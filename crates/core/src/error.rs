@@ -47,12 +47,9 @@ impl AppError {
 
     pub fn from_domain(err: domain::Error) -> Self {
         match err {
-            domain::Error::InvalidArgument { msg } => {
-                Self::new(ErrorKind::InvalidArgument, msg)
-            }
+            domain::Error::InvalidArgument { msg } => Self::new(ErrorKind::InvalidArgument, msg),
             domain::Error::Unauthenticated => {
-                Self::new(ErrorKind::Unauthenticated, "未登录或登录已失效")
-                    .with_bili_code(-101)
+                Self::new(ErrorKind::Unauthenticated, "未登录或登录已失效").with_bili_code(-101)
             }
             domain::Error::Csrf => {
                 Self::new(ErrorKind::Csrf, "CSRF 校验失败").with_bili_code(-111)
@@ -81,6 +78,7 @@ impl AppError {
             http::Error::Network(m) => Self::new(ErrorKind::Network, m),
             http::Error::Parse(m) => Self::new(ErrorKind::Parse, m),
             http::Error::Domain(e) => Self::from_domain(e),
+            http::Error::Auth(m) => Self::new(ErrorKind::InvalidArgument, m),
         }
     }
 }

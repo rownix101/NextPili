@@ -63,11 +63,21 @@ POST /x/passport-tv-login/qrcode/poll
 
 ---
 
-### 2. Cookie 导入
+### 2. 短信登录（App，手机端首选）
 
-用户从浏览器导出 Cookie，写入 jar 即可使用 Web API。 
-需至少：`SESSDATA`、`bili_jct`、`DedeUserID`。 
-可选再走兑换流程拿 `access_key` 以调用 App 接口。
+```
+GET /x/passport-login/captcha?source=main_web
+POST /x/passport-login/sms/send   # AppSign + 极验结果
+POST /x/passport-login/login/sms  # AppSign
+```
+
+客户端策略：
+
+- **手机**：仅短信（及后续密码，如需要）
+- **桌面 / 平板**：短信 + TV/HD 扫码
+- **不提供** Cookie 粘贴导入 UI（登录成功后的 jar 仍由 Rust 持久化）
+
+`cid` 为中国大陆时使用护照国家列表 **id=1**（不是拨号 86）。
 
 ---
 

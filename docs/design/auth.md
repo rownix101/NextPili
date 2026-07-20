@@ -78,14 +78,11 @@ csrf = jar.get("bili_jct")
 
 Web POST 表单字段名：`csrf` / 偶发 `biliCSRF` / `csrf_token`（按端点文档）。
 
-### 3.3 导入
+### 3.3 写入来源
 
-`import_cookies(raw: &str)`：
+产品不提供「粘贴 Cookie」登录。Cookie jar 仅由 **短信 / 扫码等正规登录成功** 写入，并持久化到 store。
 
-1. 解析 `k=v; k2=v2` 或浏览器导出格式。 
-2. 写入临时 jar，请求 `nav` 或用户信息校验。 
-3. 成功则分配 `AccountId`，写入 registry + store。 
-4. 默认填满所有 slot（若 slot 空）。
+`CookieJar::parse_header` 仍可用于解析服务端 `cookie_info` / `Set-Cookie`，不对用户暴露导入 API。
 
 ---
 
@@ -134,7 +131,7 @@ params + appkey + ts → 排序 → 拼接 appsec → md5 → sign
 
 ---
 
-## 7. 登录流（TV 扫码）
+## 7. 登录流（TV 扫码 · 仅桌面/平板 UI）
 
 ```text
 login_qr_start

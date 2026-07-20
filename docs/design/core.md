@@ -61,7 +61,8 @@ shutdown()
 |------|----------|
 | `login_qr_start` | 申请 TV 二维码；返回 url + auth_code；内部开任务轮询 |
 | `login_qr_cancel` | 取消轮询 |
-| `import_cookies` | 解析 Cookie 字符串 → 校验 mid → 写入 main 槽 |
+| `login_captcha` / `login_sms_send` / `login_sms` | 短信登录：极验 → 发码 → 校验登录 |
+| `login_qr_*` | 仅桌面/平板 UI 暴露 |
 | `logout` | 清指定账号或当前；可选调登出 API |
 | `list_accounts` | 返回公开资料列表（无密钥） |
 | `set_account_slot` | 绑定 AccountId → AccountSlot |

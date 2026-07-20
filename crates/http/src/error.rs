@@ -8,6 +8,8 @@ pub enum Error {
     Parse(String),
     #[error(transparent)]
     Domain(#[from] domain::Error),
+    #[error("auth: {0}")]
+    Auth(String),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

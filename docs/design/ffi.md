@@ -62,7 +62,7 @@ Flutter main()
 
 ```text
 sys:     api_version, ping, bootstrap, set_proxy, shutdown
-auth:    login_qr_*, import_cookies, logout, list_accounts, set_slot
+auth:    login_sms_*, login_qr_* (desktop/tablet UI), logout, list_accounts, set_slot
 feed:    feed_recommend, feed_popular
 video:   video_detail, play_url, video_related
 social:  reply_list, danmaku_view, ...

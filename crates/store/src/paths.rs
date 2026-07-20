@@ -16,11 +16,20 @@ impl AppPaths {
         }
     }
 
+    pub fn with_cache_dir(mut self, cache_dir: impl Into<PathBuf>) -> Self {
+        self.cache_dir = cache_dir.into();
+        self
+    }
+
     pub fn settings_file(&self) -> PathBuf {
         self.data_dir.join("settings.json")
     }
 
     pub fn accounts_file(&self) -> PathBuf {
         self.data_dir.join("accounts.json")
+    }
+
+    pub fn device_file(&self) -> PathBuf {
+        self.data_dir.join("device.json")
     }
 }

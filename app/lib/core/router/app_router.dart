@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 
+import '../../features/auth/auth_page.dart';
 import '../../features/home/home_page.dart';
 import '../../features/settings/settings_page.dart';
 import '../../features/shell/app_shell.dart';
@@ -23,6 +24,13 @@ GoRouter createAppRouter() {
             name: 'settings',
             pageBuilder: (context, state) => const NoTransitionPage(
               child: SettingsPage(),
+            ),
+          ),
+          GoRoute(
+            path: '/auth',
+            name: 'auth',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: AuthPage(),
             ),
           ),
         ],

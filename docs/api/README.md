@@ -4,7 +4,7 @@
 
 本文档是**面向客户端实现**的规范：参数、鉴权与响应形状，而非官方完整公开目录。
 
-**相关：** [bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect) · [架构](../architecture.md)
+**相关：** [Documentation](../README.md) · [bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect) · [架构](../architecture.md) · [Style Pathway](../writing.md)
 
 ---
 
@@ -94,7 +94,7 @@ https://api.bilibili.com
 ### 建议实现顺序
 
 1. 鉴权基础设施 — Cookie jar、CSRF、WBI、AppSign、buvid、账号路由  
-2. 登录 — TV 扫码 / Cookie 导入  
+2. 登录 — 短信（全端）/ TV 扫码（桌面·平板）  
 3. 首页推荐、热门、视频详情、playurl  
 4. 评论（REST）与弹幕（`seg.so` 或 gRPC）  
 5. 搜索（预留 Gaia）  

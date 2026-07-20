@@ -2,7 +2,8 @@
 
 > 状态：草案 v0.3  
 > 适用范围：Flutter 表现层（桌面优先；移动端为后续可选目标）  
-> 相关文档：[架构](../architecture.md) · [API](../api/README.md) · [Flutter 工程](../design/flutter.md)
+> 相关：[Documentation](../README.md) · [架构](../architecture.md) · [API](../api/README.md) · [Flutter 工程](../design/flutter.md)
+> 写法：[Documentation Style Pathway](../writing.md)
 
 本目录定义 **产品外观、交互、动效、多平台与本地化** 的立项约定，供设计评审、UI 实现与验收使用。  
 工程分层、FFI、鉴权等见 `docs/architecture.md` 与 `docs/design/*`；本文不重复协议与存储细节。
@@ -17,7 +18,8 @@
 | [interaction.md](./interaction.md) | 人机交互：信息架构、导航、手势/指针/键盘、播放器控件、反馈与错误 |
 | [motion.md](./motion.md) | 动效设计：原则、时长/缓动 token、页面转场、列表与播放器动效 |
 | [multi-platform.md](./multi-platform.md) | 多平台适配：窗口尺寸、断点、导航形态、输入设备、系统集成 |
-| [localization.md](./localization.md) | 本地化与国际化：文案、复数、日期数字、RTL、区域设置 |
+| [copy.md](./copy.md) | **产品文案**：语气、句式、按钮/空态/错误；对齐 Apple HIG Writing |
+| [localization.md](./localization.md) | 本地化与国际化：ARB、复数、日期数字、RTL、区域设置 |
 
 ---
 
@@ -46,6 +48,7 @@
 6. **性能分级**：默认 `GlassQuality.standard`；静态栏可 `premium`（Impeller）；列表禁用重玻璃。
 7. **无障碍默认**：对比度、焦点环、语义标签；Reduce Motion / Reduce Transparency 由库默认尊重。
 8. **本地化内建**：文案不硬编码；布局预留扩展；数字/时间走 locale。
+9. **文案清晰有用**：对齐 Apple Writing——清楚、简练、可行动；见 [copy.md](./copy.md)。
 
 ---
 

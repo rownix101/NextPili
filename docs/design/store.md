@@ -151,7 +151,7 @@ AccountSecrets { cookies: SerializedJar, access_key: Option<String> }
 ## 8. 备份与导出
 
 - **导出账号**：显式用户操作 + 确认；生成加密包或 Cookie 文本；默认不做。  
-- **导入**：见 auth `import_cookies`。  
+- **写入**：仅登录用例（SMS/QR）成功后 `save_accounts`。  
 - 备份文件不进日志、不进崩溃上报。
 
 ---

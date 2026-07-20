@@ -13,10 +13,12 @@ Flutter (app/)  --FRB-->  core  --> domain
 
 设计文档：
 
+- [Documentation](docs/README.md) — 文档入口（Essentials / Guides / HIG / Reference）
 - [架构总览](docs/architecture.md)
 - [模块设计](docs/design/README.md)
 - [API 约定](docs/api/README.md)
 - [UX](docs/ux/README.md)
+- [文档规范](docs/writing.md)
 
 ## 仓库布局
 
@@ -67,16 +69,19 @@ flutter pub get
 flutter run -d linux
 ```
 
-## P0 状态
+## P1 状态
 
 已打通：
 
 - Rust workspace 与 crate 边界
-- `domain` / `auth` / `store` / `http` / `media` / `core` 骨架
-- FRB：`ping` · `api_version` · `bootstrap`
-- Flutter feature 目录、Riverpod、go_router 桌面壳
+- `domain` / `auth` / `store` / `http` / `media` / `core`
+- FRB：`ping` · `api_version` · `bootstrap` · 登录/账号 API
+- 账号凭据持久化（登录成功写入 `accounts.json`，不提供 Cookie 粘贴导入）与设备 `buvid3`（`device.json`）
+- WBI / AppSign 纯签名 + HTTP 请求管线（Cookie / csrf / 签名）
+- 短信登录（captcha + sms/send + login/sms）与桌面/平板 TV 扫码
+- Flutter 账号页（手机仅短信；桌面/平板额外扫码）
 
-下一步（P1）：Cookie jar 持久化、buvid、WBI/AppSign、扫码登录。
+下一步（P2）：推荐/热门 feed、稿件详情、playurl → media_kit 播放。
 
 ## 许可
 

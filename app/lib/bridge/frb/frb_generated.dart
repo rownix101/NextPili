@@ -3,7 +3,9 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
+import 'api/auth.dart';
 import 'api/simple.dart';
+import 'auth_service.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'error.dart';
@@ -67,7 +69,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => 748986634;
+  int get rustContentHash => -1458337765;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -82,9 +84,32 @@ abstract class RustLibApi extends BaseApi {
 
   Future<void> crateApiSimpleBootstrap({required BootstrapConfig config});
 
+  String crateApiAuthDeviceBuvid3();
+
   Future<void> crateApiSimpleInitApp();
 
+  List<AccountPublicDto> crateApiAuthListAccounts();
+
+  Future<CaptchaDto> crateApiAuthLoginCaptcha();
+
+  Future<QrPollDto> crateApiAuthLoginQrPoll({
+    required String authCode,
+    String? localId,
+  });
+
+  Future<QrStartDto> crateApiAuthLoginQrStart({String? localId});
+
+  Future<AccountPublicDto> crateApiAuthLoginSms({required SmsLoginDto req});
+
+  Future<SmsSendDtoResult> crateApiAuthLoginSmsSend({required SmsSendDto req});
+
+  void crateApiAuthLogout({String? accountId});
+
+  String crateApiAuthNewLoginSessionId();
+
   String crateApiSimplePing();
+
+  void crateApiAuthSetAccountSlot({required SlotDto slot, String? accountId});
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -146,6 +171,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "bootstrap", argNames: ["config"]);
 
   @override
+  String crateApiAuthDeviceBuvid3() {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 3)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiAuthDeviceBuvid3ConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAuthDeviceBuvid3ConstMeta =>
+      const TaskConstMeta(debugName: "device_buvid3", argNames: []);
+
+  @override
   Future<void> crateApiSimpleInitApp() {
     return handler.executeNormal(
       NormalTask(
@@ -154,7 +201,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 3,
+            funcId: 4,
             port: port_,
           );
         },
@@ -173,12 +220,224 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "init_app", argNames: []);
 
   @override
+  List<AccountPublicDto> crateApiAuthListAccounts() {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 5)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_account_public_dto,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiAuthListAccountsConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAuthListAccountsConstMeta =>
+      const TaskConstMeta(debugName: "list_accounts", argNames: []);
+
+  @override
+  Future<CaptchaDto> crateApiAuthLoginCaptcha() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 6,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_captcha_dto,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiAuthLoginCaptchaConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAuthLoginCaptchaConstMeta =>
+      const TaskConstMeta(debugName: "login_captcha", argNames: []);
+
+  @override
+  Future<QrPollDto> crateApiAuthLoginQrPoll({
+    required String authCode,
+    String? localId,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(authCode, serializer);
+          sse_encode_opt_String(localId, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 7,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_qr_poll_dto,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiAuthLoginQrPollConstMeta,
+        argValues: [authCode, localId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAuthLoginQrPollConstMeta => const TaskConstMeta(
+    debugName: "login_qr_poll",
+    argNames: ["authCode", "localId"],
+  );
+
+  @override
+  Future<QrStartDto> crateApiAuthLoginQrStart({String? localId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_opt_String(localId, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 8,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_qr_start_dto,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiAuthLoginQrStartConstMeta,
+        argValues: [localId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAuthLoginQrStartConstMeta =>
+      const TaskConstMeta(debugName: "login_qr_start", argNames: ["localId"]);
+
+  @override
+  Future<AccountPublicDto> crateApiAuthLoginSms({required SmsLoginDto req}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_sms_login_dto(req, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 9,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_account_public_dto,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiAuthLoginSmsConstMeta,
+        argValues: [req],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAuthLoginSmsConstMeta =>
+      const TaskConstMeta(debugName: "login_sms", argNames: ["req"]);
+
+  @override
+  Future<SmsSendDtoResult> crateApiAuthLoginSmsSend({required SmsSendDto req}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_sms_send_dto(req, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 10,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_sms_send_dto_result,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiAuthLoginSmsSendConstMeta,
+        argValues: [req],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAuthLoginSmsSendConstMeta =>
+      const TaskConstMeta(debugName: "login_sms_send", argNames: ["req"]);
+
+  @override
+  void crateApiAuthLogout({String? accountId}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_opt_String(accountId, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 11)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiAuthLogoutConstMeta,
+        argValues: [accountId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAuthLogoutConstMeta =>
+      const TaskConstMeta(debugName: "logout", argNames: ["accountId"]);
+
+  @override
+  String crateApiAuthNewLoginSessionId() {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 12)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiAuthNewLoginSessionIdConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAuthNewLoginSessionIdConstMeta =>
+      const TaskConstMeta(debugName: "new_login_session_id", argNames: []);
+
+  @override
   String crateApiSimplePing() {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 4)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 13)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_String,
@@ -194,10 +453,51 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiSimplePingConstMeta =>
       const TaskConstMeta(debugName: "ping", argNames: []);
 
+  @override
+  void crateApiAuthSetAccountSlot({required SlotDto slot, String? accountId}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_slot_dto(slot, serializer);
+          sse_encode_opt_String(accountId, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 14)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiAuthSetAccountSlotConstMeta,
+        argValues: [slot, accountId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAuthSetAccountSlotConstMeta => const TaskConstMeta(
+    debugName: "set_account_slot",
+    argNames: ["slot", "accountId"],
+  );
+
   @protected
   String dco_decode_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as String;
+  }
+
+  @protected
+  AccountPublicDto dco_decode_account_public_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return AccountPublicDto(
+      id: dco_decode_String(arr[0]),
+      mid: dco_decode_i_64(arr[1]),
+      name: dco_decode_String(arr[2]),
+      avatarUrl: dco_decode_String(arr[3]),
+      isLogin: dco_decode_bool(arr[4]),
+    );
   }
 
   @protected
@@ -228,6 +528,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool dco_decode_bool(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as bool;
+  }
+
+  @protected
   BootstrapConfig dco_decode_bootstrap_config(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -238,6 +544,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       cacheDir: dco_decode_String(arr[1]),
       logLevel: dco_decode_String(arr[2]),
     );
+  }
+
+  @protected
+  AccountPublicDto dco_decode_box_autoadd_account_public_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_account_public_dto(raw);
   }
 
   @protected
@@ -253,6 +565,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  SmsLoginDto dco_decode_box_autoadd_sms_login_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_sms_login_dto(raw);
+  }
+
+  @protected
+  SmsSendDto dco_decode_box_autoadd_sms_send_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_sms_send_dto(raw);
+  }
+
+  @protected
+  CaptchaDto dco_decode_captcha_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return CaptchaDto(
+      token: dco_decode_String(arr[0]),
+      gt: dco_decode_String(arr[1]),
+      challenge: dco_decode_String(arr[2]),
+      captchaType: dco_decode_String(arr[3]),
+    );
+  }
+
+  @protected
   ErrorKind dco_decode_error_kind(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return ErrorKind.values[raw as int];
@@ -265,15 +603,121 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PlatformInt64 dco_decode_i_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dcoDecodeI64(raw);
+  }
+
+  @protected
+  List<AccountPublicDto> dco_decode_list_account_public_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_account_public_dto).toList();
+  }
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as Uint8List;
   }
 
   @protected
+  String? dco_decode_opt_String(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_String(raw);
+  }
+
+  @protected
+  AccountPublicDto? dco_decode_opt_box_autoadd_account_public_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_account_public_dto(raw);
+  }
+
+  @protected
   int? dco_decode_opt_box_autoadd_i_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_i_32(raw);
+  }
+
+  @protected
+  QrPollDto dco_decode_qr_poll_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return QrPollDto(
+      status: dco_decode_qr_status_kind(arr[0]),
+      message: dco_decode_String(arr[1]),
+      account: dco_decode_opt_box_autoadd_account_public_dto(arr[2]),
+    );
+  }
+
+  @protected
+  QrStartDto dco_decode_qr_start_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return QrStartDto(
+      url: dco_decode_String(arr[0]),
+      authCode: dco_decode_String(arr[1]),
+    );
+  }
+
+  @protected
+  QrStatusKind dco_decode_qr_status_kind(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return QrStatusKind.values[raw as int];
+  }
+
+  @protected
+  SlotDto dco_decode_slot_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return SlotDto.values[raw as int];
+  }
+
+  @protected
+  SmsLoginDto dco_decode_sms_login_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return SmsLoginDto(
+      cid: dco_decode_i_32(arr[0]),
+      tel: dco_decode_String(arr[1]),
+      code: dco_decode_String(arr[2]),
+      captchaKey: dco_decode_String(arr[3]),
+      loginSessionId: dco_decode_String(arr[4]),
+    );
+  }
+
+  @protected
+  SmsSendDto dco_decode_sms_send_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 8)
+      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    return SmsSendDto(
+      cid: dco_decode_i_32(arr[0]),
+      tel: dco_decode_String(arr[1]),
+      token: dco_decode_String(arr[2]),
+      geeChallenge: dco_decode_String(arr[3]),
+      geeValidate: dco_decode_String(arr[4]),
+      geeSeccode: dco_decode_String(arr[5]),
+      loginSessionId: dco_decode_String(arr[6]),
+      localId: dco_decode_opt_String(arr[7]),
+    );
+  }
+
+  @protected
+  SmsSendDtoResult dco_decode_sms_send_dto_result(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return SmsSendDtoResult(
+      captchaKey: dco_decode_String(arr[0]),
+      loginSessionId: dco_decode_String(arr[1]),
+    );
   }
 
   @protected
@@ -299,6 +743,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var inner = sse_decode_list_prim_u_8_strict(deserializer);
     return utf8.decoder.convert(inner);
+  }
+
+  @protected
+  AccountPublicDto sse_decode_account_public_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_id = sse_decode_String(deserializer);
+    var var_mid = sse_decode_i_64(deserializer);
+    var var_name = sse_decode_String(deserializer);
+    var var_avatarUrl = sse_decode_String(deserializer);
+    var var_isLogin = sse_decode_bool(deserializer);
+    return AccountPublicDto(
+      id: var_id,
+      mid: var_mid,
+      name: var_name,
+      avatarUrl: var_avatarUrl,
+      isLogin: var_isLogin,
+    );
   }
 
   @protected
@@ -330,6 +791,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool sse_decode_bool(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint8() != 0;
+  }
+
+  @protected
   BootstrapConfig sse_decode_bootstrap_config(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_dataDir = sse_decode_String(deserializer);
@@ -340,6 +807,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       cacheDir: var_cacheDir,
       logLevel: var_logLevel,
     );
+  }
+
+  @protected
+  AccountPublicDto sse_decode_box_autoadd_account_public_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_account_public_dto(deserializer));
   }
 
   @protected
@@ -357,6 +832,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  SmsLoginDto sse_decode_box_autoadd_sms_login_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_sms_login_dto(deserializer));
+  }
+
+  @protected
+  SmsSendDto sse_decode_box_autoadd_sms_send_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_sms_send_dto(deserializer));
+  }
+
+  @protected
+  CaptchaDto sse_decode_captcha_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_token = sse_decode_String(deserializer);
+    var var_gt = sse_decode_String(deserializer);
+    var var_challenge = sse_decode_String(deserializer);
+    var var_captchaType = sse_decode_String(deserializer);
+    return CaptchaDto(
+      token: var_token,
+      gt: var_gt,
+      challenge: var_challenge,
+      captchaType: var_captchaType,
+    );
+  }
+
+  @protected
   ErrorKind sse_decode_error_kind(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var inner = sse_decode_i_32(deserializer);
@@ -370,10 +874,54 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PlatformInt64 sse_decode_i_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getPlatformInt64();
+  }
+
+  @protected
+  List<AccountPublicDto> sse_decode_list_account_public_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <AccountPublicDto>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_account_public_dto(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
     return deserializer.buffer.getUint8List(len_);
+  }
+
+  @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_String(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  AccountPublicDto? sse_decode_opt_box_autoadd_account_public_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_account_public_dto(deserializer));
+    } else {
+      return null;
+    }
   }
 
   @protected
@@ -385,6 +933,96 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     } else {
       return null;
     }
+  }
+
+  @protected
+  QrPollDto sse_decode_qr_poll_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_status = sse_decode_qr_status_kind(deserializer);
+    var var_message = sse_decode_String(deserializer);
+    var var_account = sse_decode_opt_box_autoadd_account_public_dto(
+      deserializer,
+    );
+    return QrPollDto(
+      status: var_status,
+      message: var_message,
+      account: var_account,
+    );
+  }
+
+  @protected
+  QrStartDto sse_decode_qr_start_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_url = sse_decode_String(deserializer);
+    var var_authCode = sse_decode_String(deserializer);
+    return QrStartDto(url: var_url, authCode: var_authCode);
+  }
+
+  @protected
+  QrStatusKind sse_decode_qr_status_kind(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return QrStatusKind.values[inner];
+  }
+
+  @protected
+  SlotDto sse_decode_slot_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return SlotDto.values[inner];
+  }
+
+  @protected
+  SmsLoginDto sse_decode_sms_login_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_cid = sse_decode_i_32(deserializer);
+    var var_tel = sse_decode_String(deserializer);
+    var var_code = sse_decode_String(deserializer);
+    var var_captchaKey = sse_decode_String(deserializer);
+    var var_loginSessionId = sse_decode_String(deserializer);
+    return SmsLoginDto(
+      cid: var_cid,
+      tel: var_tel,
+      code: var_code,
+      captchaKey: var_captchaKey,
+      loginSessionId: var_loginSessionId,
+    );
+  }
+
+  @protected
+  SmsSendDto sse_decode_sms_send_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_cid = sse_decode_i_32(deserializer);
+    var var_tel = sse_decode_String(deserializer);
+    var var_token = sse_decode_String(deserializer);
+    var var_geeChallenge = sse_decode_String(deserializer);
+    var var_geeValidate = sse_decode_String(deserializer);
+    var var_geeSeccode = sse_decode_String(deserializer);
+    var var_loginSessionId = sse_decode_String(deserializer);
+    var var_localId = sse_decode_opt_String(deserializer);
+    return SmsSendDto(
+      cid: var_cid,
+      tel: var_tel,
+      token: var_token,
+      geeChallenge: var_geeChallenge,
+      geeValidate: var_geeValidate,
+      geeSeccode: var_geeSeccode,
+      loginSessionId: var_loginSessionId,
+      localId: var_localId,
+    );
+  }
+
+  @protected
+  SmsSendDtoResult sse_decode_sms_send_dto_result(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_captchaKey = sse_decode_String(deserializer);
+    var var_loginSessionId = sse_decode_String(deserializer);
+    return SmsSendDtoResult(
+      captchaKey: var_captchaKey,
+      loginSessionId: var_loginSessionId,
+    );
   }
 
   @protected
@@ -405,15 +1043,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  bool sse_decode_bool(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getUint8() != 0;
-  }
-
-  @protected
   void sse_encode_String(String self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_prim_u_8_strict(utf8.encoder.convert(self), serializer);
+  }
+
+  @protected
+  void sse_encode_account_public_dto(
+    AccountPublicDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.id, serializer);
+    sse_encode_i_64(self.mid, serializer);
+    sse_encode_String(self.name, serializer);
+    sse_encode_String(self.avatarUrl, serializer);
+    sse_encode_bool(self.isLogin, serializer);
   }
 
   @protected
@@ -434,6 +1079,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_bool(bool self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint8(self ? 1 : 0);
+  }
+
+  @protected
   void sse_encode_bootstrap_config(
     BootstrapConfig self,
     SseSerializer serializer,
@@ -442,6 +1093,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.dataDir, serializer);
     sse_encode_String(self.cacheDir, serializer);
     sse_encode_String(self.logLevel, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_account_public_dto(
+    AccountPublicDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_account_public_dto(self, serializer);
   }
 
   @protected
@@ -460,6 +1120,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_sms_login_dto(
+    SmsLoginDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_sms_login_dto(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_sms_send_dto(
+    SmsSendDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_sms_send_dto(self, serializer);
+  }
+
+  @protected
+  void sse_encode_captcha_dto(CaptchaDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.token, serializer);
+    sse_encode_String(self.gt, serializer);
+    sse_encode_String(self.challenge, serializer);
+    sse_encode_String(self.captchaType, serializer);
+  }
+
+  @protected
   void sse_encode_error_kind(ErrorKind self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.index, serializer);
@@ -469,6 +1156,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_i_32(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putInt32(self);
+  }
+
+  @protected
+  void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putPlatformInt64(self);
+  }
+
+  @protected
+  void sse_encode_list_account_public_dto(
+    List<AccountPublicDto> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_account_public_dto(item, serializer);
+    }
   }
 
   @protected
@@ -482,6 +1187,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_opt_String(String? self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_String(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_box_autoadd_account_public_dto(
+    AccountPublicDto? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_account_public_dto(self, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_opt_box_autoadd_i_32(int? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -489,6 +1217,66 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (self != null) {
       sse_encode_box_autoadd_i_32(self, serializer);
     }
+  }
+
+  @protected
+  void sse_encode_qr_poll_dto(QrPollDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_qr_status_kind(self.status, serializer);
+    sse_encode_String(self.message, serializer);
+    sse_encode_opt_box_autoadd_account_public_dto(self.account, serializer);
+  }
+
+  @protected
+  void sse_encode_qr_start_dto(QrStartDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.url, serializer);
+    sse_encode_String(self.authCode, serializer);
+  }
+
+  @protected
+  void sse_encode_qr_status_kind(QrStatusKind self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_slot_dto(SlotDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_sms_login_dto(SmsLoginDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.cid, serializer);
+    sse_encode_String(self.tel, serializer);
+    sse_encode_String(self.code, serializer);
+    sse_encode_String(self.captchaKey, serializer);
+    sse_encode_String(self.loginSessionId, serializer);
+  }
+
+  @protected
+  void sse_encode_sms_send_dto(SmsSendDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.cid, serializer);
+    sse_encode_String(self.tel, serializer);
+    sse_encode_String(self.token, serializer);
+    sse_encode_String(self.geeChallenge, serializer);
+    sse_encode_String(self.geeValidate, serializer);
+    sse_encode_String(self.geeSeccode, serializer);
+    sse_encode_String(self.loginSessionId, serializer);
+    sse_encode_opt_String(self.localId, serializer);
+  }
+
+  @protected
+  void sse_encode_sms_send_dto_result(
+    SmsSendDtoResult self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.captchaKey, serializer);
+    sse_encode_String(self.loginSessionId, serializer);
   }
 
   @protected
@@ -506,11 +1294,5 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_unit(void self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-  }
-
-  @protected
-  void sse_encode_bool(bool self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putUint8(self ? 1 : 0);
   }
 }

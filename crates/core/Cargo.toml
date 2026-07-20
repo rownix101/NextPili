@@ -26,6 +26,8 @@ parking_lot = { workspace = true }
 anyhow = { workspace = true }
 flutter_rust_bridge = { workspace = true }
 
+uuid = { workspace = true }
+
 [dev-dependencies]
 tempfile = "3"
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }

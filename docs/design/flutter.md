@@ -160,7 +160,7 @@ feedProvider = AsyncNotifier
 | Feature | MVP 阶段 | 依赖 core API |
 |---------|----------|---------------|
 | shell | P0 | — |
-| auth | P1 | login_qr_*, import_cookies, auth_state |
+| auth | P1 | login_sms_*, login_qr_* (desktop/tablet), auth_state |
 | home | P2 | feed_recommend, feed_popular |
 | video | P2 | video_detail |
 | player | P3 | play_url, playback_start/stop, danmaku |

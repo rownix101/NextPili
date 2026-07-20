@@ -3,7 +3,9 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
+import 'api/auth.dart';
 import 'api/simple.dart';
+import 'auth_service.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi' as ffi;
@@ -23,13 +25,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String dco_decode_String(dynamic raw);
 
   @protected
+  AccountPublicDto dco_decode_account_public_dto(dynamic raw);
+
+  @protected
   ApiVersion dco_decode_api_version(dynamic raw);
 
   @protected
   AppError dco_decode_app_error(dynamic raw);
 
   @protected
+  bool dco_decode_bool(dynamic raw);
+
+  @protected
   BootstrapConfig dco_decode_bootstrap_config(dynamic raw);
+
+  @protected
+  AccountPublicDto dco_decode_box_autoadd_account_public_dto(dynamic raw);
 
   @protected
   BootstrapConfig dco_decode_box_autoadd_bootstrap_config(dynamic raw);
@@ -38,16 +49,58 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int dco_decode_box_autoadd_i_32(dynamic raw);
 
   @protected
+  SmsLoginDto dco_decode_box_autoadd_sms_login_dto(dynamic raw);
+
+  @protected
+  SmsSendDto dco_decode_box_autoadd_sms_send_dto(dynamic raw);
+
+  @protected
+  CaptchaDto dco_decode_captcha_dto(dynamic raw);
+
+  @protected
   ErrorKind dco_decode_error_kind(dynamic raw);
 
   @protected
   int dco_decode_i_32(dynamic raw);
 
   @protected
+  PlatformInt64 dco_decode_i_64(dynamic raw);
+
+  @protected
+  List<AccountPublicDto> dco_decode_list_account_public_dto(dynamic raw);
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
+  String? dco_decode_opt_String(dynamic raw);
+
+  @protected
+  AccountPublicDto? dco_decode_opt_box_autoadd_account_public_dto(dynamic raw);
+
+  @protected
   int? dco_decode_opt_box_autoadd_i_32(dynamic raw);
+
+  @protected
+  QrPollDto dco_decode_qr_poll_dto(dynamic raw);
+
+  @protected
+  QrStartDto dco_decode_qr_start_dto(dynamic raw);
+
+  @protected
+  QrStatusKind dco_decode_qr_status_kind(dynamic raw);
+
+  @protected
+  SlotDto dco_decode_slot_dto(dynamic raw);
+
+  @protected
+  SmsLoginDto dco_decode_sms_login_dto(dynamic raw);
+
+  @protected
+  SmsSendDto dco_decode_sms_send_dto(dynamic raw);
+
+  @protected
+  SmsSendDtoResult dco_decode_sms_send_dto_result(dynamic raw);
 
   @protected
   int dco_decode_u_32(dynamic raw);
@@ -62,13 +115,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
+  AccountPublicDto sse_decode_account_public_dto(SseDeserializer deserializer);
+
+  @protected
   ApiVersion sse_decode_api_version(SseDeserializer deserializer);
 
   @protected
   AppError sse_decode_app_error(SseDeserializer deserializer);
 
   @protected
+  bool sse_decode_bool(SseDeserializer deserializer);
+
+  @protected
   BootstrapConfig sse_decode_bootstrap_config(SseDeserializer deserializer);
+
+  @protected
+  AccountPublicDto sse_decode_box_autoadd_account_public_dto(
+    SseDeserializer deserializer,
+  );
 
   @protected
   BootstrapConfig sse_decode_box_autoadd_bootstrap_config(
@@ -79,16 +143,64 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int sse_decode_box_autoadd_i_32(SseDeserializer deserializer);
 
   @protected
+  SmsLoginDto sse_decode_box_autoadd_sms_login_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  SmsSendDto sse_decode_box_autoadd_sms_send_dto(SseDeserializer deserializer);
+
+  @protected
+  CaptchaDto sse_decode_captcha_dto(SseDeserializer deserializer);
+
+  @protected
   ErrorKind sse_decode_error_kind(SseDeserializer deserializer);
 
   @protected
   int sse_decode_i_32(SseDeserializer deserializer);
 
   @protected
+  PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
+
+  @protected
+  List<AccountPublicDto> sse_decode_list_account_public_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer);
+
+  @protected
+  AccountPublicDto? sse_decode_opt_box_autoadd_account_public_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   int? sse_decode_opt_box_autoadd_i_32(SseDeserializer deserializer);
+
+  @protected
+  QrPollDto sse_decode_qr_poll_dto(SseDeserializer deserializer);
+
+  @protected
+  QrStartDto sse_decode_qr_start_dto(SseDeserializer deserializer);
+
+  @protected
+  QrStatusKind sse_decode_qr_status_kind(SseDeserializer deserializer);
+
+  @protected
+  SlotDto sse_decode_slot_dto(SseDeserializer deserializer);
+
+  @protected
+  SmsLoginDto sse_decode_sms_login_dto(SseDeserializer deserializer);
+
+  @protected
+  SmsSendDto sse_decode_sms_send_dto(SseDeserializer deserializer);
+
+  @protected
+  SmsSendDtoResult sse_decode_sms_send_dto_result(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_32(SseDeserializer deserializer);
@@ -100,10 +212,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_decode_unit(SseDeserializer deserializer);
 
   @protected
-  bool sse_decode_bool(SseDeserializer deserializer);
+  void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
-  void sse_encode_String(String self, SseSerializer serializer);
+  void sse_encode_account_public_dto(
+    AccountPublicDto self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_api_version(ApiVersion self, SseSerializer serializer);
@@ -112,8 +227,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_app_error(AppError self, SseSerializer serializer);
 
   @protected
+  void sse_encode_bool(bool self, SseSerializer serializer);
+
+  @protected
   void sse_encode_bootstrap_config(
     BootstrapConfig self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_account_public_dto(
+    AccountPublicDto self,
     SseSerializer serializer,
   );
 
@@ -127,10 +251,34 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_i_32(int self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_sms_login_dto(
+    SmsLoginDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_sms_send_dto(
+    SmsSendDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_captcha_dto(CaptchaDto self, SseSerializer serializer);
+
+  @protected
   void sse_encode_error_kind(ErrorKind self, SseSerializer serializer);
 
   @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_account_public_dto(
+    List<AccountPublicDto> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_prim_u_8_strict(
@@ -139,7 +287,40 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_opt_String(String? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_account_public_dto(
+    AccountPublicDto? self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_box_autoadd_i_32(int? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_qr_poll_dto(QrPollDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_qr_start_dto(QrStartDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_qr_status_kind(QrStatusKind self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_slot_dto(SlotDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_sms_login_dto(SmsLoginDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_sms_send_dto(SmsSendDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_sms_send_dto_result(
+    SmsSendDtoResult self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_u_32(int self, SseSerializer serializer);
@@ -149,9 +330,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_unit(void self, SseSerializer serializer);
-
-  @protected
-  void sse_encode_bool(bool self, SseSerializer serializer);
 }
 
 // Section: wire_class

@@ -1,6 +1,7 @@
 # 设计文档索引
 
-> 上级：[架构总览](../architecture.md) · [API 约定](../api/README.md) · [UX](../ux/README.md)
+> 上级：[Documentation](../README.md) · [架构总览](../architecture.md) · [API 约定](../api/README.md) · [UX](../ux/README.md)
+> 写法：[Documentation Style Pathway](../writing.md)
 
 本目录放 **模块级、可指导实现** 的设计，不重复架构总览中的 ADR 全文。
 

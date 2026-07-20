@@ -31,7 +31,7 @@ class HomePage extends ConsumerWidget {
                 Text('骨架已就绪', style: theme.textTheme.headlineMedium),
                 const SizedBox(height: 12),
                 Text(
-                  'P0：Rust workspace + Flutter 桌面壳 + FRB ping / api_version',
+                  'P1：账号持久化 · buvid · WBI/AppSign · 扫码/Cookie 登录',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,

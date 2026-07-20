@@ -315,11 +315,15 @@ CI **禁止**真实用户 Cookie。
 
 ## 15. 文档维护
 
+入口与写法：[docs/README.md](./README.md) · [Documentation Style Pathway](./writing.md)
+
 | 变更 | 位置 |
 |------|------|
 | 端点 / 签名 | `docs/api/**` |
 | 分层、ADR、边界 | 本文 |
 | 模块细节 | `docs/design/*` |
+| 视觉 / 交互 | `docs/ux/*` |
+| 文档结构与语气 | `docs/writing.md` |
 
 ---
 

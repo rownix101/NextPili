@@ -11,7 +11,7 @@ const MIXIN_KEY_ENC_TAB: [usize; 64] = [
 /// WBI request signer with daily mixin key cache.
 #[derive(Debug, Clone, Default)]
 pub struct WbiSigner {
-    /// Cached (yyyymmdd, mixin_key)
+    /// Cached (day_index, mixin_key)
     cache: Option<(u32, String)>,
     img_key: Option<String>,
     sub_key: Option<String>,
@@ -26,6 +26,36 @@ impl WbiSigner {
         self.img_key = Some(img_key.into());
         self.sub_key = Some(sub_key.into());
         self.cache = None;
+    }
+
+    pub fn img_key_ref(&self) -> Option<&str> {
+        self.img_key.as_deref()
+    }
+
+    pub fn sub_key_ref(&self) -> Option<&str> {
+        self.sub_key.as_deref()
+    }
+
+    pub fn has_keys(&self) -> bool {
+        self.img_key.is_some() && self.sub_key.is_some()
+    }
+
+    /// Extract key token from a wbi img/sub URL (`.../bfs/wbi/{key}.png`).
+    pub fn key_from_url(url: &str) -> Option<String> {
+        let file = url.rsplit('/').next()?;
+        let key = file.split('.').next()?;
+        if key.is_empty() {
+            None
+        } else {
+            Some(key.to_string())
+        }
+    }
+
+    pub fn set_keys_from_urls(&mut self, img_url: &str, sub_url: &str) -> Result<(), &'static str> {
+        let img = Self::key_from_url(img_url).ok_or("invalid wbi img_url")?;
+        let sub = Self::key_from_url(sub_url).ok_or("invalid wbi sub_url")?;
+        self.set_keys(img, sub);
+        Ok(())
     }
 
     pub fn mixin_key(img_key: &str, sub_key: &str) -> String {
@@ -50,8 +80,10 @@ impl WbiSigner {
     /// Sign params in-place: inject `wts` / `w_rid`.
     pub fn sign(&self, params: &mut BTreeMap<String, String>, mixin_key: &str, wts: i64) {
         params.insert("wts".into(), wts.to_string());
+        // BTreeMap is already sorted by key.
         let query = params
             .iter()
+            .filter(|(k, _)| k.as_str() != "w_rid")
             .map(|(k, v)| format!("{k}={}", Self::filtered_value(v)))
             .collect::<Vec<_>>()
             .join("&");
@@ -92,6 +124,15 @@ mod tests {
         let key = WbiSigner::mixin_key("imgxxxxxxxx", "subyyyyyyyy");
         assert!(!key.is_empty());
         assert!(key.len() <= 32);
+    }
+
+    #[test]
+    fn key_from_url_ok() {
+        let k = WbiSigner::key_from_url(
+            "https://i0.hdslb.com/bfs/wbi/7cd084941338484aae1ad9425b84077c.png",
+        )
+        .unwrap();
+        assert_eq!(k, "7cd084941338484aae1ad9425b84077c");
     }
 
     #[test]
