@@ -9,6 +9,7 @@ import '../../core/theme/player_colors.dart';
 import '../../core/theme/spacing.dart';
 import '../../core/widgets/loading.dart';
 import '../../core/widgets/np_button.dart';
+import 'danmaku_overlay.dart';
 import 'player_adapter.dart';
 
 /// Full-screen-ish player route for a single cid.
@@ -39,6 +40,8 @@ class _PlayerPageState extends State<PlayerPage> {
   bool _loading = true;
   String? _error;
   bool _showChrome = true;
+  bool _danmakuOn = true;
+  int _resolvedAid = 0;
 
   @override
   void initState() {
@@ -68,7 +71,10 @@ class _PlayerPageState extends State<PlayerPage> {
         cid: widget.cid,
       );
       if (!mounted) return;
-      setState(() => _loading = false);
+      setState(() {
+        _resolvedAid = aid;
+        _loading = false;
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -146,11 +152,23 @@ class _PlayerPageState extends State<PlayerPage> {
             else
               GestureDetector(
                 onTap: () => setState(() => _showChrome = !_showChrome),
-                child: Center(
-                  child: Video(
-                    controller: _adapter.controller,
-                    controls: NoVideoControls,
-                  ),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Center(
+                      child: Video(
+                        controller: _adapter.controller,
+                        controls: NoVideoControls,
+                      ),
+                    ),
+                    if (_resolvedAid > 0)
+                      DanmakuOverlay(
+                        aid: _resolvedAid,
+                        cid: widget.cid,
+                        position: _adapter.player.stream.position,
+                        enabled: _danmakuOn,
+                      ),
+                  ],
                 ),
               ),
             if (_showChrome) ...[
@@ -171,6 +189,9 @@ class _PlayerPageState extends State<PlayerPage> {
                   qualities: _adapter.qualityOptions,
                   current: _adapter.currentVideo,
                   onQuality: _switchQuality,
+                  danmakuOn: _danmakuOn,
+                  onToggleDanmaku: () =>
+                      setState(() => _danmakuOn = !_danmakuOn),
                 ),
               ),
               if (!_loading && _error == null)
@@ -196,6 +217,8 @@ class _TopBar extends StatelessWidget {
     required this.current,
     required this.onQuality,
     required this.colors,
+    required this.danmakuOn,
+    required this.onToggleDanmaku,
   });
 
   final String title;
@@ -204,6 +227,8 @@ class _TopBar extends StatelessWidget {
   final StreamDto? current;
   final ValueChanged<StreamDto> onQuality;
   final PlayerColors colors;
+  final bool danmakuOn;
+  final VoidCallback onToggleDanmaku;
 
   @override
   Widget build(BuildContext context) {
@@ -224,6 +249,12 @@ class _TopBar extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(color: colors.controlFg, fontSize: 16),
             ),
+          ),
+          NpIconButton(
+            icon: AppIcons.danmaku,
+            color: danmakuOn ? colors.controlFg : colors.controlFgMuted,
+            onPressed: onToggleDanmaku,
+            tooltip: danmakuOn ? '关闭弹幕' : '打开弹幕',
           ),
           if (qualities.isNotEmpty)
             PopupMenuButton<StreamDto>(

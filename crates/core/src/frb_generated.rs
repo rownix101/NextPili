@@ -37,7 +37,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.11.1";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1052856961;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1571779341;
 
 // Section: executor
 
@@ -103,6 +103,49 @@ fn wire__crate__api__simple__bootstrap_impl(
                     let output_ok = crate::api::simple::bootstrap(api_config)?;
                     Ok(output_ok)
                 })())
+            }
+        },
+    )
+}
+fn wire__crate__api__social__danmaku_segments_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "danmaku_segments",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_aid = <i64>::sse_decode(&mut deserializer);
+            let api_cid = <i64>::sse_decode(&mut deserializer);
+            let api_segment_index = <u32>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, crate::error::AppError>(
+                    (move || async move {
+                        let output_ok = crate::api::social::danmaku_segments(
+                            api_aid,
+                            api_cid,
+                            api_segment_index,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
             }
         },
     )
@@ -330,6 +373,153 @@ fn wire__crate__api__auth__login_captcha_impl(
                 transform_result_sse::<_, crate::error::AppError>(
                     (move || async move {
                         let output_ok = crate::api::auth::login_captcha().await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__auth__login_password_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "login_password",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_req = <crate::auth_service::PasswordLoginDto>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, crate::error::AppError>(
+                    (move || async move {
+                        let output_ok = crate::api::auth::login_password(api_req).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__auth__login_password_risk_captcha_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "login_password_risk_captcha",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, crate::error::AppError>(
+                    (move || async move {
+                        let output_ok = crate::api::auth::login_password_risk_captcha().await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__auth__login_password_risk_send_sms_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "login_password_risk_send_sms",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_req =
+                <crate::auth_service::PasswordRiskSendSmsDto>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, crate::error::AppError>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::auth::login_password_risk_send_sms(api_req).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__auth__login_password_risk_verify_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "login_password_risk_verify",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_req =
+                <crate::auth_service::PasswordRiskVerifyDto>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, crate::error::AppError>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::auth::login_password_risk_verify(api_req).await?;
                         Ok(output_ok)
                     })()
                     .await,
@@ -680,6 +870,51 @@ fn wire__crate__api__video__playback_stop_impl(
         },
     )
 }
+fn wire__crate__api__social__reply_list_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "reply_list",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_oid = <i64>::sse_decode(&mut deserializer);
+            let api_type_ = <i32>::sse_decode(&mut deserializer);
+            let api_mode = <i32>::sse_decode(&mut deserializer);
+            let api_next_offset = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, crate::error::AppError>(
+                    (move || async move {
+                        let output_ok = crate::api::social::reply_list(
+                            api_oid,
+                            api_type_,
+                            api_mode,
+                            api_next_offset,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crate__api__auth__set_account_slot_impl(
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
@@ -876,6 +1111,40 @@ impl SseDecode for crate::auth_service::CaptchaDto {
     }
 }
 
+impl SseDecode for crate::api::social::DanmakuItemDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_id = <i64>::sse_decode(deserializer);
+        let mut var_progressMs = <i64>::sse_decode(deserializer);
+        let mut var_mode = <i32>::sse_decode(deserializer);
+        let mut var_fontsize = <i32>::sse_decode(deserializer);
+        let mut var_color = <u32>::sse_decode(deserializer);
+        let mut var_text = <String>::sse_decode(deserializer);
+        let mut var_midHash = <String>::sse_decode(deserializer);
+        return crate::api::social::DanmakuItemDto {
+            id: var_id,
+            progress_ms: var_progressMs,
+            mode: var_mode,
+            fontsize: var_fontsize,
+            color: var_color,
+            text: var_text,
+            mid_hash: var_midHash,
+        };
+    }
+}
+
+impl SseDecode for crate::api::social::DanmakuSegmentDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_segmentIndex = <u32>::sse_decode(deserializer);
+        let mut var_items = <Vec<crate::api::social::DanmakuItemDto>>::sse_decode(deserializer);
+        return crate::api::social::DanmakuSegmentDto {
+            segment_index: var_segmentIndex,
+            items: var_items,
+        };
+    }
+}
+
 impl SseDecode for crate::error::ErrorKind {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -970,6 +1239,20 @@ impl SseDecode for Vec<crate::auth_service::AccountPublicDto> {
     }
 }
 
+impl SseDecode for Vec<crate::api::social::DanmakuItemDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::social::DanmakuItemDto>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<crate::api::feed::FeedItemDto> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1001,6 +1284,18 @@ impl SseDecode for Vec<u8> {
         let mut ans_ = vec![];
         for idx_ in 0..len_ {
             ans_.push(<u8>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::social::ReplyDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::social::ReplyDto>::sse_decode(deserializer));
         }
         return ans_;
     }
@@ -1125,6 +1420,19 @@ impl SseDecode for Option<i32> {
     }
 }
 
+impl SseDecode for Option<crate::auth_service::PasswordRiskDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::auth_service::PasswordRiskDto>::sse_decode(
+                deserializer,
+            ));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<u32> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1133,6 +1441,123 @@ impl SseDecode for Option<u32> {
         } else {
             return None;
         }
+    }
+}
+
+impl SseDecode for crate::auth_service::PasswordLoginDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_username = <String>::sse_decode(deserializer);
+        let mut var_password = <String>::sse_decode(deserializer);
+        let mut var_token = <String>::sse_decode(deserializer);
+        let mut var_geeChallenge = <String>::sse_decode(deserializer);
+        let mut var_geeValidate = <String>::sse_decode(deserializer);
+        let mut var_geeSeccode = <String>::sse_decode(deserializer);
+        return crate::auth_service::PasswordLoginDto {
+            username: var_username,
+            password: var_password,
+            token: var_token,
+            gee_challenge: var_geeChallenge,
+            gee_validate: var_geeValidate,
+            gee_seccode: var_geeSeccode,
+        };
+    }
+}
+
+impl SseDecode for crate::auth_service::PasswordLoginResultDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_kind = <crate::auth_service::PasswordLoginResultKind>::sse_decode(deserializer);
+        let mut var_message = <String>::sse_decode(deserializer);
+        let mut var_account =
+            <Option<crate::auth_service::AccountPublicDto>>::sse_decode(deserializer);
+        let mut var_risk = <Option<crate::auth_service::PasswordRiskDto>>::sse_decode(deserializer);
+        return crate::auth_service::PasswordLoginResultDto {
+            kind: var_kind,
+            message: var_message,
+            account: var_account,
+            risk: var_risk,
+        };
+    }
+}
+
+impl SseDecode for crate::auth_service::PasswordLoginResultKind {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::auth_service::PasswordLoginResultKind::Success,
+            1 => crate::auth_service::PasswordLoginResultKind::NeedPhoneVerify,
+            _ => unreachable!("Invalid variant for PasswordLoginResultKind: {}", inner),
+        };
+    }
+}
+
+impl SseDecode for crate::auth_service::PasswordRiskDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_riskUrl = <String>::sse_decode(deserializer);
+        let mut var_tmpToken = <String>::sse_decode(deserializer);
+        let mut var_requestId = <String>::sse_decode(deserializer);
+        let mut var_source = <String>::sse_decode(deserializer);
+        let mut var_hideTel = <String>::sse_decode(deserializer);
+        return crate::auth_service::PasswordRiskDto {
+            risk_url: var_riskUrl,
+            tmp_token: var_tmpToken,
+            request_id: var_requestId,
+            source: var_source,
+            hide_tel: var_hideTel,
+        };
+    }
+}
+
+impl SseDecode for crate::auth_service::PasswordRiskSendSmsDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_tmpToken = <String>::sse_decode(deserializer);
+        let mut var_riskUrl = <String>::sse_decode(deserializer);
+        let mut var_token = <String>::sse_decode(deserializer);
+        let mut var_geeChallenge = <String>::sse_decode(deserializer);
+        let mut var_geeValidate = <String>::sse_decode(deserializer);
+        let mut var_geeSeccode = <String>::sse_decode(deserializer);
+        return crate::auth_service::PasswordRiskSendSmsDto {
+            tmp_token: var_tmpToken,
+            risk_url: var_riskUrl,
+            token: var_token,
+            gee_challenge: var_geeChallenge,
+            gee_validate: var_geeValidate,
+            gee_seccode: var_geeSeccode,
+        };
+    }
+}
+
+impl SseDecode for crate::auth_service::PasswordRiskSendSmsResultDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_captchaKey = <String>::sse_decode(deserializer);
+        return crate::auth_service::PasswordRiskSendSmsResultDto {
+            captcha_key: var_captchaKey,
+        };
+    }
+}
+
+impl SseDecode for crate::auth_service::PasswordRiskVerifyDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_code = <String>::sse_decode(deserializer);
+        let mut var_tmpToken = <String>::sse_decode(deserializer);
+        let mut var_requestId = <String>::sse_decode(deserializer);
+        let mut var_source = <String>::sse_decode(deserializer);
+        let mut var_captchaKey = <String>::sse_decode(deserializer);
+        let mut var_riskUrl = <String>::sse_decode(deserializer);
+        return crate::auth_service::PasswordRiskVerifyDto {
+            code: var_code,
+            tmp_token: var_tmpToken,
+            request_id: var_requestId,
+            source: var_source,
+            captcha_key: var_captchaKey,
+            risk_url: var_riskUrl,
+        };
     }
 }
 
@@ -1200,6 +1625,46 @@ impl SseDecode for crate::api::feed::RecommendFeedDto {
         return crate::api::feed::RecommendFeedDto {
             items: var_items,
             next_fresh_idx: var_nextFreshIdx,
+        };
+    }
+}
+
+impl SseDecode for crate::api::social::ReplyDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_rpid = <i64>::sse_decode(deserializer);
+        let mut var_mid = <i64>::sse_decode(deserializer);
+        let mut var_uname = <String>::sse_decode(deserializer);
+        let mut var_avatar = <String>::sse_decode(deserializer);
+        let mut var_content = <String>::sse_decode(deserializer);
+        let mut var_ctimeMs = <i64>::sse_decode(deserializer);
+        let mut var_like = <i64>::sse_decode(deserializer);
+        let mut var_childrenCount = <i32>::sse_decode(deserializer);
+        return crate::api::social::ReplyDto {
+            rpid: var_rpid,
+            mid: var_mid,
+            uname: var_uname,
+            avatar: var_avatar,
+            content: var_content,
+            ctime_ms: var_ctimeMs,
+            like: var_like,
+            children_count: var_childrenCount,
+        };
+    }
+}
+
+impl SseDecode for crate::api::social::ReplyListDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_replies = <Vec<crate::api::social::ReplyDto>>::sse_decode(deserializer);
+        let mut var_nextOffset = <String>::sse_decode(deserializer);
+        let mut var_isEnd = <bool>::sse_decode(deserializer);
+        let mut var_allCount = <i64>::sse_decode(deserializer);
+        return crate::api::social::ReplyListDto {
+            replies: var_replies,
+            next_offset: var_nextOffset,
+            is_end: var_isEnd,
+            all_count: var_allCount,
         };
     }
 }
@@ -1431,17 +1896,38 @@ fn pde_ffi_dispatcher_primary_impl(
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
         2 => wire__crate__api__simple__bootstrap_impl(port, ptr, rust_vec_len, data_len),
-        4 => wire__crate__api__feed__feed_popular_impl(port, ptr, rust_vec_len, data_len),
-        5 => wire__crate__api__feed__feed_recommend_impl(port, ptr, rust_vec_len, data_len),
-        7 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
-        9 => wire__crate__api__auth__login_captcha_impl(port, ptr, rust_vec_len, data_len),
-        10 => wire__crate__api__auth__login_qr_poll_impl(port, ptr, rust_vec_len, data_len),
-        11 => wire__crate__api__auth__login_qr_start_impl(port, ptr, rust_vec_len, data_len),
-        12 => wire__crate__api__auth__login_sms_impl(port, ptr, rust_vec_len, data_len),
-        13 => wire__crate__api__auth__login_sms_send_impl(port, ptr, rust_vec_len, data_len),
-        17 => wire__crate__api__video__play_url_impl(port, ptr, rust_vec_len, data_len),
-        18 => wire__crate__api__video__playback_start_impl(port, ptr, rust_vec_len, data_len),
-        22 => wire__crate__api__video__video_detail_impl(port, ptr, rust_vec_len, data_len),
+        3 => wire__crate__api__social__danmaku_segments_impl(port, ptr, rust_vec_len, data_len),
+        5 => wire__crate__api__feed__feed_popular_impl(port, ptr, rust_vec_len, data_len),
+        6 => wire__crate__api__feed__feed_recommend_impl(port, ptr, rust_vec_len, data_len),
+        8 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
+        10 => wire__crate__api__auth__login_captcha_impl(port, ptr, rust_vec_len, data_len),
+        11 => wire__crate__api__auth__login_password_impl(port, ptr, rust_vec_len, data_len),
+        12 => wire__crate__api__auth__login_password_risk_captcha_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        13 => wire__crate__api__auth__login_password_risk_send_sms_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        14 => wire__crate__api__auth__login_password_risk_verify_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        15 => wire__crate__api__auth__login_qr_poll_impl(port, ptr, rust_vec_len, data_len),
+        16 => wire__crate__api__auth__login_qr_start_impl(port, ptr, rust_vec_len, data_len),
+        17 => wire__crate__api__auth__login_sms_impl(port, ptr, rust_vec_len, data_len),
+        18 => wire__crate__api__auth__login_sms_send_impl(port, ptr, rust_vec_len, data_len),
+        22 => wire__crate__api__video__play_url_impl(port, ptr, rust_vec_len, data_len),
+        23 => wire__crate__api__video__playback_start_impl(port, ptr, rust_vec_len, data_len),
+        25 => wire__crate__api__social__reply_list_impl(port, ptr, rust_vec_len, data_len),
+        28 => wire__crate__api__video__video_detail_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -1455,15 +1941,15 @@ fn pde_ffi_dispatcher_sync_impl(
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
         1 => wire__crate__api__simple__api_version_impl(ptr, rust_vec_len, data_len),
-        3 => wire__crate__api__auth__device_buvid3_impl(ptr, rust_vec_len, data_len),
-        6 => wire__crate__api__settings__get_settings_impl(ptr, rust_vec_len, data_len),
-        8 => wire__crate__api__auth__list_accounts_impl(ptr, rust_vec_len, data_len),
-        14 => wire__crate__api__auth__logout_impl(ptr, rust_vec_len, data_len),
-        15 => wire__crate__api__auth__new_login_session_id_impl(ptr, rust_vec_len, data_len),
-        16 => wire__crate__api__simple__ping_impl(ptr, rust_vec_len, data_len),
-        19 => wire__crate__api__video__playback_stop_impl(ptr, rust_vec_len, data_len),
-        20 => wire__crate__api__auth__set_account_slot_impl(ptr, rust_vec_len, data_len),
-        21 => wire__crate__api__settings__update_settings_impl(ptr, rust_vec_len, data_len),
+        4 => wire__crate__api__auth__device_buvid3_impl(ptr, rust_vec_len, data_len),
+        7 => wire__crate__api__settings__get_settings_impl(ptr, rust_vec_len, data_len),
+        9 => wire__crate__api__auth__list_accounts_impl(ptr, rust_vec_len, data_len),
+        19 => wire__crate__api__auth__logout_impl(ptr, rust_vec_len, data_len),
+        20 => wire__crate__api__auth__new_login_session_id_impl(ptr, rust_vec_len, data_len),
+        21 => wire__crate__api__simple__ping_impl(ptr, rust_vec_len, data_len),
+        24 => wire__crate__api__video__playback_stop_impl(ptr, rust_vec_len, data_len),
+        26 => wire__crate__api__auth__set_account_slot_impl(ptr, rust_vec_len, data_len),
+        27 => wire__crate__api__settings__update_settings_impl(ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -1576,6 +2062,53 @@ impl flutter_rust_bridge::IntoIntoDart<crate::auth_service::CaptchaDto>
     for crate::auth_service::CaptchaDto
 {
     fn into_into_dart(self) -> crate::auth_service::CaptchaDto {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::social::DanmakuItemDto {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.id.into_into_dart().into_dart(),
+            self.progress_ms.into_into_dart().into_dart(),
+            self.mode.into_into_dart().into_dart(),
+            self.fontsize.into_into_dart().into_dart(),
+            self.color.into_into_dart().into_dart(),
+            self.text.into_into_dart().into_dart(),
+            self.mid_hash.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::social::DanmakuItemDto
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::social::DanmakuItemDto>
+    for crate::api::social::DanmakuItemDto
+{
+    fn into_into_dart(self) -> crate::api::social::DanmakuItemDto {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::social::DanmakuSegmentDto {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.segment_index.into_into_dart().into_dart(),
+            self.items.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::social::DanmakuSegmentDto
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::social::DanmakuSegmentDto>
+    for crate::api::social::DanmakuSegmentDto
+{
+    fn into_into_dart(self) -> crate::api::social::DanmakuSegmentDto {
         self
     }
 }
@@ -1698,6 +2231,166 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::video::MediaSourceDto>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::auth_service::PasswordLoginDto {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.username.into_into_dart().into_dart(),
+            self.password.into_into_dart().into_dart(),
+            self.token.into_into_dart().into_dart(),
+            self.gee_challenge.into_into_dart().into_dart(),
+            self.gee_validate.into_into_dart().into_dart(),
+            self.gee_seccode.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::auth_service::PasswordLoginDto
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::auth_service::PasswordLoginDto>
+    for crate::auth_service::PasswordLoginDto
+{
+    fn into_into_dart(self) -> crate::auth_service::PasswordLoginDto {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::auth_service::PasswordLoginResultDto {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.kind.into_into_dart().into_dart(),
+            self.message.into_into_dart().into_dart(),
+            self.account.into_into_dart().into_dart(),
+            self.risk.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::auth_service::PasswordLoginResultDto
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::auth_service::PasswordLoginResultDto>
+    for crate::auth_service::PasswordLoginResultDto
+{
+    fn into_into_dart(self) -> crate::auth_service::PasswordLoginResultDto {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::auth_service::PasswordLoginResultKind {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::Success => 0.into_dart(),
+            Self::NeedPhoneVerify => 1.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::auth_service::PasswordLoginResultKind
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::auth_service::PasswordLoginResultKind>
+    for crate::auth_service::PasswordLoginResultKind
+{
+    fn into_into_dart(self) -> crate::auth_service::PasswordLoginResultKind {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::auth_service::PasswordRiskDto {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.risk_url.into_into_dart().into_dart(),
+            self.tmp_token.into_into_dart().into_dart(),
+            self.request_id.into_into_dart().into_dart(),
+            self.source.into_into_dart().into_dart(),
+            self.hide_tel.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::auth_service::PasswordRiskDto
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::auth_service::PasswordRiskDto>
+    for crate::auth_service::PasswordRiskDto
+{
+    fn into_into_dart(self) -> crate::auth_service::PasswordRiskDto {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::auth_service::PasswordRiskSendSmsDto {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.tmp_token.into_into_dart().into_dart(),
+            self.risk_url.into_into_dart().into_dart(),
+            self.token.into_into_dart().into_dart(),
+            self.gee_challenge.into_into_dart().into_dart(),
+            self.gee_validate.into_into_dart().into_dart(),
+            self.gee_seccode.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::auth_service::PasswordRiskSendSmsDto
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::auth_service::PasswordRiskSendSmsDto>
+    for crate::auth_service::PasswordRiskSendSmsDto
+{
+    fn into_into_dart(self) -> crate::auth_service::PasswordRiskSendSmsDto {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::auth_service::PasswordRiskSendSmsResultDto {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [self.captcha_key.into_into_dart().into_dart()].into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::auth_service::PasswordRiskSendSmsResultDto
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::auth_service::PasswordRiskSendSmsResultDto>
+    for crate::auth_service::PasswordRiskSendSmsResultDto
+{
+    fn into_into_dart(self) -> crate::auth_service::PasswordRiskSendSmsResultDto {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::auth_service::PasswordRiskVerifyDto {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.code.into_into_dart().into_dart(),
+            self.tmp_token.into_into_dart().into_dart(),
+            self.request_id.into_into_dart().into_dart(),
+            self.source.into_into_dart().into_dart(),
+            self.captcha_key.into_into_dart().into_dart(),
+            self.risk_url.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::auth_service::PasswordRiskVerifyDto
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::auth_service::PasswordRiskVerifyDto>
+    for crate::auth_service::PasswordRiskVerifyDto
+{
+    fn into_into_dart(self) -> crate::auth_service::PasswordRiskVerifyDto {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::feed::PopularFeedDto {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -1804,6 +2497,53 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::feed::RecommendFeedDto>
     for crate::api::feed::RecommendFeedDto
 {
     fn into_into_dart(self) -> crate::api::feed::RecommendFeedDto {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::social::ReplyDto {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.rpid.into_into_dart().into_dart(),
+            self.mid.into_into_dart().into_dart(),
+            self.uname.into_into_dart().into_dart(),
+            self.avatar.into_into_dart().into_dart(),
+            self.content.into_into_dart().into_dart(),
+            self.ctime_ms.into_into_dart().into_dart(),
+            self.like.into_into_dart().into_dart(),
+            self.children_count.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::social::ReplyDto {}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::social::ReplyDto>
+    for crate::api::social::ReplyDto
+{
+    fn into_into_dart(self) -> crate::api::social::ReplyDto {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::social::ReplyListDto {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.replies.into_into_dart().into_dart(),
+            self.next_offset.into_into_dart().into_dart(),
+            self.is_end.into_into_dart().into_dart(),
+            self.all_count.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::social::ReplyListDto
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::social::ReplyListDto>
+    for crate::api::social::ReplyListDto
+{
+    fn into_into_dart(self) -> crate::api::social::ReplyListDto {
         self
     }
 }
@@ -2115,6 +2855,27 @@ impl SseEncode for crate::auth_service::CaptchaDto {
     }
 }
 
+impl SseEncode for crate::api::social::DanmakuItemDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i64>::sse_encode(self.id, serializer);
+        <i64>::sse_encode(self.progress_ms, serializer);
+        <i32>::sse_encode(self.mode, serializer);
+        <i32>::sse_encode(self.fontsize, serializer);
+        <u32>::sse_encode(self.color, serializer);
+        <String>::sse_encode(self.text, serializer);
+        <String>::sse_encode(self.mid_hash, serializer);
+    }
+}
+
+impl SseEncode for crate::api::social::DanmakuSegmentDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.segment_index, serializer);
+        <Vec<crate::api::social::DanmakuItemDto>>::sse_encode(self.items, serializer);
+    }
+}
+
 impl SseEncode for crate::error::ErrorKind {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -2194,6 +2955,16 @@ impl SseEncode for Vec<crate::auth_service::AccountPublicDto> {
     }
 }
 
+impl SseEncode for Vec<crate::api::social::DanmakuItemDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::social::DanmakuItemDto>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<crate::api::feed::FeedItemDto> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -2220,6 +2991,16 @@ impl SseEncode for Vec<u8> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <u8>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::social::ReplyDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::social::ReplyDto>::sse_encode(item, serializer);
         }
     }
 }
@@ -2319,6 +3100,16 @@ impl SseEncode for Option<i32> {
     }
 }
 
+impl SseEncode for Option<crate::auth_service::PasswordRiskDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::auth_service::PasswordRiskDto>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for Option<u32> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -2326,6 +3117,86 @@ impl SseEncode for Option<u32> {
         if let Some(value) = self {
             <u32>::sse_encode(value, serializer);
         }
+    }
+}
+
+impl SseEncode for crate::auth_service::PasswordLoginDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.username, serializer);
+        <String>::sse_encode(self.password, serializer);
+        <String>::sse_encode(self.token, serializer);
+        <String>::sse_encode(self.gee_challenge, serializer);
+        <String>::sse_encode(self.gee_validate, serializer);
+        <String>::sse_encode(self.gee_seccode, serializer);
+    }
+}
+
+impl SseEncode for crate::auth_service::PasswordLoginResultDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <crate::auth_service::PasswordLoginResultKind>::sse_encode(self.kind, serializer);
+        <String>::sse_encode(self.message, serializer);
+        <Option<crate::auth_service::AccountPublicDto>>::sse_encode(self.account, serializer);
+        <Option<crate::auth_service::PasswordRiskDto>>::sse_encode(self.risk, serializer);
+    }
+}
+
+impl SseEncode for crate::auth_service::PasswordLoginResultKind {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::auth_service::PasswordLoginResultKind::Success => 0,
+                crate::auth_service::PasswordLoginResultKind::NeedPhoneVerify => 1,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
+    }
+}
+
+impl SseEncode for crate::auth_service::PasswordRiskDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.risk_url, serializer);
+        <String>::sse_encode(self.tmp_token, serializer);
+        <String>::sse_encode(self.request_id, serializer);
+        <String>::sse_encode(self.source, serializer);
+        <String>::sse_encode(self.hide_tel, serializer);
+    }
+}
+
+impl SseEncode for crate::auth_service::PasswordRiskSendSmsDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.tmp_token, serializer);
+        <String>::sse_encode(self.risk_url, serializer);
+        <String>::sse_encode(self.token, serializer);
+        <String>::sse_encode(self.gee_challenge, serializer);
+        <String>::sse_encode(self.gee_validate, serializer);
+        <String>::sse_encode(self.gee_seccode, serializer);
+    }
+}
+
+impl SseEncode for crate::auth_service::PasswordRiskSendSmsResultDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.captcha_key, serializer);
+    }
+}
+
+impl SseEncode for crate::auth_service::PasswordRiskVerifyDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.code, serializer);
+        <String>::sse_encode(self.tmp_token, serializer);
+        <String>::sse_encode(self.request_id, serializer);
+        <String>::sse_encode(self.source, serializer);
+        <String>::sse_encode(self.captcha_key, serializer);
+        <String>::sse_encode(self.risk_url, serializer);
     }
 }
 
@@ -2379,6 +3250,30 @@ impl SseEncode for crate::api::feed::RecommendFeedDto {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <Vec<crate::api::feed::FeedItemDto>>::sse_encode(self.items, serializer);
         <i32>::sse_encode(self.next_fresh_idx, serializer);
+    }
+}
+
+impl SseEncode for crate::api::social::ReplyDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i64>::sse_encode(self.rpid, serializer);
+        <i64>::sse_encode(self.mid, serializer);
+        <String>::sse_encode(self.uname, serializer);
+        <String>::sse_encode(self.avatar, serializer);
+        <String>::sse_encode(self.content, serializer);
+        <i64>::sse_encode(self.ctime_ms, serializer);
+        <i64>::sse_encode(self.like, serializer);
+        <i32>::sse_encode(self.children_count, serializer);
+    }
+}
+
+impl SseEncode for crate::api::social::ReplyListDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Vec<crate::api::social::ReplyDto>>::sse_encode(self.replies, serializer);
+        <String>::sse_encode(self.next_offset, serializer);
+        <bool>::sse_encode(self.is_end, serializer);
+        <i64>::sse_encode(self.all_count, serializer);
     }
 }
 

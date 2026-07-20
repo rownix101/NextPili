@@ -7,6 +7,7 @@ import 'api/auth.dart';
 import 'api/feed.dart';
 import 'api/settings.dart';
 import 'api/simple.dart';
+import 'api/social.dart';
 import 'api/video.dart';
 import 'auth_service.dart';
 import 'dart:async';
@@ -72,7 +73,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => 1052856961;
+  int get rustContentHash => 1571779341;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -86,6 +87,12 @@ abstract class RustLibApi extends BaseApi {
   ApiVersion crateApiSimpleApiVersion();
 
   Future<void> crateApiSimpleBootstrap({required BootstrapConfig config});
+
+  Future<DanmakuSegmentDto> crateApiSocialDanmakuSegments({
+    required PlatformInt64 aid,
+    required PlatformInt64 cid,
+    required int segmentIndex,
+  });
 
   String crateApiAuthDeviceBuvid3();
 
@@ -106,6 +113,20 @@ abstract class RustLibApi extends BaseApi {
   List<AccountPublicDto> crateApiAuthListAccounts();
 
   Future<CaptchaDto> crateApiAuthLoginCaptcha();
+
+  Future<PasswordLoginResultDto> crateApiAuthLoginPassword({
+    required PasswordLoginDto req,
+  });
+
+  Future<CaptchaDto> crateApiAuthLoginPasswordRiskCaptcha();
+
+  Future<PasswordRiskSendSmsResultDto> crateApiAuthLoginPasswordRiskSendSms({
+    required PasswordRiskSendSmsDto req,
+  });
+
+  Future<AccountPublicDto> crateApiAuthLoginPasswordRiskVerify({
+    required PasswordRiskVerifyDto req,
+  });
 
   Future<QrPollDto> crateApiAuthLoginQrPoll({
     required String authCode,
@@ -138,6 +159,13 @@ abstract class RustLibApi extends BaseApi {
   });
 
   void crateApiVideoPlaybackStop();
+
+  Future<ReplyListDto> crateApiSocialReplyList({
+    required PlatformInt64 oid,
+    required int type,
+    required int mode,
+    required String nextOffset,
+  });
 
   void crateApiAuthSetAccountSlot({required SlotDto slot, String? accountId});
 
@@ -209,12 +237,49 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "bootstrap", argNames: ["config"]);
 
   @override
+  Future<DanmakuSegmentDto> crateApiSocialDanmakuSegments({
+    required PlatformInt64 aid,
+    required PlatformInt64 cid,
+    required int segmentIndex,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_i_64(aid, serializer);
+          sse_encode_i_64(cid, serializer);
+          sse_encode_u_32(segmentIndex, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 3,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_danmaku_segment_dto,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiSocialDanmakuSegmentsConstMeta,
+        argValues: [aid, cid, segmentIndex],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiSocialDanmakuSegmentsConstMeta =>
+      const TaskConstMeta(
+        debugName: "danmaku_segments",
+        argNames: ["aid", "cid", "segmentIndex"],
+      );
+
+  @override
   String crateApiAuthDeviceBuvid3() {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 3)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 4)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_String,
@@ -244,7 +309,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 4,
+            funcId: 5,
             port: port_,
           );
         },
@@ -276,7 +341,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 5,
+            funcId: 6,
             port: port_,
           );
         },
@@ -302,7 +367,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 6)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 7)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_settings_dto,
@@ -327,7 +392,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 7,
+            funcId: 8,
             port: port_,
           );
         },
@@ -351,7 +416,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 8)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 9)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_list_account_public_dto,
@@ -376,7 +441,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 9,
+            funcId: 10,
             port: port_,
           );
         },
@@ -395,6 +460,132 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "login_captcha", argNames: []);
 
   @override
+  Future<PasswordLoginResultDto> crateApiAuthLoginPassword({
+    required PasswordLoginDto req,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_password_login_dto(req, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 11,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_password_login_result_dto,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiAuthLoginPasswordConstMeta,
+        argValues: [req],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAuthLoginPasswordConstMeta =>
+      const TaskConstMeta(debugName: "login_password", argNames: ["req"]);
+
+  @override
+  Future<CaptchaDto> crateApiAuthLoginPasswordRiskCaptcha() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 12,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_captcha_dto,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiAuthLoginPasswordRiskCaptchaConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAuthLoginPasswordRiskCaptchaConstMeta =>
+      const TaskConstMeta(
+        debugName: "login_password_risk_captcha",
+        argNames: [],
+      );
+
+  @override
+  Future<PasswordRiskSendSmsResultDto> crateApiAuthLoginPasswordRiskSendSms({
+    required PasswordRiskSendSmsDto req,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_password_risk_send_sms_dto(req, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 13,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_password_risk_send_sms_result_dto,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiAuthLoginPasswordRiskSendSmsConstMeta,
+        argValues: [req],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAuthLoginPasswordRiskSendSmsConstMeta =>
+      const TaskConstMeta(
+        debugName: "login_password_risk_send_sms",
+        argNames: ["req"],
+      );
+
+  @override
+  Future<AccountPublicDto> crateApiAuthLoginPasswordRiskVerify({
+    required PasswordRiskVerifyDto req,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_password_risk_verify_dto(req, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 14,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_account_public_dto,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiAuthLoginPasswordRiskVerifyConstMeta,
+        argValues: [req],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiAuthLoginPasswordRiskVerifyConstMeta =>
+      const TaskConstMeta(
+        debugName: "login_password_risk_verify",
+        argNames: ["req"],
+      );
+
+  @override
   Future<QrPollDto> crateApiAuthLoginQrPoll({
     required String authCode,
     String? localId,
@@ -408,7 +599,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 10,
+            funcId: 15,
             port: port_,
           );
         },
@@ -438,7 +629,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 11,
+            funcId: 16,
             port: port_,
           );
         },
@@ -466,7 +657,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 12,
+            funcId: 17,
             port: port_,
           );
         },
@@ -494,7 +685,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 13,
+            funcId: 18,
             port: port_,
           );
         },
@@ -519,7 +710,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_opt_String(accountId, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 14)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 19)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
@@ -541,7 +732,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 15)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 20)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_String,
@@ -563,7 +754,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 16)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 21)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_String,
@@ -597,7 +788,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 17,
+            funcId: 22,
             port: port_,
           );
         },
@@ -633,7 +824,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 18,
+            funcId: 23,
             port: port_,
           );
         },
@@ -659,7 +850,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 19)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 24)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
@@ -676,6 +867,44 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "playback_stop", argNames: []);
 
   @override
+  Future<ReplyListDto> crateApiSocialReplyList({
+    required PlatformInt64 oid,
+    required int type,
+    required int mode,
+    required String nextOffset,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_i_64(oid, serializer);
+          sse_encode_i_32(type, serializer);
+          sse_encode_i_32(mode, serializer);
+          sse_encode_String(nextOffset, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 25,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_reply_list_dto,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiSocialReplyListConstMeta,
+        argValues: [oid, type, mode, nextOffset],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiSocialReplyListConstMeta => const TaskConstMeta(
+    debugName: "reply_list",
+    argNames: ["oid", "type", "mode", "nextOffset"],
+  );
+
+  @override
   void crateApiAuthSetAccountSlot({required SlotDto slot, String? accountId}) {
     return handler.executeSync(
       SyncTask(
@@ -683,7 +912,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_slot_dto(slot, serializer);
           sse_encode_opt_String(accountId, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 20)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 26)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
@@ -714,7 +943,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_opt_box_autoadd_u_32(preferredQn, serializer);
           sse_encode_opt_String(proxy, serializer);
           sse_encode_opt_String(locale, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 21)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 27)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_settings_dto,
@@ -743,7 +972,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 22,
+            funcId: 28,
             port: port_,
           );
         },
@@ -847,6 +1076,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PasswordLoginDto dco_decode_box_autoadd_password_login_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_password_login_dto(raw);
+  }
+
+  @protected
+  PasswordRiskDto dco_decode_box_autoadd_password_risk_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_password_risk_dto(raw);
+  }
+
+  @protected
+  PasswordRiskSendSmsDto dco_decode_box_autoadd_password_risk_send_sms_dto(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_password_risk_send_sms_dto(raw);
+  }
+
+  @protected
+  PasswordRiskVerifyDto dco_decode_box_autoadd_password_risk_verify_dto(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_password_risk_verify_dto(raw);
+  }
+
+  @protected
   SmsLoginDto dco_decode_box_autoadd_sms_login_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dco_decode_sms_login_dto(raw);
@@ -875,6 +1132,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       gt: dco_decode_String(arr[1]),
       challenge: dco_decode_String(arr[2]),
       captchaType: dco_decode_String(arr[3]),
+    );
+  }
+
+  @protected
+  DanmakuItemDto dco_decode_danmaku_item_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 7)
+      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    return DanmakuItemDto(
+      id: dco_decode_i_64(arr[0]),
+      progressMs: dco_decode_i_64(arr[1]),
+      mode: dco_decode_i_32(arr[2]),
+      fontsize: dco_decode_i_32(arr[3]),
+      color: dco_decode_u_32(arr[4]),
+      text: dco_decode_String(arr[5]),
+      midHash: dco_decode_String(arr[6]),
+    );
+  }
+
+  @protected
+  DanmakuSegmentDto dco_decode_danmaku_segment_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return DanmakuSegmentDto(
+      segmentIndex: dco_decode_u_32(arr[0]),
+      items: dco_decode_list_danmaku_item_dto(arr[1]),
     );
   }
 
@@ -938,6 +1224,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<DanmakuItemDto> dco_decode_list_danmaku_item_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_danmaku_item_dto).toList();
+  }
+
+  @protected
   List<FeedItemDto> dco_decode_list_feed_item_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_feed_item_dto).toList();
@@ -953,6 +1245,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as Uint8List;
+  }
+
+  @protected
+  List<ReplyDto> dco_decode_list_reply_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_reply_dto).toList();
   }
 
   @protected
@@ -1020,9 +1318,109 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PasswordRiskDto? dco_decode_opt_box_autoadd_password_risk_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_password_risk_dto(raw);
+  }
+
+  @protected
   int? dco_decode_opt_box_autoadd_u_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_u_32(raw);
+  }
+
+  @protected
+  PasswordLoginDto dco_decode_password_login_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return PasswordLoginDto(
+      username: dco_decode_String(arr[0]),
+      password: dco_decode_String(arr[1]),
+      token: dco_decode_String(arr[2]),
+      geeChallenge: dco_decode_String(arr[3]),
+      geeValidate: dco_decode_String(arr[4]),
+      geeSeccode: dco_decode_String(arr[5]),
+    );
+  }
+
+  @protected
+  PasswordLoginResultDto dco_decode_password_login_result_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return PasswordLoginResultDto(
+      kind: dco_decode_password_login_result_kind(arr[0]),
+      message: dco_decode_String(arr[1]),
+      account: dco_decode_opt_box_autoadd_account_public_dto(arr[2]),
+      risk: dco_decode_opt_box_autoadd_password_risk_dto(arr[3]),
+    );
+  }
+
+  @protected
+  PasswordLoginResultKind dco_decode_password_login_result_kind(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return PasswordLoginResultKind.values[raw as int];
+  }
+
+  @protected
+  PasswordRiskDto dco_decode_password_risk_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return PasswordRiskDto(
+      riskUrl: dco_decode_String(arr[0]),
+      tmpToken: dco_decode_String(arr[1]),
+      requestId: dco_decode_String(arr[2]),
+      source: dco_decode_String(arr[3]),
+      hideTel: dco_decode_String(arr[4]),
+    );
+  }
+
+  @protected
+  PasswordRiskSendSmsDto dco_decode_password_risk_send_sms_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return PasswordRiskSendSmsDto(
+      tmpToken: dco_decode_String(arr[0]),
+      riskUrl: dco_decode_String(arr[1]),
+      token: dco_decode_String(arr[2]),
+      geeChallenge: dco_decode_String(arr[3]),
+      geeValidate: dco_decode_String(arr[4]),
+      geeSeccode: dco_decode_String(arr[5]),
+    );
+  }
+
+  @protected
+  PasswordRiskSendSmsResultDto dco_decode_password_risk_send_sms_result_dto(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 1)
+      throw Exception('unexpected arr length: expect 1 but see ${arr.length}');
+    return PasswordRiskSendSmsResultDto(captchaKey: dco_decode_String(arr[0]));
+  }
+
+  @protected
+  PasswordRiskVerifyDto dco_decode_password_risk_verify_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return PasswordRiskVerifyDto(
+      code: dco_decode_String(arr[0]),
+      tmpToken: dco_decode_String(arr[1]),
+      requestId: dco_decode_String(arr[2]),
+      source: dco_decode_String(arr[3]),
+      captchaKey: dco_decode_String(arr[4]),
+      riskUrl: dco_decode_String(arr[5]),
+    );
   }
 
   @protected
@@ -1078,6 +1476,38 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return RecommendFeedDto(
       items: dco_decode_list_feed_item_dto(arr[0]),
       nextFreshIdx: dco_decode_i_32(arr[1]),
+    );
+  }
+
+  @protected
+  ReplyDto dco_decode_reply_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 8)
+      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    return ReplyDto(
+      rpid: dco_decode_i_64(arr[0]),
+      mid: dco_decode_i_64(arr[1]),
+      uname: dco_decode_String(arr[2]),
+      avatar: dco_decode_String(arr[3]),
+      content: dco_decode_String(arr[4]),
+      ctimeMs: dco_decode_i_64(arr[5]),
+      like: dco_decode_i_64(arr[6]),
+      childrenCount: dco_decode_i_32(arr[7]),
+    );
+  }
+
+  @protected
+  ReplyListDto dco_decode_reply_list_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return ReplyListDto(
+      replies: dco_decode_list_reply_dto(arr[0]),
+      nextOffset: dco_decode_String(arr[1]),
+      isEnd: dco_decode_bool(arr[2]),
+      allCount: dco_decode_i_64(arr[3]),
     );
   }
 
@@ -1345,6 +1775,38 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PasswordLoginDto sse_decode_box_autoadd_password_login_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_password_login_dto(deserializer));
+  }
+
+  @protected
+  PasswordRiskDto sse_decode_box_autoadd_password_risk_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_password_risk_dto(deserializer));
+  }
+
+  @protected
+  PasswordRiskSendSmsDto sse_decode_box_autoadd_password_risk_send_sms_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_password_risk_send_sms_dto(deserializer));
+  }
+
+  @protected
+  PasswordRiskVerifyDto sse_decode_box_autoadd_password_risk_verify_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_password_risk_verify_dto(deserializer));
+  }
+
+  @protected
   SmsLoginDto sse_decode_box_autoadd_sms_login_dto(
     SseDeserializer deserializer,
   ) {
@@ -1377,6 +1839,37 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       challenge: var_challenge,
       captchaType: var_captchaType,
     );
+  }
+
+  @protected
+  DanmakuItemDto sse_decode_danmaku_item_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_id = sse_decode_i_64(deserializer);
+    var var_progressMs = sse_decode_i_64(deserializer);
+    var var_mode = sse_decode_i_32(deserializer);
+    var var_fontsize = sse_decode_i_32(deserializer);
+    var var_color = sse_decode_u_32(deserializer);
+    var var_text = sse_decode_String(deserializer);
+    var var_midHash = sse_decode_String(deserializer);
+    return DanmakuItemDto(
+      id: var_id,
+      progressMs: var_progressMs,
+      mode: var_mode,
+      fontsize: var_fontsize,
+      color: var_color,
+      text: var_text,
+      midHash: var_midHash,
+    );
+  }
+
+  @protected
+  DanmakuSegmentDto sse_decode_danmaku_segment_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_segmentIndex = sse_decode_u_32(deserializer);
+    var var_items = sse_decode_list_danmaku_item_dto(deserializer);
+    return DanmakuSegmentDto(segmentIndex: var_segmentIndex, items: var_items);
   }
 
   @protected
@@ -1454,6 +1947,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<DanmakuItemDto> sse_decode_list_danmaku_item_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <DanmakuItemDto>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_danmaku_item_dto(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   List<FeedItemDto> sse_decode_list_feed_item_dto(
     SseDeserializer deserializer,
   ) {
@@ -1484,6 +1991,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
     return deserializer.buffer.getUint8List(len_);
+  }
+
+  @protected
+  List<ReplyDto> sse_decode_list_reply_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <ReplyDto>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_reply_dto(deserializer));
+    }
+    return ans_;
   }
 
   @protected
@@ -1600,6 +2119,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PasswordRiskDto? sse_decode_opt_box_autoadd_password_risk_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_password_risk_dto(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
   int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -1608,6 +2140,121 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     } else {
       return null;
     }
+  }
+
+  @protected
+  PasswordLoginDto sse_decode_password_login_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_username = sse_decode_String(deserializer);
+    var var_password = sse_decode_String(deserializer);
+    var var_token = sse_decode_String(deserializer);
+    var var_geeChallenge = sse_decode_String(deserializer);
+    var var_geeValidate = sse_decode_String(deserializer);
+    var var_geeSeccode = sse_decode_String(deserializer);
+    return PasswordLoginDto(
+      username: var_username,
+      password: var_password,
+      token: var_token,
+      geeChallenge: var_geeChallenge,
+      geeValidate: var_geeValidate,
+      geeSeccode: var_geeSeccode,
+    );
+  }
+
+  @protected
+  PasswordLoginResultDto sse_decode_password_login_result_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_kind = sse_decode_password_login_result_kind(deserializer);
+    var var_message = sse_decode_String(deserializer);
+    var var_account = sse_decode_opt_box_autoadd_account_public_dto(
+      deserializer,
+    );
+    var var_risk = sse_decode_opt_box_autoadd_password_risk_dto(deserializer);
+    return PasswordLoginResultDto(
+      kind: var_kind,
+      message: var_message,
+      account: var_account,
+      risk: var_risk,
+    );
+  }
+
+  @protected
+  PasswordLoginResultKind sse_decode_password_login_result_kind(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return PasswordLoginResultKind.values[inner];
+  }
+
+  @protected
+  PasswordRiskDto sse_decode_password_risk_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_riskUrl = sse_decode_String(deserializer);
+    var var_tmpToken = sse_decode_String(deserializer);
+    var var_requestId = sse_decode_String(deserializer);
+    var var_source = sse_decode_String(deserializer);
+    var var_hideTel = sse_decode_String(deserializer);
+    return PasswordRiskDto(
+      riskUrl: var_riskUrl,
+      tmpToken: var_tmpToken,
+      requestId: var_requestId,
+      source: var_source,
+      hideTel: var_hideTel,
+    );
+  }
+
+  @protected
+  PasswordRiskSendSmsDto sse_decode_password_risk_send_sms_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_tmpToken = sse_decode_String(deserializer);
+    var var_riskUrl = sse_decode_String(deserializer);
+    var var_token = sse_decode_String(deserializer);
+    var var_geeChallenge = sse_decode_String(deserializer);
+    var var_geeValidate = sse_decode_String(deserializer);
+    var var_geeSeccode = sse_decode_String(deserializer);
+    return PasswordRiskSendSmsDto(
+      tmpToken: var_tmpToken,
+      riskUrl: var_riskUrl,
+      token: var_token,
+      geeChallenge: var_geeChallenge,
+      geeValidate: var_geeValidate,
+      geeSeccode: var_geeSeccode,
+    );
+  }
+
+  @protected
+  PasswordRiskSendSmsResultDto sse_decode_password_risk_send_sms_result_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_captchaKey = sse_decode_String(deserializer);
+    return PasswordRiskSendSmsResultDto(captchaKey: var_captchaKey);
+  }
+
+  @protected
+  PasswordRiskVerifyDto sse_decode_password_risk_verify_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_code = sse_decode_String(deserializer);
+    var var_tmpToken = sse_decode_String(deserializer);
+    var var_requestId = sse_decode_String(deserializer);
+    var var_source = sse_decode_String(deserializer);
+    var var_captchaKey = sse_decode_String(deserializer);
+    var var_riskUrl = sse_decode_String(deserializer);
+    return PasswordRiskVerifyDto(
+      code: var_code,
+      tmpToken: var_tmpToken,
+      requestId: var_requestId,
+      source: var_source,
+      captchaKey: var_captchaKey,
+      riskUrl: var_riskUrl,
+    );
   }
 
   @protected
@@ -1659,6 +2306,44 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_items = sse_decode_list_feed_item_dto(deserializer);
     var var_nextFreshIdx = sse_decode_i_32(deserializer);
     return RecommendFeedDto(items: var_items, nextFreshIdx: var_nextFreshIdx);
+  }
+
+  @protected
+  ReplyDto sse_decode_reply_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_rpid = sse_decode_i_64(deserializer);
+    var var_mid = sse_decode_i_64(deserializer);
+    var var_uname = sse_decode_String(deserializer);
+    var var_avatar = sse_decode_String(deserializer);
+    var var_content = sse_decode_String(deserializer);
+    var var_ctimeMs = sse_decode_i_64(deserializer);
+    var var_like = sse_decode_i_64(deserializer);
+    var var_childrenCount = sse_decode_i_32(deserializer);
+    return ReplyDto(
+      rpid: var_rpid,
+      mid: var_mid,
+      uname: var_uname,
+      avatar: var_avatar,
+      content: var_content,
+      ctimeMs: var_ctimeMs,
+      like: var_like,
+      childrenCount: var_childrenCount,
+    );
+  }
+
+  @protected
+  ReplyListDto sse_decode_reply_list_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_replies = sse_decode_list_reply_dto(deserializer);
+    var var_nextOffset = sse_decode_String(deserializer);
+    var var_isEnd = sse_decode_bool(deserializer);
+    var var_allCount = sse_decode_i_64(deserializer);
+    return ReplyListDto(
+      replies: var_replies,
+      nextOffset: var_nextOffset,
+      isEnd: var_isEnd,
+      allCount: var_allCount,
+    );
   }
 
   @protected
@@ -1940,6 +2625,42 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_box_autoadd_password_login_dto(
+    PasswordLoginDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_password_login_dto(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_password_risk_dto(
+    PasswordRiskDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_password_risk_dto(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_password_risk_send_sms_dto(
+    PasswordRiskSendSmsDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_password_risk_send_sms_dto(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_password_risk_verify_dto(
+    PasswordRiskVerifyDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_password_risk_verify_dto(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_sms_login_dto(
     SmsLoginDto self,
     SseSerializer serializer,
@@ -1970,6 +2691,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.gt, serializer);
     sse_encode_String(self.challenge, serializer);
     sse_encode_String(self.captchaType, serializer);
+  }
+
+  @protected
+  void sse_encode_danmaku_item_dto(
+    DanmakuItemDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_64(self.id, serializer);
+    sse_encode_i_64(self.progressMs, serializer);
+    sse_encode_i_32(self.mode, serializer);
+    sse_encode_i_32(self.fontsize, serializer);
+    sse_encode_u_32(self.color, serializer);
+    sse_encode_String(self.text, serializer);
+    sse_encode_String(self.midHash, serializer);
+  }
+
+  @protected
+  void sse_encode_danmaku_segment_dto(
+    DanmakuSegmentDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_32(self.segmentIndex, serializer);
+    sse_encode_list_danmaku_item_dto(self.items, serializer);
   }
 
   @protected
@@ -2031,6 +2777,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_danmaku_item_dto(
+    List<DanmakuItemDto> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_danmaku_item_dto(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_feed_item_dto(
     List<FeedItemDto> self,
     SseSerializer serializer,
@@ -2062,6 +2820,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     serializer.buffer.putUint8List(self);
+  }
+
+  @protected
+  void sse_encode_list_reply_dto(
+    List<ReplyDto> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_reply_dto(item, serializer);
+    }
   }
 
   @protected
@@ -2163,6 +2933,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_opt_box_autoadd_password_risk_dto(
+    PasswordRiskDto? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_password_risk_dto(self, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -2170,6 +2953,91 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (self != null) {
       sse_encode_box_autoadd_u_32(self, serializer);
     }
+  }
+
+  @protected
+  void sse_encode_password_login_dto(
+    PasswordLoginDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.username, serializer);
+    sse_encode_String(self.password, serializer);
+    sse_encode_String(self.token, serializer);
+    sse_encode_String(self.geeChallenge, serializer);
+    sse_encode_String(self.geeValidate, serializer);
+    sse_encode_String(self.geeSeccode, serializer);
+  }
+
+  @protected
+  void sse_encode_password_login_result_dto(
+    PasswordLoginResultDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_password_login_result_kind(self.kind, serializer);
+    sse_encode_String(self.message, serializer);
+    sse_encode_opt_box_autoadd_account_public_dto(self.account, serializer);
+    sse_encode_opt_box_autoadd_password_risk_dto(self.risk, serializer);
+  }
+
+  @protected
+  void sse_encode_password_login_result_kind(
+    PasswordLoginResultKind self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_password_risk_dto(
+    PasswordRiskDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.riskUrl, serializer);
+    sse_encode_String(self.tmpToken, serializer);
+    sse_encode_String(self.requestId, serializer);
+    sse_encode_String(self.source, serializer);
+    sse_encode_String(self.hideTel, serializer);
+  }
+
+  @protected
+  void sse_encode_password_risk_send_sms_dto(
+    PasswordRiskSendSmsDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.tmpToken, serializer);
+    sse_encode_String(self.riskUrl, serializer);
+    sse_encode_String(self.token, serializer);
+    sse_encode_String(self.geeChallenge, serializer);
+    sse_encode_String(self.geeValidate, serializer);
+    sse_encode_String(self.geeSeccode, serializer);
+  }
+
+  @protected
+  void sse_encode_password_risk_send_sms_result_dto(
+    PasswordRiskSendSmsResultDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.captchaKey, serializer);
+  }
+
+  @protected
+  void sse_encode_password_risk_verify_dto(
+    PasswordRiskVerifyDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.code, serializer);
+    sse_encode_String(self.tmpToken, serializer);
+    sse_encode_String(self.requestId, serializer);
+    sse_encode_String(self.source, serializer);
+    sse_encode_String(self.captchaKey, serializer);
+    sse_encode_String(self.riskUrl, serializer);
   }
 
   @protected
@@ -2212,6 +3080,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_feed_item_dto(self.items, serializer);
     sse_encode_i_32(self.nextFreshIdx, serializer);
+  }
+
+  @protected
+  void sse_encode_reply_dto(ReplyDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_64(self.rpid, serializer);
+    sse_encode_i_64(self.mid, serializer);
+    sse_encode_String(self.uname, serializer);
+    sse_encode_String(self.avatar, serializer);
+    sse_encode_String(self.content, serializer);
+    sse_encode_i_64(self.ctimeMs, serializer);
+    sse_encode_i_64(self.like, serializer);
+    sse_encode_i_32(self.childrenCount, serializer);
+  }
+
+  @protected
+  void sse_encode_reply_list_dto(ReplyListDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_reply_dto(self.replies, serializer);
+    sse_encode_String(self.nextOffset, serializer);
+    sse_encode_bool(self.isEnd, serializer);
+    sse_encode_i_64(self.allCount, serializer);
   }
 
   @protected

@@ -184,6 +184,37 @@ impl BiliClient {
         parse_bili_json(&text)
     }
 
+    /// Execute GET and return raw body bytes (danmaku protobuf, etc.).
+    pub async fn get_bytes(
+        &self,
+        url: &str,
+        mut params: BTreeMap<String, String>,
+        opts: RequestOptions<'_>,
+    ) -> Result<Vec<u8>> {
+        self.apply_auth_params(&mut params, &opts)?;
+        let headers = self.build_headers(&opts, false)?;
+        let resp = self
+            .inner
+            .request(Method::GET, url)
+            .headers(headers)
+            .query(&params.into_iter().collect::<Vec<_>>())
+            .send()
+            .await
+            .map_err(|e| Error::Network(e.to_string()))?;
+        let status = resp.status();
+        let bytes = resp
+            .bytes()
+            .await
+            .map_err(|e| Error::Network(e.to_string()))?;
+        if !status.is_success() {
+            return Err(Error::Network(format!(
+                "HTTP {} for binary GET",
+                status.as_u16()
+            )));
+        }
+        Ok(bytes.to_vec())
+    }
+
     fn apply_auth_params(
         &self,
         params: &mut BTreeMap<String, String>,
@@ -260,6 +291,13 @@ impl BiliClient {
             headers.insert(REFERER, HeaderValue::from_static(constants::WWW_BASE));
         }
 
+        if let Some(referer) = opts.referer {
+            headers.insert(
+                REFERER,
+                HeaderValue::from_str(referer).map_err(|e| Error::Network(e.to_string()))?,
+            );
+        }
+
         Ok(headers)
     }
 }
@@ -274,6 +312,8 @@ pub struct RequestOptions<'a> {
     pub csrf: bool,
     pub wbi: Option<&'a WbiSigner>,
     pub prefer_app_ua: bool,
+    /// Override Referer (e.g. safe-center risk URL).
+    pub referer: Option<&'a str>,
 }
 
 impl Default for RequestOptions<'_> {
@@ -286,6 +326,7 @@ impl Default for RequestOptions<'_> {
             csrf: false,
             wbi: None,
             prefer_app_ua: false,
+            referer: None,
         }
     }
 }
@@ -324,6 +365,11 @@ impl<'a> RequestOptions<'a> {
     pub fn with_wbi(mut self, wbi: &'a WbiSigner) -> Self {
         self.wbi = Some(wbi);
         self.sign = SignMode::Wbi;
+        self
+    }
+
+    pub fn with_referer(mut self, referer: &'a str) -> Self {
+        self.referer = Some(referer);
         self
     }
 }

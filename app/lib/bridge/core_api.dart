@@ -6,6 +6,7 @@ import 'frb/api/auth.dart' as frb_auth;
 import 'frb/api/feed.dart' as frb_feed;
 import 'frb/api/settings.dart' as frb_settings;
 import 'frb/api/simple.dart' as frb;
+import 'frb/api/social.dart' as frb_social;
 import 'frb/api/video.dart' as frb_video;
 import 'frb/auth_service.dart';
 import 'frb/error.dart';
@@ -15,6 +16,8 @@ export 'frb/api/simple.dart' show ApiVersion, BootstrapConfig;
 export 'frb/api/feed.dart'
     show FeedItemDto, PopularFeedDto, RecommendFeedDto;
 export 'frb/api/settings.dart' show SettingsDto;
+export 'frb/api/social.dart'
+    show DanmakuItemDto, DanmakuSegmentDto, ReplyDto, ReplyListDto;
 export 'frb/api/video.dart'
     show
         HeaderDto,
@@ -29,6 +32,13 @@ export 'frb/auth_service.dart'
     show
         AccountPublicDto,
         CaptchaDto,
+        PasswordLoginDto,
+        PasswordLoginResultDto,
+        PasswordLoginResultKind,
+        PasswordRiskDto,
+        PasswordRiskSendSmsDto,
+        PasswordRiskSendSmsResultDto,
+        PasswordRiskVerifyDto,
         QrPollDto,
         QrStartDto,
         QrStatusKind,
@@ -101,6 +111,22 @@ class CoreApi {
   Future<AccountPublicDto> loginSms(SmsLoginDto req) =>
       frb_auth.loginSms(req: req);
 
+  Future<PasswordLoginResultDto> loginPassword(PasswordLoginDto req) =>
+      frb_auth.loginPassword(req: req);
+
+  Future<CaptchaDto> loginPasswordRiskCaptcha() =>
+      frb_auth.loginPasswordRiskCaptcha();
+
+  Future<PasswordRiskSendSmsResultDto> loginPasswordRiskSendSms(
+    PasswordRiskSendSmsDto req,
+  ) =>
+      frb_auth.loginPasswordRiskSendSms(req: req);
+
+  Future<AccountPublicDto> loginPasswordRiskVerify(
+    PasswordRiskVerifyDto req,
+  ) =>
+      frb_auth.loginPasswordRiskVerify(req: req);
+
   List<AccountPublicDto> listAccounts() => frb_auth.listAccounts();
 
   void logout({String? accountId}) => frb_auth.logout(accountId: accountId);
@@ -147,6 +173,32 @@ class CoreApi {
       );
 
   void playbackStop() => frb_video.playbackStop();
+
+  /// Main-floor comments. `oid` is video **aid**. `mode`: 0/3 heat, 2 time.
+  Future<frb_social.ReplyListDto> replyList({
+    required int oid,
+    int type = 1,
+    int mode = 3,
+    String nextOffset = '',
+  }) =>
+      frb_social.replyList(
+        oid: PlatformInt64Util.from(oid),
+        type: type,
+        mode: mode,
+        nextOffset: nextOffset,
+      );
+
+  /// One ~6 min danmaku segment (`segmentIndex` is 1-based).
+  Future<frb_social.DanmakuSegmentDto> danmakuSegments({
+    required int aid,
+    required int cid,
+    int segmentIndex = 1,
+  }) =>
+      frb_social.danmakuSegments(
+        aid: PlatformInt64Util.from(aid),
+        cid: PlatformInt64Util.from(cid),
+        segmentIndex: segmentIndex,
+      );
 
   frb_settings.SettingsDto getSettings() => frb_settings.getSettings();
 

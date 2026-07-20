@@ -17,5 +17,5 @@ pub use error::{map_bili_code, Error, Result};
 pub use feed::FeedItem;
 pub use id::{AccountId, Cid, DurationMs, QualityQn, UserMid, VideoId};
 pub use quality::{pick_audio_track, pick_quality, AudioTrack};
-pub use reply::Reply;
+pub use reply::{Reply, ReplyPage};
 pub use video::{Owner, VideoDetail, VideoPage, VideoStat};

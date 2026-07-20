@@ -12,6 +12,7 @@ import '../../core/widgets/loading.dart';
 import '../../core/widgets/np_button.dart';
 import '../../core/widgets/page_header.dart';
 import '../../core/widgets/stat_chip.dart';
+import 'reply_section.dart';
 
 final videoDetailProvider =
     FutureProvider.autoDispose.family<VideoDetailDto, String>((ref, id) {
@@ -66,15 +67,26 @@ class _DetailBody extends StatelessWidget {
         final cover = _Cover(url: detail.cover);
         final info = _InfoColumn(detail: detail);
 
+        final replies = ReplySection(aid: i64(detail.aid));
+
         if (wide) {
           return Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(flex: 5, child: cover),
+                Expanded(
+                  flex: 5,
+                  child: ListView(
+                    children: [
+                      cover,
+                      const SizedBox(height: AppSpacing.lg),
+                      replies,
+                    ],
+                  ),
+                ),
                 const SizedBox(width: AppSpacing.lg),
-                Expanded(flex: 6, child: info),
+                Expanded(flex: 6, child: SingleChildScrollView(child: info)),
               ],
             ),
           );
@@ -86,6 +98,8 @@ class _DetailBody extends StatelessWidget {
             AspectRatio(aspectRatio: 16 / 9, child: cover),
             const SizedBox(height: AppSpacing.md),
             info,
+            const SizedBox(height: AppSpacing.lg),
+            replies,
           ],
         );
       },

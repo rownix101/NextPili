@@ -1,10 +1,11 @@
-//! Auth use cases: QR (desktop/tablet), SMS login, account list, logout.
+//! Auth use cases: QR (desktop/tablet), SMS / password login, account list, logout.
 
 use crate::error::{AppError, ErrorKind};
 use auth::{now_ms, Account, AccountRegistry, AccountSlot, WbiSigner};
 use domain::id::{AccountId, UserMid};
 use http::{
-    BiliClient, LoginSuccess, NavApi, SmsLoginRequest, SmsSendRequest,
+    BiliClient, LoginSuccess, NavApi, PasswordLoginOutcome, PasswordLoginRequest,
+    SafeCenterSmsSendRequest, SafeCenterSmsVerifyRequest, SmsLoginRequest, SmsSendRequest,
 };
 use parking_lot::RwLock;
 use store::Store;
@@ -205,6 +206,205 @@ pub async fn login_sms(
     finalize_login(http, store, accounts, wbi, success).await
 }
 
+/// Complete password login (RSA encrypt + App oauth2).
+///
+/// May return [`PasswordLoginResultDto::need_phone_verify`] for safe-center SMS (PiliPlus flow).
+pub async fn login_password(
+    http: &BiliClient,
+    store: &Store,
+    accounts: &RwLock<AccountRegistry>,
+    wbi: &RwLock<WbiSigner>,
+    req: PasswordLoginDto,
+) -> Result<PasswordLoginResultDto, AppError> {
+    let username = req.username.trim();
+    if username.is_empty() {
+        return Err(AppError::new(
+            ErrorKind::InvalidArgument,
+            "账号不能为空（手机号 / 邮箱）",
+        ));
+    }
+    if req.password.is_empty() {
+        return Err(AppError::new(ErrorKind::InvalidArgument, "密码不能为空"));
+    }
+    if req.token.trim().is_empty()
+        || req.gee_challenge.trim().is_empty()
+        || req.gee_validate.trim().is_empty()
+    {
+        return Err(AppError::new(
+            ErrorKind::InvalidArgument,
+            "请先完成人机验证",
+        ));
+    }
+
+    let seccode = normalize_seccode(&req.gee_seccode, &req.gee_validate);
+
+    let outcome = http::LoginApi::password_login(
+        http,
+        &PasswordLoginRequest {
+            username,
+            password: &req.password,
+            recaptcha_token: req.token.trim(),
+            gee_challenge: req.gee_challenge.trim(),
+            gee_validate: req.gee_validate.trim(),
+            gee_seccode: &seccode,
+        },
+    )
+    .await?;
+
+    match outcome {
+        PasswordLoginOutcome::Success(success) => {
+            let account = finalize_login(http, store, accounts, wbi, success).await?;
+            Ok(PasswordLoginResultDto {
+                kind: PasswordLoginResultKind::Success,
+                message: "登录成功".into(),
+                account: Some(account),
+                risk: None,
+            })
+        }
+        PasswordLoginOutcome::NeedPhoneVerify {
+            message,
+            risk_url,
+            tmp_token,
+            request_id,
+            source,
+        } => {
+            // Prefetch hide_tel for UI (best-effort).
+            let mut hide_tel = String::new();
+            let mut tel_verify = true;
+            match http::LoginApi::safe_center_info(http, &tmp_token).await {
+                Ok(info) => {
+                    hide_tel = info.hide_tel;
+                    tel_verify = info.tel_verify;
+                }
+                Err(e) => {
+                    tracing::warn!(error = %e, "safe_center_info failed");
+                }
+            }
+            if !tel_verify {
+                return Err(AppError::new(
+                    ErrorKind::RiskControl,
+                    "当前账号未绑定可验证手机号，请改用短信或扫码登录",
+                ));
+            }
+            Ok(PasswordLoginResultDto {
+                kind: PasswordLoginResultKind::NeedPhoneVerify,
+                message,
+                account: None,
+                risk: Some(PasswordRiskDto {
+                    risk_url,
+                    tmp_token,
+                    request_id,
+                    source,
+                    hide_tel,
+                }),
+            })
+        }
+    }
+}
+
+/// Safe-center pre captcha for risk SMS (PiliPlus `preCapture`).
+pub async fn login_password_risk_captcha(http: &BiliClient) -> Result<CaptchaDto, AppError> {
+    let c = http::LoginApi::safe_center_pre_captcha(http).await?;
+    Ok(CaptchaDto {
+        token: c.recaptcha_token,
+        gt: c.gee_gt,
+        challenge: c.gee_challenge,
+        captcha_type: "geetest".into(),
+    })
+}
+
+/// Send safe-center risk SMS after geetest.
+pub async fn login_password_risk_send_sms(
+    http: &BiliClient,
+    req: PasswordRiskSendSmsDto,
+) -> Result<PasswordRiskSendSmsResultDto, AppError> {
+    if req.tmp_token.trim().is_empty() {
+        return Err(AppError::new(
+            ErrorKind::InvalidArgument,
+            "缺少 tmp_token",
+        ));
+    }
+    if req.gee_validate.trim().is_empty() || req.token.trim().is_empty() {
+        return Err(AppError::new(
+            ErrorKind::InvalidArgument,
+            "请先完成人机验证",
+        ));
+    }
+    let seccode = normalize_seccode(&req.gee_seccode, &req.gee_validate);
+    let result = http::LoginApi::safe_center_sms_send(
+        http,
+        &SafeCenterSmsSendRequest {
+            tmp_code: req.tmp_token.trim(),
+            gee_challenge: req.gee_challenge.trim(),
+            gee_validate: req.gee_validate.trim(),
+            gee_seccode: &seccode,
+            recaptcha_token: req.token.trim(),
+            referer_url: req.risk_url.trim(),
+            sms_type: None,
+        },
+    )
+    .await?;
+    Ok(PasswordRiskSendSmsResultDto {
+        captcha_key: result.captcha_key,
+    })
+}
+
+/// Verify risk SMS and finish login via oauth2 access_token (PiliPlus flow).
+pub async fn login_password_risk_verify(
+    http: &BiliClient,
+    store: &Store,
+    accounts: &RwLock<AccountRegistry>,
+    wbi: &RwLock<WbiSigner>,
+    req: PasswordRiskVerifyDto,
+) -> Result<AccountPublicDto, AppError> {
+    if req.code.trim().is_empty() {
+        return Err(AppError::new(ErrorKind::InvalidArgument, "请输入短信验证码"));
+    }
+    if req.tmp_token.trim().is_empty() || req.captcha_key.trim().is_empty() {
+        return Err(AppError::new(
+            ErrorKind::InvalidArgument,
+            "缺少二次验证会话参数",
+        ));
+    }
+    let oauth_code = http::LoginApi::safe_center_sms_verify(
+        http,
+        &SafeCenterSmsVerifyRequest {
+            code: req.code.trim(),
+            tmp_code: req.tmp_token.trim(),
+            request_id: req.request_id.trim(),
+            source: if req.source.trim().is_empty() {
+                "risk"
+            } else {
+                req.source.trim()
+            },
+            captcha_key: req.captcha_key.trim(),
+            referer_url: req.risk_url.trim(),
+            r#type: None,
+        },
+    )
+    .await?;
+
+    let buvid = store.buvid3();
+    let local_id = if buvid.is_empty() {
+        "0".into()
+    } else {
+        buvid.clone()
+    };
+    let success =
+        http::LoginApi::oauth2_access_token(http, &oauth_code, &local_id, &buvid).await?;
+    finalize_login(http, store, accounts, wbi, success).await
+}
+
+fn normalize_seccode(gee_seccode: &str, gee_validate: &str) -> String {
+    if gee_seccode.contains('|') {
+        gee_seccode.to_string()
+    } else if gee_seccode.trim().is_empty() {
+        format!("{}|jordan", gee_validate.trim())
+    } else {
+        format!("{}|jordan", gee_seccode.trim())
+    }
+}
+
 fn validate_tel(tel: &str) -> Result<(), AppError> {
     let t = tel.trim();
     if t.is_empty() {
@@ -369,4 +569,64 @@ pub struct SmsLoginDto {
     pub code: String,
     pub captcha_key: String,
     pub login_session_id: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct PasswordLoginDto {
+    /// Phone number or email.
+    pub username: String,
+    pub password: String,
+    /// Captcha API `token`.
+    pub token: String,
+    pub gee_challenge: String,
+    pub gee_validate: String,
+    pub gee_seccode: String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PasswordLoginResultKind {
+    Success,
+    NeedPhoneVerify,
+}
+
+#[derive(Debug, Clone)]
+pub struct PasswordRiskDto {
+    pub risk_url: String,
+    pub tmp_token: String,
+    pub request_id: String,
+    pub source: String,
+    pub hide_tel: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct PasswordLoginResultDto {
+    pub kind: PasswordLoginResultKind,
+    pub message: String,
+    pub account: Option<AccountPublicDto>,
+    pub risk: Option<PasswordRiskDto>,
+}
+
+#[derive(Debug, Clone)]
+pub struct PasswordRiskSendSmsDto {
+    pub tmp_token: String,
+    pub risk_url: String,
+    pub token: String,
+    pub gee_challenge: String,
+    pub gee_validate: String,
+    pub gee_seccode: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct PasswordRiskSendSmsResultDto {
+    pub captcha_key: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct PasswordRiskVerifyDto {
+    pub code: String,
+    pub tmp_token: String,
+    pub request_id: String,
+    pub source: String,
+    pub captcha_key: String,
+    pub risk_url: String,
 }

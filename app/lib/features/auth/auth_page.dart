@@ -14,6 +14,7 @@ import '../../core/theme/shapes.dart';
 import '../../core/theme/spacing.dart';
 import '../../core/widgets/np_button.dart';
 import '../../core/widgets/page_header.dart';
+import 'password_risk_dialog.dart';
 
 final accountsProvider = StateProvider<List<AccountPublicDto>>((ref) {
   try {
@@ -48,6 +49,14 @@ class _AuthPageState extends ConsumerState<AuthPage>
   final _geeValidateController = TextEditingController();
   final _geeSeccodeController = TextEditingController();
 
+  // Password
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _pwdGeeValidateController = TextEditingController();
+  final _pwdGeeSeccodeController = TextEditingController();
+  CaptchaDto? _pwdCaptcha;
+  String _pwdHint = '完成人机验证后可登录';
+
   CaptchaDto? _captcha;
   String _loginSessionId = '';
   String? _captchaKey;
@@ -56,11 +65,13 @@ class _AuthPageState extends ConsumerState<AuthPage>
 
   bool _busy = false;
 
+  int get _qrTabIndex => supportsQrLogin(context) ? 2 : -1;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final wantQr = supportsQrLogin(context);
-    final len = wantQr ? 2 : 1;
+    final len = wantQr ? 3 : 2;
     if (_tabs == null || _tabs!.length != len) {
       _tabs?.removeListener(_onTabChanged);
       _tabs?.dispose();
@@ -72,7 +83,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
   void _onTabChanged() {
     final tabs = _tabs;
     if (tabs == null || tabs.indexIsChanging) return;
-    if (supportsQrLogin(context) && tabs.index == 1) {
+    if (_qrTabIndex >= 0 && tabs.index == _qrTabIndex) {
       _ensureQr();
     }
   }
@@ -96,6 +107,10 @@ class _AuthPageState extends ConsumerState<AuthPage>
     _codeController.dispose();
     _geeValidateController.dispose();
     _geeSeccodeController.dispose();
+    _usernameController.dispose();
+    _passwordController.dispose();
+    _pwdGeeValidateController.dispose();
+    _pwdGeeSeccodeController.dispose();
     super.dispose();
   }
 
@@ -312,6 +327,109 @@ class _AuthPageState extends ConsumerState<AuthPage>
     }
   }
 
+  Future<void> _preparePwdCaptcha() async {
+    setState(() {
+      _busy = true;
+      _pwdHint = '获取人机验证参数…';
+    });
+    try {
+      final captcha = await CoreApi.instance.loginCaptcha();
+      if (!mounted) return;
+      setState(() {
+        _pwdCaptcha = captcha;
+        _pwdGeeValidateController.clear();
+        _pwdGeeSeccodeController.clear();
+        _pwdHint = '请完成极验（gee_validate / gee_seccode），再登录';
+      });
+    } catch (e) {
+      _toast(errorMessage(e));
+      setState(() => _pwdHint = '获取验证码失败');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _openPwdGeeValidator() async {
+    final c = _pwdCaptcha;
+    if (c == null) {
+      _toast('请先获取人机验证参数');
+      return;
+    }
+    final uri = Uri.parse('https://kuresaru.github.io/geetest-validator/');
+    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!ok) {
+      _toast('无法打开验证页面，请手动完成极验后填入结果');
+    } else {
+      await Clipboard.setData(
+        ClipboardData(
+          text: 'gt=${c.gt}\nchallenge=${c.challenge}\ntoken=${c.token}',
+        ),
+      );
+      _toast('已复制 gt/challenge/token，完成验证后粘贴 validate/seccode');
+    }
+  }
+
+  Future<void> _loginPassword() async {
+    final captcha = _pwdCaptcha;
+    if (captcha == null) {
+      await _preparePwdCaptcha();
+      return;
+    }
+    final validate = _pwdGeeValidateController.text.trim();
+    final seccode = _pwdGeeSeccodeController.text.trim().isEmpty
+        ? (validate.isEmpty ? '' : '$validate|jordan')
+        : _pwdGeeSeccodeController.text.trim();
+    if (validate.isEmpty) {
+      _toast('请填入 gee_validate');
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      final result = await CoreApi.instance.loginPassword(
+        PasswordLoginDto(
+          username: _usernameController.text.trim(),
+          password: _passwordController.text,
+          token: captcha.token,
+          geeChallenge: captcha.challenge,
+          geeValidate: validate,
+          geeSeccode: seccode,
+        ),
+      );
+      if (!mounted) return;
+      switch (result.kind) {
+        case PasswordLoginResultKind.success:
+          final acc = result.account;
+          _refreshAccounts();
+          _toast('登录成功：${acc?.name ?? ''}');
+          _passwordController.clear();
+          setState(() => _pwdHint = '登录成功');
+        case PasswordLoginResultKind.needPhoneVerify:
+          final risk = result.risk;
+          if (risk == null) {
+            _toast(result.message);
+            return;
+          }
+          setState(() => _pwdHint = result.message);
+          final acc = await showPasswordRiskDialog(
+            context: context,
+            risk: risk,
+            message: result.message,
+          );
+          if (!mounted) return;
+          if (acc != null) {
+            _refreshAccounts();
+            _toast('登录成功：${acc.name}');
+            _passwordController.clear();
+            setState(() => _pwdHint = '登录成功');
+          }
+      }
+    } catch (e) {
+      _toast(errorMessage(e));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   void _logout(String? id) {
     try {
       CoreApi.instance.logout(accountId: id);
@@ -341,6 +459,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
                 controller: tabs,
                 tabs: [
                   const Tab(text: '短信登录'),
+                  const Tab(text: '密码登录'),
                   if (showQr) const Tab(text: '扫码登录'),
                 ],
               ),
@@ -368,6 +487,18 @@ class _AuthPageState extends ConsumerState<AuthPage>
                         onOpenGee: _openGeeValidator,
                         onSendSms: _sendSms,
                         onLogin: _loginSms,
+                      ),
+                      _PasswordTab(
+                        busy: _busy,
+                        usernameController: _usernameController,
+                        passwordController: _passwordController,
+                        geeValidateController: _pwdGeeValidateController,
+                        geeSeccodeController: _pwdGeeSeccodeController,
+                        captcha: _pwdCaptcha,
+                        hint: _pwdHint,
+                        onPrepareCaptcha: _preparePwdCaptcha,
+                        onOpenGee: _openPwdGeeValidator,
+                        onLogin: _loginPassword,
                       ),
                       if (showQr)
                         _QrTab(
@@ -434,7 +565,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
                   Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.xs),
                     child: Text(
-                      '手机端仅提供短信登录；扫码登录在桌面 / 平板可用',
+                      '手机端：短信 / 密码；扫码登录在桌面 / 平板可用',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colors.fgSecondary,
                       ),
@@ -611,6 +742,111 @@ class _SmsTab extends StatelessWidget {
           label: '登录',
           icon: AppIcons.login,
           variant: NpButtonVariant.secondary,
+          onPressed: busy ? null : onLogin,
+        ),
+      ],
+    );
+  }
+}
+
+class _PasswordTab extends StatelessWidget {
+  const _PasswordTab({
+    required this.busy,
+    required this.usernameController,
+    required this.passwordController,
+    required this.geeValidateController,
+    required this.geeSeccodeController,
+    required this.captcha,
+    required this.hint,
+    required this.onPrepareCaptcha,
+    required this.onOpenGee,
+    required this.onLogin,
+  });
+
+  final bool busy;
+  final TextEditingController usernameController;
+  final TextEditingController passwordController;
+  final TextEditingController geeValidateController;
+  final TextEditingController geeSeccodeController;
+  final CaptchaDto? captcha;
+  final String hint;
+  final VoidCallback onPrepareCaptcha;
+  final VoidCallback onOpenGee;
+  final VoidCallback onLogin;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ListView(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      children: [
+        Text(
+          '使用手机号或邮箱 + 密码登录。密码仅用于本次请求，经 RSA 加密后提交，不会落盘。',
+          style: theme.textTheme.bodyMedium,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        TextField(
+          controller: usernameController,
+          enabled: !busy,
+          keyboardType: TextInputType.emailAddress,
+          autofillHints: const [AutofillHints.username],
+          decoration: const InputDecoration(labelText: '账号（手机号 / 邮箱）'),
+        ),
+        const SizedBox(height: AppSpacing.md - 4),
+        TextField(
+          controller: passwordController,
+          enabled: !busy,
+          obscureText: true,
+          autofillHints: const [AutofillHints.password],
+          decoration: const InputDecoration(labelText: '密码'),
+        ),
+        const SizedBox(height: AppSpacing.md - 4),
+        Text(hint, style: theme.textTheme.bodySmall),
+        if (captcha != null) ...[
+          const SizedBox(height: AppSpacing.sm),
+          SelectableText(
+            'gt: ${captcha!.gt}\nchallenge: ${captcha!.challenge}',
+            style: theme.textTheme.bodySmall,
+          ),
+        ],
+        const SizedBox(height: AppSpacing.md - 4),
+        Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          children: [
+            NpButton(
+              label: '获取人机验证',
+              icon: AppIcons.shield,
+              variant: NpButtonVariant.secondary,
+              onPressed: busy ? null : onPrepareCaptcha,
+            ),
+            NpButton(
+              label: '打开极验助手',
+              icon: AppIcons.externalLink,
+              variant: NpButtonVariant.secondary,
+              onPressed: busy || captcha == null ? null : onOpenGee,
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md - 4),
+        TextField(
+          controller: geeValidateController,
+          enabled: !busy,
+          decoration: const InputDecoration(labelText: 'gee_validate'),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        TextField(
+          controller: geeSeccodeController,
+          enabled: !busy,
+          decoration: const InputDecoration(
+            labelText: 'gee_seccode（可留空，默认 validate|jordan）',
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        NpButton(
+          label: busy ? '登录中…' : '登录',
+          icon: AppIcons.lock,
+          loading: busy,
           onPressed: busy ? null : onLogin,
         ),
       ],

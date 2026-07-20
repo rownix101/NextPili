@@ -5,6 +5,7 @@ pub mod app_sign;
 pub mod buvid;
 pub mod constants;
 pub mod cookie;
+pub mod password;
 pub mod slot;
 pub mod wbi;
 
@@ -16,5 +17,6 @@ pub use constants::{
     PLATFORM_ANDROID, UA_ANDROID_HD, UA_WEB, WEB_REFERER, WWW_BASE,
 };
 pub use cookie::CookieJar;
+pub use password::{encrypt_password, PasswordCryptoError};
 pub use slot::AccountSlot;
 pub use wbi::WbiSigner;

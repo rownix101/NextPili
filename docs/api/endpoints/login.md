@@ -73,8 +73,8 @@ POST /x/passport-login/login/sms  # AppSign
 
 客户端策略：
 
-- **手机**：仅短信（及后续密码，如需要）
-- **桌面 / 平板**：短信 + TV/HD 扫码
+- **手机**：短信 + 密码
+- **桌面 / 平板**：短信 + 密码 + TV/HD 扫码
 - **不提供** Cookie 粘贴导入 UI（登录成功后的 jar 仍由 Rust 持久化）
 
 `cid` 为中国大陆时使用护照国家列表 **id=1**（不是拨号 86）。
@@ -85,12 +85,21 @@ POST /x/passport-login/login/sms  # AppSign
 
 ```
 GET /x/passport-login/web/key # 拿 salt + RSA 公钥
-POST /x/passport-login/oauth2/login # AppSign
+POST /x/passport-login/oauth2/login # AppSign + 极验
 ```
 
-密码加密：`RSA_encrypt(salt + password)`（以官方/社区文档为准）。
+密码加密：`RSA_encrypt(hash + password)` → Base64。
 
-风控时进入 safe center 流程（极验 + 短信）。
+**风控二次验证（对齐 PiliPlus）**，当 `data.status == 2` 且 `data.url` 含 `tmp_token` / `request_id` / `source`：
+
+```text
+1. GET  /x/safecenter/user/info?tmp_code=<tmp_token>     → hide_tel
+2. POST /x/safecenter/captcha/pre                        → gee_gt / challenge / recaptcha_token
+3. 完成极验
+4. POST /x/safecenter/common/sms/send  AppSign           → captcha_key（Referer=risk url）
+5. POST /x/safecenter/login/tel/verify AppSign           → oauth code
+6. POST /x/passport-login/oauth2/access_token AppSign    → token_info + cookie_info
+```
 
 ---
 

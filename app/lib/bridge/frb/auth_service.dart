@@ -69,6 +69,207 @@ class CaptchaDto {
           captchaType == other.captchaType;
 }
 
+class PasswordLoginDto {
+  /// Phone number or email.
+  final String username;
+  final String password;
+
+  /// Captcha API `token`.
+  final String token;
+  final String geeChallenge;
+  final String geeValidate;
+  final String geeSeccode;
+
+  const PasswordLoginDto({
+    required this.username,
+    required this.password,
+    required this.token,
+    required this.geeChallenge,
+    required this.geeValidate,
+    required this.geeSeccode,
+  });
+
+  @override
+  int get hashCode =>
+      username.hashCode ^
+      password.hashCode ^
+      token.hashCode ^
+      geeChallenge.hashCode ^
+      geeValidate.hashCode ^
+      geeSeccode.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PasswordLoginDto &&
+          runtimeType == other.runtimeType &&
+          username == other.username &&
+          password == other.password &&
+          token == other.token &&
+          geeChallenge == other.geeChallenge &&
+          geeValidate == other.geeValidate &&
+          geeSeccode == other.geeSeccode;
+}
+
+class PasswordLoginResultDto {
+  final PasswordLoginResultKind kind;
+  final String message;
+  final AccountPublicDto? account;
+  final PasswordRiskDto? risk;
+
+  const PasswordLoginResultDto({
+    required this.kind,
+    required this.message,
+    this.account,
+    this.risk,
+  });
+
+  @override
+  int get hashCode =>
+      kind.hashCode ^ message.hashCode ^ account.hashCode ^ risk.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PasswordLoginResultDto &&
+          runtimeType == other.runtimeType &&
+          kind == other.kind &&
+          message == other.message &&
+          account == other.account &&
+          risk == other.risk;
+}
+
+enum PasswordLoginResultKind { success, needPhoneVerify }
+
+class PasswordRiskDto {
+  final String riskUrl;
+  final String tmpToken;
+  final String requestId;
+  final String source;
+  final String hideTel;
+
+  const PasswordRiskDto({
+    required this.riskUrl,
+    required this.tmpToken,
+    required this.requestId,
+    required this.source,
+    required this.hideTel,
+  });
+
+  @override
+  int get hashCode =>
+      riskUrl.hashCode ^
+      tmpToken.hashCode ^
+      requestId.hashCode ^
+      source.hashCode ^
+      hideTel.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PasswordRiskDto &&
+          runtimeType == other.runtimeType &&
+          riskUrl == other.riskUrl &&
+          tmpToken == other.tmpToken &&
+          requestId == other.requestId &&
+          source == other.source &&
+          hideTel == other.hideTel;
+}
+
+class PasswordRiskSendSmsDto {
+  final String tmpToken;
+  final String riskUrl;
+  final String token;
+  final String geeChallenge;
+  final String geeValidate;
+  final String geeSeccode;
+
+  const PasswordRiskSendSmsDto({
+    required this.tmpToken,
+    required this.riskUrl,
+    required this.token,
+    required this.geeChallenge,
+    required this.geeValidate,
+    required this.geeSeccode,
+  });
+
+  @override
+  int get hashCode =>
+      tmpToken.hashCode ^
+      riskUrl.hashCode ^
+      token.hashCode ^
+      geeChallenge.hashCode ^
+      geeValidate.hashCode ^
+      geeSeccode.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PasswordRiskSendSmsDto &&
+          runtimeType == other.runtimeType &&
+          tmpToken == other.tmpToken &&
+          riskUrl == other.riskUrl &&
+          token == other.token &&
+          geeChallenge == other.geeChallenge &&
+          geeValidate == other.geeValidate &&
+          geeSeccode == other.geeSeccode;
+}
+
+class PasswordRiskSendSmsResultDto {
+  final String captchaKey;
+
+  const PasswordRiskSendSmsResultDto({required this.captchaKey});
+
+  @override
+  int get hashCode => captchaKey.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PasswordRiskSendSmsResultDto &&
+          runtimeType == other.runtimeType &&
+          captchaKey == other.captchaKey;
+}
+
+class PasswordRiskVerifyDto {
+  final String code;
+  final String tmpToken;
+  final String requestId;
+  final String source;
+  final String captchaKey;
+  final String riskUrl;
+
+  const PasswordRiskVerifyDto({
+    required this.code,
+    required this.tmpToken,
+    required this.requestId,
+    required this.source,
+    required this.captchaKey,
+    required this.riskUrl,
+  });
+
+  @override
+  int get hashCode =>
+      code.hashCode ^
+      tmpToken.hashCode ^
+      requestId.hashCode ^
+      source.hashCode ^
+      captchaKey.hashCode ^
+      riskUrl.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PasswordRiskVerifyDto &&
+          runtimeType == other.runtimeType &&
+          code == other.code &&
+          tmpToken == other.tmpToken &&
+          requestId == other.requestId &&
+          source == other.source &&
+          captchaKey == other.captchaKey &&
+          riskUrl == other.riskUrl;
+}
+
 class QrPollDto {
   final QrStatusKind status;
   final String message;

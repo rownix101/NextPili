@@ -39,6 +39,26 @@ Future<SmsSendDtoResult> loginSmsSend({required SmsSendDto req}) =>
 Future<AccountPublicDto> loginSms({required SmsLoginDto req}) =>
     RustLib.instance.api.crateApiAuthLoginSms(req: req);
 
+/// Complete password login (RSA + App oauth2; requires geetest).
+///
+/// On risk, returns `kind = need_phone_verify` with safe-center params (PiliPlus flow).
+Future<PasswordLoginResultDto> loginPassword({required PasswordLoginDto req}) =>
+    RustLib.instance.api.crateApiAuthLoginPassword(req: req);
+
+/// Safe-center pre captcha for password risk SMS.
+Future<CaptchaDto> loginPasswordRiskCaptcha() =>
+    RustLib.instance.api.crateApiAuthLoginPasswordRiskCaptcha();
+
+/// Send safe-center risk SMS after geetest.
+Future<PasswordRiskSendSmsResultDto> loginPasswordRiskSendSms({
+  required PasswordRiskSendSmsDto req,
+}) => RustLib.instance.api.crateApiAuthLoginPasswordRiskSendSms(req: req);
+
+/// Verify risk SMS and finish password login.
+Future<AccountPublicDto> loginPasswordRiskVerify({
+  required PasswordRiskVerifyDto req,
+}) => RustLib.instance.api.crateApiAuthLoginPasswordRiskVerify(req: req);
+
 /// List known accounts (no secrets).
 List<AccountPublicDto> listAccounts() =>
     RustLib.instance.api.crateApiAuthListAccounts();

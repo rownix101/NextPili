@@ -1,12 +1,13 @@
-//! Auth-facing FFI API (QR for desktop/tablet, SMS, account list).
+//! Auth-facing FFI API (QR for desktop/tablet, SMS, password, account list).
 
 use crate::app::CoreApp;
 use crate::auth_service;
 use crate::error::AppError;
 
 pub use crate::auth_service::{
-    AccountPublicDto, CaptchaDto, QrPollDto, QrStartDto, QrStatusKind, SlotDto, SmsLoginDto,
-    SmsSendDto, SmsSendDtoResult,
+    AccountPublicDto, CaptchaDto, PasswordLoginDto, PasswordLoginResultDto, PasswordLoginResultKind,
+    PasswordRiskDto, PasswordRiskSendSmsDto, PasswordRiskSendSmsResultDto, PasswordRiskVerifyDto,
+    QrPollDto, QrStartDto, QrStatusKind, SlotDto, SmsLoginDto, SmsSendDto, SmsSendDtoResult,
 };
 
 /// Start TV/HD QR login. Prefer only on desktop / tablet UI surfaces.
@@ -80,6 +81,43 @@ pub async fn login_sms_send(req: SmsSendDto) -> Result<SmsSendDtoResult, AppErro
 pub async fn login_sms(req: SmsLoginDto) -> Result<AccountPublicDto, AppError> {
     let app = CoreApp::global()?;
     auth_service::login_sms(&app.http(), &app.store, &app.accounts, &app.wbi, req).await
+}
+
+/// Complete password login (RSA + App oauth2; requires geetest).
+///
+/// On risk, returns `kind = need_phone_verify` with safe-center params (PiliPlus flow).
+pub async fn login_password(req: PasswordLoginDto) -> Result<PasswordLoginResultDto, AppError> {
+    let app = CoreApp::global()?;
+    auth_service::login_password(&app.http(), &app.store, &app.accounts, &app.wbi, req).await
+}
+
+/// Safe-center pre captcha for password risk SMS.
+pub async fn login_password_risk_captcha() -> Result<CaptchaDto, AppError> {
+    let app = CoreApp::global()?;
+    auth_service::login_password_risk_captcha(&app.http()).await
+}
+
+/// Send safe-center risk SMS after geetest.
+pub async fn login_password_risk_send_sms(
+    req: PasswordRiskSendSmsDto,
+) -> Result<PasswordRiskSendSmsResultDto, AppError> {
+    let app = CoreApp::global()?;
+    auth_service::login_password_risk_send_sms(&app.http(), req).await
+}
+
+/// Verify risk SMS and finish password login.
+pub async fn login_password_risk_verify(
+    req: PasswordRiskVerifyDto,
+) -> Result<AccountPublicDto, AppError> {
+    let app = CoreApp::global()?;
+    auth_service::login_password_risk_verify(
+        &app.http(),
+        &app.store,
+        &app.accounts,
+        &app.wbi,
+        req,
+    )
+    .await
 }
 
 /// List known accounts (no secrets).

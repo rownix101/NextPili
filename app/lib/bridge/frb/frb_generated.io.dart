@@ -7,6 +7,7 @@ import 'api/auth.dart';
 import 'api/feed.dart';
 import 'api/settings.dart';
 import 'api/simple.dart';
+import 'api/social.dart';
 import 'api/video.dart';
 import 'auth_service.dart';
 import 'dart:async';
@@ -52,6 +53,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int dco_decode_box_autoadd_i_32(dynamic raw);
 
   @protected
+  PasswordLoginDto dco_decode_box_autoadd_password_login_dto(dynamic raw);
+
+  @protected
+  PasswordRiskDto dco_decode_box_autoadd_password_risk_dto(dynamic raw);
+
+  @protected
+  PasswordRiskSendSmsDto dco_decode_box_autoadd_password_risk_send_sms_dto(
+    dynamic raw,
+  );
+
+  @protected
+  PasswordRiskVerifyDto dco_decode_box_autoadd_password_risk_verify_dto(
+    dynamic raw,
+  );
+
+  @protected
   SmsLoginDto dco_decode_box_autoadd_sms_login_dto(dynamic raw);
 
   @protected
@@ -62,6 +79,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CaptchaDto dco_decode_captcha_dto(dynamic raw);
+
+  @protected
+  DanmakuItemDto dco_decode_danmaku_item_dto(dynamic raw);
+
+  @protected
+  DanmakuSegmentDto dco_decode_danmaku_segment_dto(dynamic raw);
 
   @protected
   ErrorKind dco_decode_error_kind(dynamic raw);
@@ -85,6 +108,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<AccountPublicDto> dco_decode_list_account_public_dto(dynamic raw);
 
   @protected
+  List<DanmakuItemDto> dco_decode_list_danmaku_item_dto(dynamic raw);
+
+  @protected
   List<FeedItemDto> dco_decode_list_feed_item_dto(dynamic raw);
 
   @protected
@@ -92,6 +118,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
+
+  @protected
+  List<ReplyDto> dco_decode_list_reply_dto(dynamic raw);
 
   @protected
   List<StreamDto> dco_decode_list_stream_dto(dynamic raw);
@@ -118,7 +147,33 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int? dco_decode_opt_box_autoadd_i_32(dynamic raw);
 
   @protected
+  PasswordRiskDto? dco_decode_opt_box_autoadd_password_risk_dto(dynamic raw);
+
+  @protected
   int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
+
+  @protected
+  PasswordLoginDto dco_decode_password_login_dto(dynamic raw);
+
+  @protected
+  PasswordLoginResultDto dco_decode_password_login_result_dto(dynamic raw);
+
+  @protected
+  PasswordLoginResultKind dco_decode_password_login_result_kind(dynamic raw);
+
+  @protected
+  PasswordRiskDto dco_decode_password_risk_dto(dynamic raw);
+
+  @protected
+  PasswordRiskSendSmsDto dco_decode_password_risk_send_sms_dto(dynamic raw);
+
+  @protected
+  PasswordRiskSendSmsResultDto dco_decode_password_risk_send_sms_result_dto(
+    dynamic raw,
+  );
+
+  @protected
+  PasswordRiskVerifyDto dco_decode_password_risk_verify_dto(dynamic raw);
 
   @protected
   PopularFeedDto dco_decode_popular_feed_dto(dynamic raw);
@@ -134,6 +189,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RecommendFeedDto dco_decode_recommend_feed_dto(dynamic raw);
+
+  @protected
+  ReplyDto dco_decode_reply_dto(dynamic raw);
+
+  @protected
+  ReplyListDto dco_decode_reply_list_dto(dynamic raw);
 
   @protected
   SettingsDto dco_decode_settings_dto(dynamic raw);
@@ -206,6 +267,26 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int sse_decode_box_autoadd_i_32(SseDeserializer deserializer);
 
   @protected
+  PasswordLoginDto sse_decode_box_autoadd_password_login_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  PasswordRiskDto sse_decode_box_autoadd_password_risk_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  PasswordRiskSendSmsDto sse_decode_box_autoadd_password_risk_send_sms_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  PasswordRiskVerifyDto sse_decode_box_autoadd_password_risk_verify_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   SmsLoginDto sse_decode_box_autoadd_sms_login_dto(
     SseDeserializer deserializer,
   );
@@ -218,6 +299,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   CaptchaDto sse_decode_captcha_dto(SseDeserializer deserializer);
+
+  @protected
+  DanmakuItemDto sse_decode_danmaku_item_dto(SseDeserializer deserializer);
+
+  @protected
+  DanmakuSegmentDto sse_decode_danmaku_segment_dto(
+    SseDeserializer deserializer,
+  );
 
   @protected
   ErrorKind sse_decode_error_kind(SseDeserializer deserializer);
@@ -243,6 +332,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<DanmakuItemDto> sse_decode_list_danmaku_item_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<FeedItemDto> sse_decode_list_feed_item_dto(SseDeserializer deserializer);
 
   @protected
@@ -250,6 +344,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
+
+  @protected
+  List<ReplyDto> sse_decode_list_reply_dto(SseDeserializer deserializer);
 
   @protected
   List<StreamDto> sse_decode_list_stream_dto(SseDeserializer deserializer);
@@ -282,7 +379,43 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int? sse_decode_opt_box_autoadd_i_32(SseDeserializer deserializer);
 
   @protected
+  PasswordRiskDto? sse_decode_opt_box_autoadd_password_risk_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
+
+  @protected
+  PasswordLoginDto sse_decode_password_login_dto(SseDeserializer deserializer);
+
+  @protected
+  PasswordLoginResultDto sse_decode_password_login_result_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  PasswordLoginResultKind sse_decode_password_login_result_kind(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  PasswordRiskDto sse_decode_password_risk_dto(SseDeserializer deserializer);
+
+  @protected
+  PasswordRiskSendSmsDto sse_decode_password_risk_send_sms_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  PasswordRiskSendSmsResultDto sse_decode_password_risk_send_sms_result_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  PasswordRiskVerifyDto sse_decode_password_risk_verify_dto(
+    SseDeserializer deserializer,
+  );
 
   @protected
   PopularFeedDto sse_decode_popular_feed_dto(SseDeserializer deserializer);
@@ -298,6 +431,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RecommendFeedDto sse_decode_recommend_feed_dto(SseDeserializer deserializer);
+
+  @protected
+  ReplyDto sse_decode_reply_dto(SseDeserializer deserializer);
+
+  @protected
+  ReplyListDto sse_decode_reply_list_dto(SseDeserializer deserializer);
 
   @protected
   SettingsDto sse_decode_settings_dto(SseDeserializer deserializer);
@@ -378,6 +517,30 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_i_32(int self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_password_login_dto(
+    PasswordLoginDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_password_risk_dto(
+    PasswordRiskDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_password_risk_send_sms_dto(
+    PasswordRiskSendSmsDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_password_risk_verify_dto(
+    PasswordRiskVerifyDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_sms_login_dto(
     SmsLoginDto self,
     SseSerializer serializer,
@@ -394,6 +557,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_captcha_dto(CaptchaDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_danmaku_item_dto(
+    DanmakuItemDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_danmaku_segment_dto(
+    DanmakuSegmentDto self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_error_kind(ErrorKind self, SseSerializer serializer);
@@ -420,6 +595,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_danmaku_item_dto(
+    List<DanmakuItemDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_feed_item_dto(
     List<FeedItemDto> self,
     SseSerializer serializer,
@@ -436,6 +617,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     Uint8List self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_list_reply_dto(List<ReplyDto> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_stream_dto(
@@ -480,7 +664,55 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_box_autoadd_i_32(int? self, SseSerializer serializer);
 
   @protected
+  void sse_encode_opt_box_autoadd_password_risk_dto(
+    PasswordRiskDto? self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_password_login_dto(
+    PasswordLoginDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_password_login_result_dto(
+    PasswordLoginResultDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_password_login_result_kind(
+    PasswordLoginResultKind self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_password_risk_dto(
+    PasswordRiskDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_password_risk_send_sms_dto(
+    PasswordRiskSendSmsDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_password_risk_send_sms_result_dto(
+    PasswordRiskSendSmsResultDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_password_risk_verify_dto(
+    PasswordRiskVerifyDto self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_popular_feed_dto(
@@ -502,6 +734,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     RecommendFeedDto self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_reply_dto(ReplyDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_reply_list_dto(ReplyListDto self, SseSerializer serializer);
 
   @protected
   void sse_encode_settings_dto(SettingsDto self, SseSerializer serializer);

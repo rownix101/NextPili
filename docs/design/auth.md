@@ -80,7 +80,7 @@ Web POST 表单字段名：`csrf` / 偶发 `biliCSRF` / `csrf_token`（按端点
 
 ### 3.3 写入来源
 
-产品不提供「粘贴 Cookie」登录。Cookie jar 仅由 **短信 / 扫码等正规登录成功** 写入，并持久化到 store。
+产品不提供「粘贴 Cookie」登录。Cookie jar 仅由 **短信 / 密码 / 扫码等正规登录成功** 写入，并持久化到 store。
 
 `CookieJar::parse_header` 仍可用于解析服务端 `cookie_info` / `Set-Cookie`，不对用户暴露导入 API。
 

@@ -3,7 +3,7 @@
 按垂直切片交付可演示能力：鉴权 → 浏览 → 播放 → 互动 → 个人库 → 扩展业务。阶段顺序与 [architecture §12](./architecture.md#12-mvp-落地顺序) 一致；用例名以 [design/core.md](./design/core.md) 为准。
 
 > 状态：草案 v0.1  
-> 当前进度：**P3 收尾** · 下一目标 **P4**  
+> 当前进度：**P4 进行中** · 下一目标 **P5**  
 > 相关：[Architecture](./architecture.md) · [API](./api/README.md) · [Design](./design/README.md) · [UX](./ux/README.md)
 
 ---
@@ -15,8 +15,8 @@
 | **P0** | 骨架 | ✅ 完成 | Workspace + Flutter 壳 + FRB `ping` / `api_version` |
 | **P1** | 鉴权 | ✅ 完成 | 短信/扫码登录、Cookie/WBI/AppSign、会话落盘 |
 | **P2** | 浏览 | ✅ 完成 | 推荐/热门 feed + 稿件详情页 |
-| **P3** | 播放 | 🔶 收尾 | playurl → media_kit + 清晰度 + 心跳 + 设置 qn/代理 |
-| **P4** | 互动只读 | ⬜ 计划 | 评论列表 + 弹幕展示 |
+| **P3** | 播放 | ✅ 完成 | playurl → media_kit + 清晰度 + 心跳 + 设置 qn/代理 |
+| **P4** | 互动只读 | 🔶 进行中 | 评论列表 + 弹幕展示（REST） |
 | **P5** | 个人库 | ⬜ 计划 | 搜索、历史、稍后再看、收藏只读 |
 | **P6** | 扩展 | ⬜ 计划 | 动态、直播、番剧、多账号槽、写操作 |
 
@@ -87,7 +87,7 @@
 
 ---
 
-### P3 · 播放 🔶
+### P3 · 播放 ✅
 
 从详情进入真实播放：取流、切换清晰度、心跳上报。
 
@@ -97,6 +97,7 @@
 | media_kit 适配层 | DTO 不变 | `PlayerAdapter` |
 | 清晰度切换 | qn / DASH 选择 | 播放器 chrome |
 | 心跳 start/stop | `playback_*` · heartbeat 槽 | 进/出播放页 |
+| 代理 / 默认 qn | `get_settings` / `update_settings` | feature `settings` |
 
 **验收**
 
@@ -104,20 +105,20 @@
 详情 → 播放 → 出声出画 → 切换清晰度不断流 → 退出停止心跳
 ```
 
-**依赖**：P2 详情 cid；[design/media.md](./design/media.md) · [endpoints/video.md](./api/endpoints/video.md) playurl。  
-**开放**：代理与默认 qn 走 Rust store（见 [design/store.md](./design/store.md)）。
+**依赖**：P2 详情 cid；[design/media.md](./design/media.md) · [endpoints/video.md](./api/endpoints/video.md) playurl。
 
 ---
 
-### P4 · 互动只读 ⬜
+### P4 · 互动只读 🔶
 
 观看路径补全评论与弹幕（默认 REST；gRPC 随后）。
 
-| 交付 | Rust / API | Flutter |
-|------|------------|---------|
-| 评论分页 | `reply_list` | 详情侧栏/页 |
-| 弹幕分段 → 时间轴条目 | `danmaku_segments` + `media` 规范化 | 播放器 Overlay |
-| 弹幕性能基线 | 限流/分页策略 | 密度可调（设置可后置） |
+| 交付 | Rust / API | Flutter | 状态 |
+|------|------------|---------|------|
+| 评论分页 | `reply_list` | 详情 `ReplySection` | ✅ |
+| 弹幕分段 → 时间轴条目 | `danmaku_segments` + `media` 规范化 | 播放器 `DanmakuOverlay` | ✅ |
+| 弹幕性能基线 | 段内 cap 4000 · UI 同屏 48 | 开关按钮 | ✅ MVP |
+| 楼中楼 / 发评论 / gRPC | — | — | ⬜ 后置 |
 
 **验收**
 
