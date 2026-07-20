@@ -11,6 +11,7 @@
 | 文档 | 说明 |
 |------|------|
 | [Architecture](./architecture.md) | 分层、依赖方向、ADR 与里程碑——系统如何拼在一起 |
+| [Roadmap](./roadmap.md) | P0–P6 交付切片、验收标准与当前进度 |
 
 Flutter 做薄壳；Rust 持有协议与凭据；`domain` 无 IO。
 

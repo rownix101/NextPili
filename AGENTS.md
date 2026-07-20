@@ -28,7 +28,7 @@ cd app && flutter run -d linux  # windows / macos as available
 cd app && flutter analyze
 ```
 
-Toolchain: Rust stable (edition 2021, rustfmt + clippy), Flutter ≥ 3.41. Install FRB codegen: `cargo install flutter_rust_bridge_codegen --version 2.11.1 --locked`. Enable desktop with `flutter config --enable-linux-desktop`.
+Toolchain: Rust stable (edition 2024, rustfmt + clippy), Flutter ≥ 3.41. Install FRB codegen: `cargo install flutter_rust_bridge_codegen --version 2.11.1 --locked`. Enable desktop with `flutter config --enable-linux-desktop`.
 
 ## Coding Style & Naming Conventions
 

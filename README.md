@@ -1,24 +1,46 @@
 # NextPili
 
-桌面端优先的 B 站第三方客户端骨架。
+[![License](https://img.shields.io/badge/license-Review--Only-red)](LICENSE)
+[![Rust](https://img.shields.io/badge/rust-edition%202024-orange?logo=rust)](https://www.rust-lang.org/)
+[![MSRV](https://img.shields.io/badge/MSRV-1.85-orange?logo=rust)](https://www.rust-lang.org/)
+[![Flutter](https://img.shields.io/badge/Flutter-%E2%89%A5%203.41-02569B?logo=flutter&logoColor=white)](https://flutter.dev/)
+[![FRB](https://img.shields.io/badge/flutter__rust__bridge-2.11-blue)](https://github.com/fzyzcjy/flutter_rust_bridge)
+[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows%20%7C%20macOS-lightgrey)](#)
 
-**技术栈**：Rust（协议 / 业务核心）+ Flutter（UI）+ [flutter_rust_bridge](https://github.com/fzyzcjy/flutter_rust_bridge) 2.11。
+用 Rust 持有协议与凭据、用 Flutter 做桌面壳，经 [flutter_rust_bridge](https://github.com/fzyzcjy/flutter_rust_bridge) 2.11 贯通的 B 站第三方客户端骨架。
 
-## 架构
+> **Important:** 本仓库为 **审阅专用 / 非开源**。允许本地克隆阅读；禁止未授权的生产使用、再分发与商业利用。完整条款见 [LICENSE](LICENSE)。
+
+## 概览
+
+NextPili 是桌面优先（Linux / Windows / macOS）的 B 站客户端工程。业务与签名在 Rust；UI 只做展示与交互。`domain` 无 IO；凭据不得进入 Flutter 持久化层。
+
+| 层 | 职责 |
+|----|------|
+| `app/` | Flutter 壳：路由、页面、播放器表面 |
+| `core` | FRB 面与用例编排 |
+| `auth` / `http` / `store` / `media` | 协议、请求、持久化、播放源规范化 |
+| `domain` | 共享模型与错误语义（无 IO） |
 
 ```text
 Flutter (app/)  --FRB-->  core  --> domain
                               |--> auth / http / store / media
 ```
 
-设计文档：
+请求从 Flutter 经 `core` 进入业务 crate；网络、鉴权与凭据读写都在 Rust。
 
-- [Documentation](docs/README.md) — 文档入口（Essentials / Guides / HIG / Reference）
-- [架构总览](docs/architecture.md)
-- [模块设计](docs/design/README.md)
-- [API 约定](docs/api/README.md)
-- [UX](docs/ux/README.md)
-- [文档规范](docs/writing.md)
+## 文档
+
+权威入口：[Documentation](docs/README.md)。实现契约与进度只在 `docs/` 定义；本页不复制全文。
+
+| 文档 | 说明 |
+|------|------|
+| [Architecture](docs/architecture.md) | 建立分层、依赖方向与 ADR |
+| [Roadmap](docs/roadmap.md) | 查 P0–P6 交付切片与验收 |
+| [Design Index](docs/design/README.md) | 按模块落地实现边界 |
+| [API Index](docs/api/README.md) | 查路径、签名与响应形状 |
+| [UX Index](docs/ux/README.md) | 对齐外观、交互与 token |
+| [Documentation Style](docs/writing.md) | 写文档时的用语与 Example-first 要求 |
 
 ## 仓库布局
 
@@ -32,64 +54,90 @@ NextPili/
 │   ├── store/     # 本地持久化
 │   └── media/     # 播放源规范化
 ├── app/           # Flutter 桌面壳
-├── docs/
-└── scripts/
+├── docs/          # Essentials / Guides / HIG / Reference
+└── scripts/       # 测试与 FRB codegen
 ```
 
-## 开发环境
+用 `crates/*` 按职责切边界；改 `crates/core/src/api` 后跑 `scripts/codegen.sh`。
 
-| 工具 | 版本建议 |
-|------|----------|
-| Rust | stable（edition 2021） |
+## 构建环境
+
+| 工具 | 要求 |
+|------|------|
+| Rust | stable，edition 2024，MSRV 1.85 |
 | Flutter | ≥ 3.41（当前验证 3.44） |
-| FRB codegen | `cargo install flutter_rust_bridge_codegen --version 2.11.1 --locked` |
+| FRB codegen | `flutter_rust_bridge_codegen` 2.11.1（`--locked`） |
 | cargo-expand | FRB 生成依赖 |
 
-启用桌面：
+启用桌面目标：
 
 ```bash
 flutter config --enable-linux-desktop
 # windows / macos 同理
 ```
 
-## 常用命令
+把 Flutter 目标打开到 Linux / Windows / macOS，再在 `app/` 下运行。
+
+安装 FRB 代码生成器：
 
 ```bash
-# Rust 单测
+cargo install flutter_rust_bridge_codegen --version 2.11.1 --locked
+```
+
+## 常用命令
+
+运行 Rust 工作区测试：
+
+```bash
 cargo test --workspace
 # 或
 ./scripts/test-rust.sh
+```
 
-# 重新生成 FRB 绑定（改 crates/core/src/api 后）
+修改 `crates/core/src/api` 后重新生成 FRB 绑定：
+
+```bash
 ./scripts/codegen.sh
+```
 
-# Flutter
+启动 Flutter 桌面壳（以 Linux 为例）：
+
+```bash
 cd app
 flutter pub get
 flutter run -d linux
 ```
 
-## P1 状态
+## 当前进度
 
-已打通：
+**P0–P1 已完成**；下一目标 **P2**（推荐/热门 feed、稿件详情）。切片与验收以 [Roadmap](docs/roadmap.md) 为准。
 
-- Rust workspace 与 crate 边界
-- `domain` / `auth` / `store` / `http` / `media` / `core`
+已打通（摘要）：
+
+- Workspace 与 crate 边界：`domain` / `auth` / `store` / `http` / `media` / `core`
 - FRB：`ping` · `api_version` · `bootstrap` · 登录/账号 API
-- 账号凭据持久化（登录成功写入 `accounts.json`，不提供 Cookie 粘贴导入）与设备 `buvid3`（`device.json`）
-- WBI / AppSign 纯签名 + HTTP 请求管线（Cookie / csrf / 签名）
-- 短信登录（captcha + sms/send + login/sms）与桌面/平板 TV 扫码
-- Flutter 账号页（手机仅短信；桌面/平板额外扫码）
+- 账号持久化（`accounts.json`，无 Cookie 粘贴导入）与 `buvid3`（`device.json`）
+- WBI / AppSign 与 HTTP 管线（Cookie / CSRF / 签名）
+- 短信登录与桌面/平板 TV 扫码；Flutter 账号页
 
-下一步（P2）：推荐/热门 feed、稿件详情、playurl → media_kit 播放。
+其后 P3：`playurl` → media_kit 播放。
 
 ## 许可
 
-**非开源 / 仅审阅**（见根目录 [`LICENSE`](LICENSE)）。
+本作品 **不是** OSI 开源软件。Cargo 元数据为 `UNLICENSED`。
 
-- 允许：查看、阅读、审阅源码与文档；为学习与代码评审在本地克隆、浏览。
-- 未授权：生产使用、修改后对外发布、再分发、商业利用等。
-- 第三方依赖仍遵守各自原始许可。
-- 应用分发请遵守 B 站服务条款与当地法律。
+| | 范围 |
+|--|------|
+| **允许** | 查看、阅读、审阅；为学习与代码评审在本地克隆、浏览 |
+| **禁止（未授权时）** | 生产使用、对外发布修改版、再分发、商业利用 |
+| **第三方** | 各依赖仍遵守其原始许可 |
+| **应用分发** | 须遵守 B 站服务条款与适用法律 |
 
-Cargo 元数据使用 `UNLICENSED`，表示未授予开源使用许可。
+完整条款见 [LICENSE](LICENSE)。
+
+## See Also
+
+- [Documentation Home](docs/README.md)
+- [Architecture](docs/architecture.md)
+- [Roadmap](docs/roadmap.md)
+- [LICENSE](LICENSE)
