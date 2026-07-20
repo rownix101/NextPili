@@ -275,27 +275,29 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> {
           else if (loading)
             const AppLoading()
           else if (ownsSurface && adapter != null)
-            GestureDetector(
-              onTap: _toggleChrome,
-              onPanDown: (_) => _bumpChrome(),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Video(
-                    controller: adapter.controller,
-                    controls: NoVideoControls,
-                    fill: Colors.black,
-                  ),
-                  if (session.resolvedAid > 0)
-                    DanmakuOverlay(
-                      aid: session.resolvedAid,
-                      cid: widget.cid,
-                      position: adapter.player.stream.position,
-                      playing: adapter.player.stream.playing,
-                      initialPlaying: adapter.player.state.playing,
-                      enabled: session.danmakuOn,
+            MouseRegion(
+              onHover: (_) => _bumpChrome(),
+              child: GestureDetector(
+                onTap: _toggleChrome,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Video(
+                      controller: adapter.controller,
+                      controls: NoVideoControls,
+                      fill: Colors.black,
                     ),
-                ],
+                    if (session.resolvedAid > 0)
+                      DanmakuOverlay(
+                        aid: session.resolvedAid,
+                        cid: widget.cid,
+                        position: adapter.player.stream.position,
+                        playing: adapter.player.stream.playing,
+                        initialPlaying: adapter.player.state.playing,
+                        enabled: session.danmakuOn,
+                      ),
+                  ],
+                ),
               ),
             )
           else

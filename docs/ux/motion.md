@@ -88,9 +88,10 @@ Flutter 粗映射（实现可微调）：
 
 - 用途：视频卡 → 播放详情（可选 Hero 封面）。
 - 要求：
-  - 封面 `Hero` tag 稳定（bvid）；
-  - 中断时（快速返回）不残影；
-  - 列表复用注意 tag 唯一。
+  - 封面 `Hero` tag 稳定（bvid + 列表 slot，见 `AppHeroTags.videoCover`）；
+  - 同一路由子树内 tag 唯一（推荐流可重复 bvid 时用 index 作 slot）；
+  - 打开详情时把完整 tag 经 `GoRouter` `extra` 传到目的地 Hero；
+  - 中断时（快速返回）不残影。
 - 首期若成本高：**可降级**为 fade through，不阻塞功能。
 
 ### 4.5 微交互

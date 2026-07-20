@@ -499,15 +499,20 @@ class _FeedBody extends StatelessWidget {
                       final id = item.bvid.isNotEmpty
                           ? item.bvid
                           : 'av${i64(item.aid)}';
+                      final heroTag =
+                          AppHeroTags.videoCover(id, slot: index);
                       return VideoCard(
                         title: item.title,
                         coverUrl: item.cover,
                         ownerName: item.ownerName,
                         durationLabel:
                             formatDurationMs(i64(item.durationMs)),
-                        heroTag: AppHeroTags.videoCover(id),
+                        heroTag: heroTag,
                         onTap: () {
-                          context.push('/video/${Uri.encodeComponent(id)}');
+                          context.push(
+                            '/video/${Uri.encodeComponent(id)}',
+                            extra: heroTag,
+                          );
                         },
                       );
                     },

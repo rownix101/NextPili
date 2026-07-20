@@ -19,13 +19,25 @@ import 'geetest/geetest_result.dart';
 import 'geetest/geetest_webview_dialog.dart';
 import 'password_risk_dialog.dart';
 
-final accountsProvider = StateProvider<List<AccountPublicDto>>((ref) {
-  try {
-    return CoreApi.instance.listAccounts();
-  } catch (_) {
-    return const [];
+class AccountsNotifier extends Notifier<List<AccountPublicDto>> {
+  @override
+  List<AccountPublicDto> build() {
+    try {
+      return CoreApi.instance.listAccounts();
+    } catch (_) {
+      return const [];
+    }
   }
-});
+
+  void refresh() {
+    state = CoreApi.instance.listAccounts();
+  }
+}
+
+final accountsProvider =
+    NotifierProvider<AccountsNotifier, List<AccountPublicDto>>(
+  AccountsNotifier.new,
+);
 
 /// Passport URLs opened externally for flows we do not host in-app.
 const _forgotPasswordUrl =
@@ -122,8 +134,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
 
   void _refreshAccounts() {
     try {
-      ref.read(accountsProvider.notifier).state =
-          CoreApi.instance.listAccounts();
+      ref.read(accountsProvider.notifier).refresh();
     } catch (e) {
       _toast(errorMessage(e, context.l10n));
     }

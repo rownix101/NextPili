@@ -292,15 +292,19 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                     final id = item.bvid.isNotEmpty
                         ? item.bvid
                         : 'av${i64(item.aid)}';
+                    final heroTag = AppHeroTags.videoCover(id, slot: index);
                     return VideoCard(
                       title: item.title,
                       coverUrl: item.cover,
                       ownerName: item.ownerName,
                       durationLabel: formatDurationMs(i64(item.durationMs)),
                       viewLabel: formatCount(i64(item.play), locale: locale),
-                      heroTag: AppHeroTags.videoCover(id),
+                      heroTag: heroTag,
                       onTap: () {
-                        context.push('/video/${Uri.encodeComponent(id)}');
+                        context.push(
+                          '/video/${Uri.encodeComponent(id)}',
+                          extra: heroTag,
+                        );
                       },
                     );
                   },

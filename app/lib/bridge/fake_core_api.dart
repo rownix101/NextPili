@@ -6,7 +6,7 @@ class FakeCoreApi {
 
   ApiVersion apiVersion() => const ApiVersion(
         major: 0,
-        minor: 2,
+        minor: 17,
         patch: 0,
         core: 'fake',
       );

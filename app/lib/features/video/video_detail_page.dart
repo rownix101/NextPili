@@ -34,10 +34,14 @@ class VideoDetailPage extends ConsumerStatefulWidget {
     super.key,
     required this.videoId,
     this.initialCid = 0,
+    this.coverHeroTag,
   });
 
   final String videoId;
   final int initialCid;
+
+  /// Matches the source [VideoCard] hero; may include a list [slot] suffix.
+  final Object? coverHeroTag;
 
   @override
   ConsumerState<VideoDetailPage> createState() => _VideoDetailPageState();
@@ -45,6 +49,9 @@ class VideoDetailPage extends ConsumerStatefulWidget {
 
 class _VideoDetailPageState extends ConsumerState<VideoDetailPage> {
   int? _selectedCid;
+
+  Object get _heroTag =>
+      widget.coverHeroTag ?? AppHeroTags.videoCover(widget.videoId);
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +80,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage> {
       body: async.when(
         // design-system §8.7 — skeleton preferred over bare spinner.
         // Hero destination must exist while loading so cover flight lands cleanly.
-        loading: () => _WatchSkeleton(videoId: widget.videoId),
+        loading: () => _WatchSkeleton(heroTag: _heroTag),
         error: (e, _) => EmptyState.error(
           message: errorMessage(e, context.l10n),
           onRetry: () => ref.invalidate(videoDetailProvider(widget.videoId)),
@@ -84,6 +91,7 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage> {
             detail: detail,
             videoId: widget.videoId,
             currentCid: cid,
+            coverHeroTag: _heroTag,
             onSelectCid: (c) => setState(() => _selectedCid = c),
           );
         },
@@ -104,12 +112,14 @@ class _WatchBody extends StatefulWidget {
     required this.detail,
     required this.videoId,
     required this.currentCid,
+    required this.coverHeroTag,
     required this.onSelectCid,
   });
 
   final VideoDetailDto detail;
   final String videoId;
   final int currentCid;
+  final Object coverHeroTag;
   final ValueChanged<int> onSelectCid;
 
   @override
@@ -135,6 +145,7 @@ class _WatchBodyState extends State<_WatchBody> {
           detail: detail,
           videoId: videoId,
           cid: currentCid,
+          coverHeroTag: widget.coverHeroTag,
         );
         final rail = _RightRail(
           detail: detail,
@@ -254,11 +265,13 @@ class _PlayerBlock extends StatelessWidget {
     required this.detail,
     required this.videoId,
     required this.cid,
+    required this.coverHeroTag,
   });
 
   final VideoDetailDto detail;
   final String videoId;
   final int cid;
+  final Object coverHeroTag;
 
   @override
   Widget build(BuildContext context) {
@@ -303,7 +316,7 @@ class _PlayerBlock extends StatelessWidget {
 
     if (reduceMotion || videoId.isEmpty) return surface;
     return Hero(
-      tag: AppHeroTags.videoCover(videoId),
+      tag: coverHeroTag,
       createRectTween: (begin, end) =>
           MaterialRectArcTween(begin: begin, end: end),
       child: Material(
@@ -570,9 +583,9 @@ class _ExpandableDescState extends State<_ExpandableDesc> {
 
 /// First-paint skeleton matching dual-column watch layout.
 class _WatchSkeleton extends StatelessWidget {
-  const _WatchSkeleton({required this.videoId});
+  const _WatchSkeleton({required this.heroTag});
 
-  final String videoId;
+  final Object heroTag;
 
   @override
   Widget build(BuildContext context) {
@@ -589,9 +602,9 @@ class _WatchSkeleton extends StatelessWidget {
             borderRadius: AppShapes.borderMd,
           ),
         );
-        if (!reduceMotion && videoId.isNotEmpty) {
+        if (!reduceMotion) {
           player = Hero(
-            tag: AppHeroTags.videoCover(videoId),
+            tag: heroTag,
             createRectTween: (begin, end) =>
                 MaterialRectArcTween(begin: begin, end: end),
             child: Material(

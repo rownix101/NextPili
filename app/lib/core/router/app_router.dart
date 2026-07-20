@@ -119,11 +119,18 @@ GoRouter createAppRouter() {
               final id = Uri.decodeComponent(state.pathParameters['id'] ?? '');
               final cid =
                   int.tryParse(state.uri.queryParameters['cid'] ?? '') ?? 0;
+              // List cards pass AppHeroTags.videoCover(..., slot:) as extra
+              // so duplicate bvids in one feed stay unique (motion §4.4).
+              final coverHeroTag = state.extra;
               // motion §4.4 / §5.1 — container transform + cover Hero.
               return AppTransitions.containerTransform(
                 key: state.pageKey,
                 name: state.name,
-                child: VideoDetailPage(videoId: id, initialCid: cid),
+                child: VideoDetailPage(
+                  videoId: id,
+                  initialCid: cid,
+                  coverHeroTag: coverHeroTag,
+                ),
               );
             },
           ),

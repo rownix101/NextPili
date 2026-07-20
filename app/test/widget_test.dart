@@ -7,7 +7,7 @@ void main() {
     expect(api.ping(), 'pong');
     final v = api.apiVersion();
     expect(v.major, 0);
-    expect(v.minor, 1);
+    expect(v.minor, 17);
     expect(v.core, 'fake');
   });
 }

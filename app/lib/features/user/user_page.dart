@@ -81,10 +81,18 @@ String _videoRouteId({required String bvid, required int aid}) {
   return id;
 }
 
-void _openVideo(BuildContext context, {required String bvid, required int aid}) {
+void _openVideo(
+  BuildContext context, {
+  required String bvid,
+  required int aid,
+  Object? heroTag,
+}) {
   final id = _videoRouteId(bvid: bvid, aid: aid);
   if (id.isEmpty) return;
-  context.push('/video/${Uri.encodeComponent(id)}');
+  context.push(
+    '/video/${Uri.encodeComponent(id)}',
+    extra: heroTag,
+  );
 }
 
 // ─── History ────────────────────────────────────────────────────────────────
@@ -207,17 +215,20 @@ class _HistoryTabState extends State<_HistoryTab> {
         builder: (context, index) {
           final it = _items[index];
           final id = _videoRouteId(bvid: it.bvid, aid: i64(it.aid));
+          final heroTag =
+              id.isEmpty ? null : AppHeroTags.videoCover(id, slot: index);
           return VideoCard(
             title: it.title,
             coverUrl: it.cover,
             ownerName: it.ownerName,
             durationLabel: formatDurationMs(i64(it.durationMs)),
             viewLabel: it.showTitle.isNotEmpty ? it.showTitle : it.ownerName,
-            heroTag: id.isEmpty ? null : AppHeroTags.videoCover(id),
+            heroTag: heroTag,
             onTap: () => _openVideo(
               context,
               bvid: it.bvid,
               aid: i64(it.aid),
+              heroTag: heroTag,
             ),
           );
         },
@@ -335,16 +346,19 @@ class _ToViewTabState extends State<_ToViewTab> {
         builder: (context, index) {
           final it = _items[index];
           final id = _videoRouteId(bvid: it.bvid, aid: i64(it.aid));
+          final heroTag =
+              id.isEmpty ? null : AppHeroTags.videoCover(id, slot: index);
           return VideoCard(
             title: it.title,
             coverUrl: it.cover,
             ownerName: it.ownerName,
             durationLabel: formatDurationMs(i64(it.durationMs)),
-            heroTag: id.isEmpty ? null : AppHeroTags.videoCover(id),
+            heroTag: heroTag,
             onTap: () => _openVideo(
               context,
               bvid: it.bvid,
               aid: i64(it.aid),
+              heroTag: heroTag,
             ),
           );
         },
@@ -545,18 +559,21 @@ class _FavTabState extends State<_FavTab> {
                               final it = _items[index];
                               final id =
                                   _videoRouteId(bvid: it.bvid, aid: i64(it.aid));
+                              final heroTag = id.isEmpty
+                                  ? null
+                                  : AppHeroTags.videoCover(id, slot: index);
                               return VideoCard(
                                 title: it.title,
                                 coverUrl: it.cover,
                                 ownerName: it.ownerName,
                                 durationLabel:
                                     formatDurationMs(i64(it.durationMs)),
-                                heroTag:
-                                    id.isEmpty ? null : AppHeroTags.videoCover(id),
+                                heroTag: heroTag,
                                 onTap: () => _openVideo(
                                   context,
                                   bvid: it.bvid,
                                   aid: i64(it.aid),
+                                  heroTag: heroTag,
                                 ),
                               );
                             },

@@ -4,10 +4,10 @@
 [![Rust](https://img.shields.io/badge/rust-edition%202024-orange?logo=rust)](https://www.rust-lang.org/)
 [![MSRV](https://img.shields.io/badge/MSRV-1.85-orange?logo=rust)](https://www.rust-lang.org/)
 [![Flutter](https://img.shields.io/badge/Flutter-%E2%89%A5%203.41-02569B?logo=flutter&logoColor=white)](https://flutter.dev/)
-[![FRB](https://img.shields.io/badge/flutter__rust__bridge-2.11-blue)](https://github.com/fzyzcjy/flutter_rust_bridge)
+[![FRB](https://img.shields.io/badge/flutter__rust__bridge-2.12-blue)](https://github.com/fzyzcjy/flutter_rust_bridge)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows%20%7C%20macOS-lightgrey)](#)
 
-用 Rust 持有协议与凭据、用 Flutter 做桌面壳，经 [flutter_rust_bridge](https://github.com/fzyzcjy/flutter_rust_bridge) 2.11 贯通的 B 站第三方客户端骨架。
+用 Rust 持有协议与凭据、用 Flutter 做桌面壳，经 [flutter_rust_bridge](https://github.com/fzyzcjy/flutter_rust_bridge) 2.12 贯通的 B 站第三方客户端骨架。
 
 > **Important:** 本仓库为 **审阅专用 / 非开源**。允许本地克隆阅读；禁止未授权的生产使用、再分发与商业利用。完整条款见 [LICENSE](LICENSE)。
 
@@ -66,7 +66,7 @@ NextPili/
 |------|------|
 | Rust | stable，edition 2024，MSRV 1.85 |
 | Flutter | ≥ 3.41（当前验证 3.44） |
-| FRB codegen | `flutter_rust_bridge_codegen` 2.11.1（`--locked`） |
+| FRB codegen | `flutter_rust_bridge_codegen` 2.12.0（`--locked`） |
 | cargo-expand | FRB 生成依赖 |
 
 启用桌面目标：
@@ -78,10 +78,12 @@ flutter config --enable-linux-desktop
 
 把 Flutter 目标打开到 Linux / Windows / macOS，再在 `app/` 下运行。
 
+**Linux 桌面穿透 / blur：** 壳层透明后，live blur 依赖合成器协议 `ext-background-effect-v1`（runner：`desktop_compositor_blur.cc`）。**GNOME/Mutter 预计 ≥51** 才支持；50.x 上只有透明、无模糊是预期行为。KWin（Plasma 6.7+）、Hyprland、Niri 等已实现该协议的环境可测 live blur。自检：`wayland-info | grep background_effect`。
+
 安装 FRB 代码生成器：
 
 ```bash
-cargo install flutter_rust_bridge_codegen --version 2.11.1 --locked
+cargo install flutter_rust_bridge_codegen --version 2.12.0 --locked
 ```
 
 ## 常用命令
