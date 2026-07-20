@@ -7,6 +7,11 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../bridge/core_api.dart';
 import '../../core/adaptive/form_factor.dart';
+import '../../core/icons/app_icons.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/spacing.dart';
+import '../../core/widgets/np_button.dart';
+import '../../core/widgets/page_header.dart';
 
 final accountsProvider = StateProvider<List<AccountPublicDto>>((ref) {
   try {
@@ -268,12 +273,15 @@ class _AuthPageState extends ConsumerState<AuthPage>
   Widget build(BuildContext context) {
     final accounts = ref.watch(accountsProvider);
     final theme = Theme.of(context);
+    final colors = AppColors.of(context);
     final showQr = supportsQrLogin(context);
     final tabs = _tabs;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('账号与登录'),
+      backgroundColor: colors.canvas,
+      appBar: PageHeader(
+        title: '账号与登录',
+        showBack: true,
         bottom: tabs == null
             ? null
             : TabBar(
@@ -326,16 +334,21 @@ class _AuthPageState extends ConsumerState<AuthPage>
                     ],
                   ),
                 ),
-                const Divider(height: 1),
+                Divider(height: 1, color: colors.borderSubtle),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md,
+                    AppSpacing.md - 4,
+                    AppSpacing.md,
+                    AppSpacing.xs,
+                  ),
                   child: Row(
                     children: [
                       Text('已保存账号', style: theme.textTheme.titleMedium),
                       const Spacer(),
                       TextButton.icon(
                         onPressed: _refreshAccounts,
-                        icon: const Icon(Icons.refresh, size: 18),
+                        icon: const Icon(AppIcons.refresh, size: 18),
                         label: const Text('刷新'),
                       ),
                     ],
@@ -351,6 +364,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
                             final a = accounts[i];
                             return ListTile(
                               leading: CircleAvatar(
+                                backgroundColor: colors.sunken,
                                 child: Text(
                                   a.name.isNotEmpty
                                       ? a.name.substring(0, 1)
@@ -361,8 +375,9 @@ class _AuthPageState extends ConsumerState<AuthPage>
                               subtitle: Text(
                                 'mid ${a.mid} · ${a.isLogin ? "已登录" : "失效"}',
                               ),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.logout),
+                              trailing: NpIconButton(
+                                icon: AppIcons.logout,
+                                tooltip: '退出',
                                 onPressed: () => _logout(a.id),
                               ),
                             );
@@ -371,20 +386,20 @@ class _AuthPageState extends ConsumerState<AuthPage>
                 ),
                 if (!showQr)
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
+                    padding: const EdgeInsets.only(bottom: AppSpacing.xs),
                     child: Text(
                       '手机端仅提供短信登录；扫码登录在桌面 / 平板可用',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                        color: colors.fgSecondary,
                       ),
                     ),
                   ),
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.only(bottom: AppSpacing.md - 4),
                   child: Text(
                     '设备 buvid3：${_safeBuvid()}',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                      color: colors.fgSecondary,
                     ),
                   ),
                 ),
@@ -440,23 +455,21 @@ class _SmsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = AppColors.of(context);
     return ListView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       children: [
         Text(
           '使用手机号 + 短信验证码登录。凭据保存在本机 Rust 数据目录，不会在设置里粘贴 Cookie。',
           style: theme.textTheme.bodyMedium,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.md),
         Row(
           children: [
             SizedBox(
               width: 140,
               child: InputDecorator(
-                decoration: const InputDecoration(
-                  labelText: '区号',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: '区号'),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<int>(
                     value: cid,
@@ -473,94 +486,86 @@ class _SmsTab extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.md - 4),
             Expanded(
               child: TextField(
                 controller: telController,
                 enabled: !busy,
                 keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: '手机号',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: '手机号'),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md - 4),
         Text(hint, style: theme.textTheme.bodySmall),
         if (captcha != null) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           SelectableText(
             'gt: ${captcha!.gt}\nchallenge: ${captcha!.challenge}',
-            style: const TextStyle(fontSize: 12),
+            style: theme.textTheme.bodySmall,
           ),
         ],
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md - 4),
         Wrap(
-          spacing: 8,
-          runSpacing: 8,
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
           children: [
-            OutlinedButton.icon(
+            NpButton(
+              label: '获取人机验证',
+              icon: AppIcons.shield,
+              variant: NpButtonVariant.secondary,
               onPressed: busy ? null : onPrepareCaptcha,
-              icon: const Icon(Icons.shield_outlined),
-              label: const Text('获取人机验证'),
             ),
-            OutlinedButton.icon(
+            NpButton(
+              label: '打开极验助手',
+              icon: AppIcons.externalLink,
+              variant: NpButtonVariant.secondary,
               onPressed: busy || captcha == null ? null : onOpenGee,
-              icon: const Icon(Icons.open_in_new),
-              label: const Text('打开极验助手'),
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md - 4),
         TextField(
           controller: geeValidateController,
           enabled: !busy,
-          decoration: const InputDecoration(
-            labelText: 'gee_validate',
-            border: OutlineInputBorder(),
-          ),
+          decoration: const InputDecoration(labelText: 'gee_validate'),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         TextField(
           controller: geeSeccodeController,
           enabled: !busy,
           decoration: const InputDecoration(
             labelText: 'gee_seccode（可留空，默认 validate|jordan）',
-            border: OutlineInputBorder(),
           ),
         ),
-        const SizedBox(height: 12),
-        FilledButton.icon(
+        const SizedBox(height: AppSpacing.md - 4),
+        NpButton(
+          label: busy ? '处理中…' : '发送短信验证码',
+          icon: AppIcons.sms,
+          loading: busy,
           onPressed: busy ? null : onSendSms,
-          icon: const Icon(Icons.sms_outlined),
-          label: Text(busy ? '处理中…' : '发送短信验证码'),
         ),
         if (captchaKey != null) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             'captcha_key 已就绪',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.primary,
-            ),
+            style: theme.textTheme.bodySmall?.copyWith(color: colors.accent),
           ),
         ],
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.md),
         TextField(
           controller: codeController,
           enabled: !busy,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            labelText: '短信验证码',
-            border: OutlineInputBorder(),
-          ),
+          decoration: const InputDecoration(labelText: '短信验证码'),
         ),
-        const SizedBox(height: 12),
-        FilledButton.tonalIcon(
+        const SizedBox(height: AppSpacing.md - 4),
+        NpButton(
+          label: '登录',
+          icon: AppIcons.login,
+          variant: NpButtonVariant.secondary,
           onPressed: busy ? null : onLogin,
-          icon: const Icon(Icons.login),
-          label: const Text('登录'),
         ),
       ],
     );
@@ -585,7 +590,7 @@ class _QrTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -593,22 +598,27 @@ class _QrTab extends StatelessWidget {
             '桌面 / 平板可用：TV/HD 扫码登录。手机端请使用短信登录。',
             style: Theme.of(context).textTheme.bodyMedium,
           ),
-          const SizedBox(height: 16),
-          FilledButton.icon(
+          const SizedBox(height: AppSpacing.md),
+          NpButton(
+            label: busy ? '处理中…' : '获取二维码',
+            icon: AppIcons.qrCode,
+            loading: busy,
             onPressed: busy ? null : onStart,
-            icon: const Icon(Icons.qr_code_2),
-            label: Text(busy ? '处理中…' : '获取二维码'),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md - 4),
           Text('状态：$status'),
           if (qrUrl != null) ...[
-            const SizedBox(height: 12),
-            SelectableText(qrUrl!, style: const TextStyle(fontSize: 12)),
-            const SizedBox(height: 8),
-            OutlinedButton.icon(
+            const SizedBox(height: AppSpacing.md - 4),
+            SelectableText(
+              qrUrl!,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            NpButton(
+              label: '复制登录 URL',
+              icon: AppIcons.copy,
+              variant: NpButtonVariant.secondary,
               onPressed: onCopyUrl,
-              icon: const Icon(Icons.copy),
-              label: const Text('复制登录 URL'),
             ),
           ],
         ],

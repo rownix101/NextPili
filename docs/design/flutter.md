@@ -2,7 +2,7 @@
 
 > 状态：草案 v0.2  
 > FFI 约定：[ffi.md](./ffi.md) · 播放适配：[media.md](./media.md)  
-> UX 规范：[ux 索引](../ux/README.md) · **视觉 / 玻璃**：[ux/design-system.md](../ux/design-system.md)
+> UX 规范：[ux 索引](../ux/README.md) · 视觉/图标：[ux/design-system.md](../ux/design-system.md) · 交互/触觉：[ux/interaction.md](../ux/interaction.md)
 
 ---
 
@@ -28,7 +28,8 @@ app/lib/
     fake_core_api.dart      # 测试用
   core/
     theme/                  # palette、AppColors、TextTheme(Inter)、GlassThemeData、PlayerColors（见 ux/design-system）
-    icons/                  # Lucide 语义封装 AppIcons
+    icons/                  # Lucide 语义封装 AppIcons（用/不用见 ux/design-system §7）
+    haptics/                # 语义 Haptics.selection/success/…（见 ux/interaction §6.4）
     motion/                 # 时长、曲线、路由转场（见 ux/motion）
     adaptive/               # 断点、Shell 变体（见 ux/multi-platform）
     router/
@@ -52,7 +53,8 @@ app/lib/
 - **按 feature 分**，不按 `screens/` + 巨大 `services/` 堆业务。
 - feature 内可有 `data/`（只调 bridge）、`presentation/`、`providers.dart`。
 - 共享组件才进 `core/widgets`。
-- 主题 / 玻璃 / 动效 / 断点 token **集中在 core/**，业务 feature 禁止魔法色值、魔法时长、魔法 `LiquidGlassSettings`。
+- 主题 / 玻璃 / 图标 / 触觉 / 动效 / 断点 **集中在 core/**，业务 feature 禁止魔法色值、魔法时长、散落 `HapticFeedback.*` / `Icons.*` / `LiquidGlassSettings`。
+- 控件形态（icon-only vs 文字）与是否震动：**先查** `docs/ux`，再写 UI。
 
 ---
 
@@ -190,10 +192,10 @@ try {
 
 ## 9. 主题、玻璃与设置
 
-- **视觉**：Liquid Glass chrome + Material 3 语义色 / 组件；亮/暗/跟随系统。
-- **依赖**：`liquid_glass_widgets: ^0.22.1`（Flutter ≥ 3.41）；色板与 `GlassThemeData` 见 `core/theme/`。
+- **视觉**：Liquid Glass chrome + **自有语义 Token**（`AppColors` / `GlassThemeData` 等）；**不用** Material 3 视觉 / `ColorScheme.fromSeed` 作品牌源；亮/暗/跟随系统。
+- **依赖**：`liquid_glass_widgets: ^0.22.1`（Flutter ≥ 3.41）；色板、图标、触觉见 `core/theme/` · `core/icons/` · `core/haptics/`。
 - 默认清晰度等：**写入 Rust settings**（见 [store.md](./store.md)），设置页读写均走 bridge。
-- 主题模式 / 玻璃画质偏好可先放 Flutter 本地，避免阻塞 P1；后续可同步 Rust store。
+- 主题模式 / 玻璃画质 / 触感开关可先放 Flutter 本地，避免阻塞 P1；后续可同步 Rust store。
 
 ---
 

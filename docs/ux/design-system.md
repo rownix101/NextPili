@@ -1,11 +1,12 @@
 # 设计规范（Design System）
 
-> 状态：草案 v0.3  
-> 依赖：[UX 索引](./README.md) · [动效](./motion.md) · [多平台](./multi-platform.md)  
+> 状态：草案 v0.4  
+> 依赖：[UX 索引](./README.md) · [动效](./motion.md) · [多平台](./multi-platform.md) · [交互](./interaction.md) · [文案](./copy.md)  
 > 视觉语言：**Liquid Glass**（iOS 26 气质，桌面适配）  
 > 实现库：[liquid_glass_widgets](https://pub.dev/packages/liquid_glass_widgets) `^0.22.1`  
 > UI 底座：**自有语义 Token** + Flutter `ThemeData` / `ThemeExtension`（**不采用 Material 3 视觉语言**）  
-> 图标：**Lucide** · 字体：**Inter** + 系统 CJK
+> 图标：**Lucide** · 字体：**Inter** + 系统 CJK  
+> 参考：[NN/g Icon Usability](https://www.nngroup.com/articles/icon-usability/) · [Apple HIG · Buttons / Icons](https://developer.apple.com/design/human-interface-guidelines/icons) · WCAG 1.1.1 / 4.1.2
 
 本文定义 NextPili 的视觉语言、配色、字体、图标、材质 token 与组件约定。  
 **玻璃用于导航与控制层；内容区保持不透明、可读。**
@@ -403,6 +404,15 @@ runApp(LiquidGlassWidgets.wrap(
 
 ## 7. 图标 — **已锁定**
 
+用 Lucide 表达动作与状态；**何时 icon-only、何时必须配可见文字** 见 §7.4–7.7。业务统一 `AppIcons.*`，禁止散落 Material / emoji 图标。
+
+| | Example |
+|--|---------|
+| ✅ | 播放器播停 → icon-only + Semantics「播放」 |
+| ❌ | 「登录」仅图标、无文字 |
+| ✅ | Rail **展开** → 图标 + 始终可见标签 |
+| ❌ | 一级导航仅靠 hover 才出标签 |
+
 ### 7.1 库
 
 | 项 | 决定 |
@@ -427,6 +437,145 @@ runApp(LiquidGlassWidgets.wrap(
 - 图标按钮在玻璃 chrome 上时，优先 `GlassIconButton`；内容区用标准按钮 + Lucide 子节点。
 - 业务禁止散落 `Icons.*`（Material）；统一 `AppIcons.play` 等薄封装映射 Lucide 名。
 
+### 7.3 判定：识别 → 诠释
+
+icon-only 仅当用户能 **两步都过关** 时才允许：
+
+| 步 | 问题 | 失败则 |
+|----|------|--------|
+| **识别** | 画的是什么？ | 换更清晰的 Lucide，或改用文字 |
+| **诠释** | 点了会怎样？ | **禁止** icon-only；加可见文字或改纯文字 |
+
+#### Example
+
+| 控件 | 识别 | 诠释 | 形态 |
+|------|------|------|------|
+| 三角形 ▶ | 播放符号 | 开始播放 | ✅ icon-only + Semantics |
+| 放大镜 | 搜索 | 打开搜索 | ✅ 紧凑 chrome 可 icon-only；桌面顶栏优先可见输入框 |
+| 时钟 | 时间 / 历史？ | 「稍后再看」？ | ❌ icon-only；→ 文字或 图标+文字 |
+| 心 / 星 | 喜欢？收藏？评分？ | 含义竞争 | ❌ 单靠图形；→ **写死一枚** + 数量或文案 |
+| 「登录」 | — | 主路径 CTA | ❌ icon-only；→ **可见文字** |
+
+硬约束（细节见 §7.4–7.8）：
+
+| 规则 | 约定 |
+|------|------|
+| 5 秒定不下隐喻 | **禁止**新画图标；用文字 |
+| 导航标签 | 展开态 **始终可见**；禁止只靠 hover 出字 |
+| 可操作控件 | 必须有可访问名称（可见字或 `Semantics`） |
+| Tooltip | 桌面 icon-only 配 Tooltip；**禁止**把完成任务必需信息只放 Tooltip |
+| 已有可见标签 | 不必再 Tooltip；旁衬图标排除语义 |
+
+外部依据（NN/g Icon Usability、Apple HIG Buttons/Icons、WCAG 1.1.1 / 4.1.2）见文首参考；**以本节与 §7.4–7.7 为准**。
+
+### 7.4 何时使用图标
+
+满足下列条件时 **应当** 用图标（可单独或与文字组合）：
+
+| 条件 | 说明 | 示例 |
+|------|------|------|
+| **接近「通用」隐喻** | 跨产品语义稳定；优先平台/竞品已统一的符号 | 播放/暂停、搜索（放大镜）、设置、关闭、全屏、音量/静音、下载、分享、返回 |
+| **工具栏 / 播放器 chrome 空间紧** | 一排操作并排，文字会挤爆；媒体控件用户已有心智模型 | 播放器底栏：播停、弹幕、全屏 |
+| **与文字并列作扫描锚点** | 不单独承担语义；图标只增强扫视 | 菜单「收藏」+ 书签；设置行 leading 分类标 |
+| **状态形态可区分** | 同一隐喻的开/关形态，不只靠颜色 | 静音斜线、弹幕开/关、点赞实心/空心 |
+| **空状态 / 错误插画位** | 降低空白突兀；**必须**配说明句 + 操作 | 无收藏：图标 + 文案 +「去发现」 |
+| **导航折叠仅图标** | Rail 收起、窄窗底栏 | **展开态必须图标+文字**；折叠态 icon-only + Tooltip + Semantics |
+
+**选型规则：**
+
+- 5 秒内想不出隐喻 → **不要画新图标**，用文字。
+- 同一动作全产品 **固定一枚** Lucide（搜索永远 magnifying glass）。
+- 优先 **简单示意** 线标，避免写实细节（小尺寸不可辨）。
+- 新图标上线前做识别/诠释抽测（口头：「这是啥 / 点了怎样」）。
+
+### 7.5 何时不使用（或禁止 icon-only）
+
+| 反模式 | 原因 | 正确做法 |
+|--------|------|----------|
+| **非常规 / 产品私有概念** | 无稳定隐喻，诠释失败 | 「稍后再看」「分 P」「充电专属」→ 文字或 图标+文字 |
+| **导航只靠 icon + hover 标签** | 标签不可见；触摸无 hover | Rail **展开显示文字**；折叠才 icon-only |
+| **主 CTA / 破坏性仅图标** | 误触成本高；文字更清楚 | 「登录」「发送」「删除账号」→ 文字按钮 |
+| **心/星等竞争隐喻** | 收藏 / 喜欢 / 评分混用 | 点赞与收藏各写死一枚，并 **配数量或文案** |
+| **时钟=历史 等牵强比喻** | 识别过、诠释不过 | 「稍后再看」勿仅用时钟；用文字入口 |
+| **用图标代替错误/成功全文** | 无障碍与文案规范 | Toast/行内完整句子；图标可选 |
+| **列表行堆 3+ 装饰标** | 噪音、拖慢扫描 | ≤1 leading 类型 **或** trailing 操作 |
+| **图标内嵌字/数字** | 难本地化 | 角标用独立 `Badge` 文本 |
+| **emoji / Material / Cupertino 混搭** | 已锁 Lucide | `AppIcons.*` only |
+| **为「满」而塞** | 无信息增量 | 删；留白优于假密度 |
+| **Tooltip 承载关键信息** | 触摸无可靠 hover | 密码规则、必填说明等 **常显**，不进 Tooltip |
+
+**判定口诀：**
+
+1. 去掉图标后用户是否仍知道点什么？→ 是：图标可作增强。否：必须加 **可见** 文字。  
+2. 5 秒内能否确定隐喻？→ 否：纯文字。  
+3. 是否一级导航或主任务入口？→ 是：默认 **图标+文字**（折叠场景例外见上）。
+
+### 7.6 三种组合：icon-only / 图标+文字 / 纯文字
+
+| 形态 | 何时用 | 硬约束 |
+|------|--------|--------|
+| **Icon-only** | 空间极紧 **且** 隐喻接近通用：播放器控件、Rail 折叠、工具栏次要操作、关闭/更多 | ① 桌面 **Tooltip**（指针/键盘 focus）② `Semantics` 名称（WCAG）③ **不得**把完成任务必需的信息只放 Tooltip ④ 触摸无 hover 时依赖学习与 Semantics，关键导航勿长期仅 icon ⑤ 热区达标 |
+| **图标 + 文字** | 导航展开、菜单、设置、需要扫视的按钮（Material 默认形态） | 文字是 **主语义**；图标不得与文案矛盾；LTR 图标在前；间距 `space.xs`–`sm`；**已有文字则不必重复 Tooltip**（Fluent） |
+| **纯文字** | 对话框主/次按钮、表单提交取消、账号与破坏性、动词短语已够清楚（Apple） | 不硬凑图标；危险靠文案 + 确认 |
+
+桌面约定：
+
+- **NavigationRail**：展开 = 图标+标签（标签始终可见）；折叠 = icon-only + Tooltip。  
+- **菜单**：文字为主；常用项可 leading 图标（克制）。  
+- **顶栏搜索**：桌面优先 **可见输入框** + 可选放大镜；**禁止**桌面仅一枚搜索图标作唯一入口。窄窗可收成 icon。
+
+### 7.7 NextPili 场景速查
+
+| 场景 | 图标？ | 形态 | 备注 |
+|------|--------|------|------|
+| 播放 / 暂停 / 全屏 / 静音 | ✅ | icon-only | 通用媒体隐喻；Semantics 必备 |
+| 弹幕开关 | ✅ | icon-only 或 图标+短标签 | 形态区分开/关；见 copy |
+| 清晰度 / 倍速 | ⚠️ | **文字为主** | 菜单写「1080P」「1.5x」；入口可小图标 |
+| 点赞 / 投币 / 收藏 / 分享 | ✅ | 播放页 icon-only + 数量 | 语义固定；未登录引导用 **文字** |
+| 稍后再看 | ⚠️ | **文字** 或 图标+文字 | 禁止仅时钟/书签无标签当唯一入口 |
+| 一级导航 | ✅ | 展开：图标+文字；折叠：icon-only | 标签 ARB；**禁止**展开态藏标签 |
+| 「登录」「发送评论」「退出登录」 | ❌ icon-only | 纯文字或图标+文字 | 主路径 CTA |
+| 「删除」「清空历史」 | ❌ icon-only | 文字 + 确认 | 可并列 trash |
+| 视频卡 meta | ✅ 可选 | 小图标+数字 **或** 纯数字 | 全产品统一一种 |
+| 评论回复 / 举报 | ⚠️ | 文字链或菜单文字 | 举报勿仅 flag |
+| 空状态 / 失败 | ✅ | 图标 + 说明 + 按钮文字 | §8.8 |
+| 设置行 | ⚠️ | 可选 leading + **标题文字** | 勿叠无意义装饰 |
+| 未读角标 | ✅ | 数字/圆点 | 不替换导航标签 |
+| 分区导航 | ❌ emoji 墙 | 分区名文字 | |
+
+### 7.8 无障碍与实现
+
+Icon-only 必须同时具备桌面 **Tooltip** 与 **`Semantics` 名称**；label 写职责动词，不写外观（[copy.md](./copy.md)）。
+
+#### Example
+
+```dart
+Tooltip(
+  message: l10n.play,
+  child: Semantics(
+    button: true,
+    label: l10n.play, // 「播放」，不是「图标」
+    child: IconButton(icon: Icon(AppIcons.play), onPressed: onPlay),
+  ),
+);
+```
+
+读屏得到职责「播放」；指针悬停得到同义 Tooltip。
+
+| 规则 | 约定 |
+|------|------|
+| 已有可见文字的按钮 | 用可见字作名称；旁衬图标 `excludeFromSemantics`，避免「收藏，收藏」 |
+| 状态 | **禁止**只靠颜色；形态差分 + 文案/Semantics |
+| 装饰图标 | 排除语义树 |
+| 本地化 | 图标不承载需翻译句子；禁止谐音梗隐喻 |
+
+### 7.9 版本说明（图标章）
+
+| 版本 | 说明 |
+|------|------|
+| v0.3 | 锁定 Lucide、尺寸 token |
+| v0.4 | 增补判定模型（识别→诠释）、何时用/不用、组合形态、场景速查 |
+
 ---
 
 ## 8. 组件约定
@@ -435,10 +584,10 @@ runApp(LiquidGlassWidgets.wrap(
 
 | 类型 | 用途 | 实现倾向 |
 |------|------|----------|
-| 主操作 | 登录、发送 | `GlassButton` 或 filled（`accent` 底 + `onAccent` 字） |
-| 次要 | 取消、次要动作 | Outlined / Text（border / fg token） |
-| 图标 | 播放器、列表操作 | `GlassIconButton`（chrome）/ 内容区图标按钮 + Lucide |
-| 危险 | 退出、删除 | `error` 色 + 确认 |
+| 主操作 | 登录、发送 | `GlassButton` 或 filled（`accent` 底 + `onAccent` 字）；**文字必现**，图标可选 |
+| 次要 | 取消、次要动作 | Outlined / Text（border / fg token）；**纯文字优先** |
+| 图标 | 播放器、工具栏、折叠导航 | `GlassIconButton`（chrome）/ 内容区图标按钮 + Lucide；**仅当符合 §7.3–7.5** |
+| 危险 | 退出、删除 | `error` 色 + **文字** + 确认；可并列 trash 图标，禁止 icon-only |
 
 ### 8.2 视频卡（内容区 · 不透明）
 
@@ -582,7 +731,7 @@ runApp(
 
 - [ ] 无业务硬编码色值 / blur / thickness（除 token 定义处）
 - [ ] **无** B 站粉 / 玫红作 accent；accent 为 Sky `#0284C7` / `#38BDF8`
-- [ ] **无** Material Symbols / `Icons.*` 作默认图标；统一 Lucide
+- [ ] **无** Material Symbols / `Icons.*` 作默认图标；统一 Lucide / `AppIcons.*`
 - [ ] 正文字体为 Inter + 系统 CJK fallback；无整包 CJK 字体
 - [ ] **不**以 M3 / `ColorScheme.fromSeed` 为品牌色源
 - [ ] 信息流卡片不透明；玻璃仅出现在 chrome / 浮层
@@ -590,6 +739,10 @@ runApp(
 - [ ] Linux / Windows 以 `standard` 可流畅滚动；无列表 `premium`
 - [ ] Reduce Motion / Reduce Transparency 下可完成核心路径
 - [ ] 视频卡截断、封面比例、meta 层级一致
+- [ ] **图标**：Rail 展开有可见标签；登录/发送/删除非 icon-only
+- [ ] **图标**：icon-only 均有 Tooltip（桌面）+ Semantics；5 秒想不出隐喻处用了文字
+- [ ] **图标**：稍后再看等私有概念非「仅图标」入口；无 emoji 控件
+- [ ] 空状态 = 图标 + 说明句 + 主操作文字（非孤图标）
 - [ ] 焦点环在键盘导航下可见
 - [ ] Flutter ≥ 3.41；`LiquidGlassWidgets.initialize` 在 `runApp` 前调用
 
@@ -603,3 +756,4 @@ runApp(
 | v0.2 | 确立 Liquid Glass 语言；锁定色板与 glass token；选定 `liquid_glass_widgets` |
 | v0.2.1 | 补充何时用/不用玻璃；手机与折叠质量策略交叉引用 multi-platform |
 | v0.3 | **锁定**配色（Sky accent，弃 B 站粉）、字体（Inter + 系统 CJK）、图标（Lucide）；明确 **不用 M3 视觉** |
+| v0.4 | 图标章：判定模型 + 何时用/不用 + 场景速查 |

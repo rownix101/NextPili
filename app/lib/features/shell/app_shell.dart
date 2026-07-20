@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/icons/app_icons.dart';
+import '../../core/theme/app_colors.dart';
+
 class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.child});
 
@@ -25,31 +28,32 @@ class AppShell extends StatelessWidget {
     final location = GoRouterState.of(context).uri.toString();
     final index = _indexForLocation(location);
     final wide = MediaQuery.sizeOf(context).width >= 900;
-
-    final destinations = const [
-      NavigationRailDestination(
-        icon: Icon(Icons.home_outlined),
-        selectedIcon: Icon(Icons.home),
-        label: Text('首页'),
-      ),
-      NavigationRailDestination(
-        icon: Icon(Icons.settings_outlined),
-        selectedIcon: Icon(Icons.settings),
-        label: Text('设置'),
-      ),
-    ];
+    final colors = AppColors.of(context);
 
     if (wide) {
       return Scaffold(
+        backgroundColor: colors.canvas,
         body: Row(
           children: [
             NavigationRail(
               selectedIndex: index,
               onDestinationSelected: (i) => _onDestinationSelected(context, i),
               labelType: NavigationRailLabelType.all,
-              destinations: destinations,
+              backgroundColor: colors.elevated.withValues(alpha: 0.55),
+              destinations: const [
+                NavigationRailDestination(
+                  icon: Icon(AppIcons.home),
+                  selectedIcon: Icon(AppIcons.home),
+                  label: Text('首页'),
+                ),
+                NavigationRailDestination(
+                  icon: Icon(AppIcons.settings),
+                  selectedIcon: Icon(AppIcons.settings),
+                  label: Text('设置'),
+                ),
+              ],
             ),
-            const VerticalDivider(width: 1),
+            VerticalDivider(width: 1, color: colors.borderSubtle),
             Expanded(child: child),
           ],
         ),
@@ -57,19 +61,20 @@ class AppShell extends StatelessWidget {
     }
 
     return Scaffold(
+      backgroundColor: colors.canvas,
       body: child,
       bottomNavigationBar: NavigationBar(
         selectedIndex: index,
         onDestinationSelected: (i) => _onDestinationSelected(context, i),
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
+            icon: Icon(AppIcons.home),
+            selectedIcon: Icon(AppIcons.home),
             label: '首页',
           ),
           NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
+            icon: Icon(AppIcons.settings),
+            selectedIcon: Icon(AppIcons.settings),
             label: '设置',
           ),
         ],

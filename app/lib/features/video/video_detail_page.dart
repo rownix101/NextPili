@@ -3,6 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../bridge/core_api.dart';
+import '../../core/icons/app_icons.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/shapes.dart';
+import '../../core/theme/spacing.dart';
+import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/loading.dart';
+import '../../core/widgets/np_button.dart';
+import '../../core/widgets/page_header.dart';
+import '../../core/widgets/stat_chip.dart';
 
 final videoDetailProvider =
     FutureProvider.autoDispose.family<VideoDetailDto, String>((ref, id) {
@@ -17,51 +26,37 @@ class VideoDetailPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(videoDetailProvider(videoId));
-    final theme = Theme.of(context);
+    final colors = AppColors.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('稿件详情'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/home');
-            }
-          },
-        ),
+      backgroundColor: colors.canvas,
+      appBar: PageHeader(
+        title: '稿件详情',
+        showBack: true,
+        onBack: () {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/home');
+          }
+        },
       ),
       body: async.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(errorMessage(e), textAlign: TextAlign.center),
-                const SizedBox(height: 16),
-                FilledButton(
-                  onPressed: () => ref.invalidate(videoDetailProvider(videoId)),
-                  child: const Text('重试'),
-                ),
-              ],
-            ),
-          ),
+        loading: () => const AppLoading(),
+        error: (e, _) => EmptyState.error(
+          message: errorMessage(e),
+          onRetry: () => ref.invalidate(videoDetailProvider(videoId)),
         ),
-        data: (detail) => _DetailBody(detail: detail, theme: theme),
+        data: (detail) => _DetailBody(detail: detail),
       ),
     );
   }
 }
 
 class _DetailBody extends StatelessWidget {
-  const _DetailBody({required this.detail, required this.theme});
+  const _DetailBody({required this.detail});
 
   final VideoDetailDto detail;
-  final ThemeData theme;
 
   @override
   Widget build(BuildContext context) {
@@ -69,16 +64,16 @@ class _DetailBody extends StatelessWidget {
       builder: (context, constraints) {
         final wide = constraints.maxWidth >= 900;
         final cover = _Cover(url: detail.cover);
-        final info = _InfoColumn(detail: detail, theme: theme);
+        final info = _InfoColumn(detail: detail);
 
         if (wide) {
           return Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(flex: 5, child: cover),
-                const SizedBox(width: 24),
+                const SizedBox(width: AppSpacing.lg),
                 Expanded(flex: 6, child: info),
               ],
             ),
@@ -86,10 +81,10 @@ class _DetailBody extends StatelessWidget {
         }
 
         return ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.md),
           children: [
             AspectRatio(aspectRatio: 16 / 9, child: cover),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.md),
             info,
           ],
         );
@@ -105,22 +100,24 @@ class _Cover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final colors = AppColors.of(context);
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: AppShapes.borderMd,
       child: url.isEmpty
           ? ColoredBox(
-              color: theme.colorScheme.surfaceContainerHigh,
-              child: const Center(child: Icon(Icons.movie_outlined, size: 48)),
+              color: colors.sunken,
+              child: Icon(AppIcons.movie, size: AppIcons.xl, color: colors.fgMuted),
             )
           : Image.network(
               url,
               fit: BoxFit.cover,
               width: double.infinity,
               errorBuilder: (_, error, stackTrace) => ColoredBox(
-                color: theme.colorScheme.surfaceContainerHigh,
-                child: const Center(
-                  child: Icon(Icons.broken_image_outlined, size: 48),
+                color: colors.sunken,
+                child: Icon(
+                  AppIcons.imageBroken,
+                  size: AppIcons.xl,
+                  color: colors.fgMuted,
                 ),
               ),
             ),
@@ -129,34 +126,35 @@ class _Cover extends StatelessWidget {
 }
 
 class _InfoColumn extends StatelessWidget {
-  const _InfoColumn({required this.detail, required this.theme});
+  const _InfoColumn({required this.detail});
 
   final VideoDetailDto detail;
-  final ThemeData theme;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = AppColors.of(context);
     final stat = detail.stat;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(detail.title, style: theme.textTheme.headlineSmall),
-        const SizedBox(height: 8),
+        Text(detail.title, style: theme.textTheme.headlineMedium),
+        const SizedBox(height: AppSpacing.sm),
         Text(
           detail.bvid.isNotEmpty ? detail.bvid : 'av${i64(detail.aid)}',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+          style: theme.textTheme.bodySmall?.copyWith(color: colors.fgSecondary),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.md - 4),
         Row(
           children: [
             CircleAvatar(
               radius: 18,
-              backgroundImage:
-                  detail.ownerFace.isNotEmpty ? NetworkImage(detail.ownerFace) : null,
+              backgroundColor: colors.sunken,
+              backgroundImage: detail.ownerFace.isNotEmpty
+                  ? NetworkImage(detail.ownerFace)
+                  : null,
               child: detail.ownerFace.isEmpty
-                  ? const Icon(Icons.person, size: 18)
+                  ? Icon(AppIcons.user, size: 18, color: colors.fgSecondary)
                   : null,
             ),
             const SizedBox(width: 10),
@@ -169,37 +167,37 @@ class _InfoColumn extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.md),
         Wrap(
           spacing: 12,
           runSpacing: 8,
           children: [
-            _StatChip(icon: Icons.play_arrow_outlined, label: _fmt(i64(stat.view))),
-            _StatChip(icon: Icons.thumb_up_outlined, label: _fmt(i64(stat.like))),
-            _StatChip(icon: Icons.comment_outlined, label: _fmt(i64(stat.reply))),
-            _StatChip(icon: Icons.subtitles_outlined, label: _fmt(i64(stat.danmaku))),
-            _StatChip(icon: Icons.star_outline, label: _fmt(i64(stat.favorite))),
-            _StatChip(icon: Icons.monetization_on_outlined, label: _fmt(i64(stat.coin))),
+            StatChip(icon: AppIcons.play, label: _fmt(i64(stat.view))),
+            StatChip(icon: AppIcons.like, label: _fmt(i64(stat.like))),
+            StatChip(icon: AppIcons.comment, label: _fmt(i64(stat.reply))),
+            StatChip(icon: AppIcons.danmaku, label: _fmt(i64(stat.danmaku))),
+            StatChip(icon: AppIcons.star, label: _fmt(i64(stat.favorite))),
+            StatChip(icon: AppIcons.coin, label: _fmt(i64(stat.coin))),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.md),
         Text('简介', style: theme.textTheme.titleMedium),
-        const SizedBox(height: 6),
+        const SizedBox(height: AppSpacing.xs + 2),
         SelectableText(
           detail.desc.isEmpty ? '（无简介）' : detail.desc,
           style: theme.textTheme.bodyMedium,
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: AppSpacing.lg - 4),
         Text(
           '分 P（${detail.pages.length}）',
           style: theme.textTheme.titleMedium,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         if (detail.pages.isEmpty)
           Text(
             '无分 P 信息',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+              color: colors.fgSecondary,
             ),
           )
         else
@@ -208,46 +206,30 @@ class _InfoColumn extends StatelessWidget {
               contentPadding: EdgeInsets.zero,
               leading: CircleAvatar(
                 radius: 14,
-                child: Text('${p.page}', style: theme.textTheme.labelSmall),
+                backgroundColor: colors.sunken,
+                child: Text(
+                  '${p.page}',
+                  style: theme.textTheme.labelSmall,
+                ),
               ),
               title: Text(p.part_.isEmpty ? 'P${p.page}' : p.part_),
               subtitle: Text(
                 'cid ${i64(p.cid)} · ${_formatDuration(i64(p.durationMs))}',
+                style: theme.textTheme.bodySmall,
               ),
-              trailing: const Icon(Icons.play_circle_outline),
+              trailing: Icon(AppIcons.playCircle, color: colors.accent),
               onTap: () => _openPlayer(context, detail, i64(p.cid)),
             ),
           ),
-        const SizedBox(height: 24),
-        FilledButton.tonalIcon(
+        const SizedBox(height: AppSpacing.lg),
+        NpButton(
+          label: '播放',
+          icon: AppIcons.play,
           onPressed: detail.pages.isEmpty
               ? null
               : () => _openPlayer(context, detail, i64(detail.pages.first.cid)),
-          icon: const Icon(Icons.play_arrow),
-          label: const Text('播放'),
         ),
       ],
-    );
-  }
-}
-
-class _StatChip extends StatelessWidget {
-  const _StatChip({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Chip(
-      avatar: Icon(icon, size: 16),
-      label: Text(label),
-      visualDensity: VisualDensity.compact,
-      side: BorderSide(color: theme.colorScheme.outlineVariant),
-      backgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(
-        alpha: 0.4,
-      ),
     );
   }
 }

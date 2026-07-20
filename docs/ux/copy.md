@@ -1,10 +1,10 @@
 # 产品文案规范（Copy）
 
-> 状态：草案 v0.1  
-> 相关：[UX 索引](./README.md) · [本地化](./localization.md) · [交互](./interaction.md) · [文档写法](../writing.md)  
+> 状态：草案 v0.2  
+> 相关：[UX 索引](./README.md) · [本地化](./localization.md) · [交互](./interaction.md) · [设计规范·图标](./design-system.md#7-图标--已锁定) · [文档写法](../writing.md)  
 > 参考：[Apple HIG · Writing](https://developer.apple.com/design/human-interface-guidelines/writing)（气质对齐；中文落地以本文为准）
 
-用清晰、简短、可行动的中文，写界面上每一个用户可见的词——按钮、标题、空状态、错误、确认框与设置说明。
+用清晰、简短、可行动的中文，写界面上每一个用户可见的词——按钮、标题、空状态、错误、确认框、设置说明、**Tooltip / Semantics**。
 
 ---
 
@@ -22,8 +22,11 @@
 |------|------|
 | 界面用词、语气、术语、场景句式 | **本文** |
 | ARB 键名、复数、RTL、格式化 | [localization.md](./localization.md) |
-| 何时弹 Dialog / Snackbar | [interaction.md](./interaction.md) |
+| 何时弹 Dialog / Snackbar / 触觉 | [interaction.md](./interaction.md) |
+| 何时用图标 vs 文字 | [design-system §7](./design-system.md#7-图标--已锁定) |
 | 实现文档怎么写 | [writing.md](../writing.md) |
+
+**与图标的契约：** 可见文案是主语义；图标是增强。icon-only 的 Tooltip / Semantics 用词仍遵守本文（职责动词，不写外观）。
 
 > **Important:** 用户可见字符串必须走 l10n；本文规定**写什么、怎么写**，不规定 ARB 工程细节。
 
@@ -231,9 +234,13 @@ Rust AppError.kind  →  l10n.errorNetworkUnavailable
 
 ### 无障碍文案
 
-- `Semantics` / Tooltip 写**控件职责**，不写视觉外观：「播放」「暂停」「下一分 P」。
-- 避免「蓝色按钮」「右上角图标」。
-- 整句进 ARB，禁止碎拼接（见 [localization.md](./localization.md)）。
+`Semantics` / Tooltip 写**控件职责**，不写视觉外观；整句进 ARB（见 [localization.md](./localization.md)）。错误/成功以**完整句子**为主，不可仅靠图标或震动传义（触觉见 [interaction §6.4](./interaction.md#64-触觉--震动反馈haptics)）。
+
+| ✅ | ❌ |
+|----|----|
+| Semantics / Tooltip：「播放」「暂停」「下一分 P」 | 「蓝色按钮」「右上角图标」 |
+| 已有可见标签「收藏」→ 只读可见字；旁衬图标排除语义 | 读成「收藏，收藏」 |
+| Toast：「已收藏」 | 仅实心图标 / 仅震动、无文案 |
 
 ---
 
@@ -255,7 +262,7 @@ Rust AppError.kind  →  l10n.errorNetworkUnavailable
 |------|----------|
 | 播完下一 P | 即将播放下一分 P<br>[ 取消 ] |
 | 清晰度 | 自动 / 1080P / 4K（与数据层 qn 映射表一致） |
-| 弹幕关闭 | 弹幕已关闭（可选 Toast；状态以图标为准） |
+| 弹幕关闭 | 可选 Toast「弹幕已关闭」；控件以**形态差分**表达开/关，Semantics 同步 |
 | 发送失败·未登录 | 登录后即可发送弹幕 |
 | 地址失效 | 播放地址已失效，正在重新获取… → 失败则「无法获取播放地址」+ 重试 |
 

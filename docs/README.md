@@ -42,8 +42,8 @@ Flutter 做薄壳；Rust 持有协议与凭据；`domain` 无 IO。
 | 文档 | 说明 |
 |------|------|
 | [UX Index](./ux/README.md) | 设计规范地图与已锁定决策 |
-| [Design System](./ux/design-system.md) | Liquid Glass、token、组件 |
-| [Interaction](./ux/interaction.md) | 导航、指针/键盘、播放器、反馈 |
+| [Design System](./ux/design-system.md) | Liquid Glass、token、图标用/不用、组件 |
+| [Interaction](./ux/interaction.md) | 导航、输入、播放器、视觉/触觉反馈 |
 | [Motion](./ux/motion.md) | 时长、缓动、转场 |
 | [Multi-platform](./ux/multi-platform.md) | 窗口、断点、输入设备 |
 | [Copy](./ux/copy.md) | 产品文案：语气、按钮/空态/错误（Apple Writing 气质） |

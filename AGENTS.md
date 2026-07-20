@@ -1,5 +1,19 @@
 # Repository Guidelines
 
+## Mandatory: Read Specs Before Coding
+
+**Do not implement, refactor, or invent APIs until you have read the relevant docs.** Guessing architecture or style is not allowed.
+
+1. Start at `docs/README.md` (portal) and open only what applies to the task.
+2. Always check when relevant:
+   - Architecture / crate boundaries → `docs/architecture.md`
+   - Module design / how to implement → `docs/design/`
+   - External / Bilibili API contracts → `docs/api/`
+   - UI / interaction / tokens → `docs/ux/`
+   - Editing docs themselves → `docs/writing.md` (Documentation Style Pathway)
+3. Match existing crate/feature patterns in code after docs, not instead of docs.
+4. If docs and code disagree, prefer documented intent and call out the gap; do not silently invent a third approach.
+
 ## Project Structure & Module Organization
 
 NextPili is a desktop-first Bilibili client: Rust core + Flutter UI via flutter_rust_bridge 2.11.
@@ -16,7 +30,7 @@ docs/           # architecture, design, API, UX
 scripts/        # codegen and test helpers
 ```
 
-Flutter feature code lives under `app/lib/features/`; shared UI under `app/lib/core/`. FRB bindings are under `app/lib/bridge/` and `crates/core/src/api/`. Design docs: `docs/README.md` (portal), `docs/writing.md` (style), `docs/architecture.md`, `docs/design/`, `docs/api/`, `docs/ux/`.
+Flutter feature code lives under `app/lib/features/`; shared UI under `app/lib/core/`. FRB bindings are under `app/lib/bridge/` and `crates/core/src/api/`. Docs map: `docs/README.md` (portal), `docs/architecture.md` (Essentials), `docs/design/` (Guides), `docs/api/` (Reference), `docs/ux/` (Human Interface), `docs/writing.md` (doc Style only).
 
 ## Build, Test, and Development Commands
 
@@ -54,6 +68,7 @@ License is **UNLICENSED / review-only** — no production use, redistribution, o
 
 ## Agent-Specific Notes
 
+- **Read specs first** (see top section). No code until relevant docs are loaded.
 - Respect crate boundaries: `domain` has no IO; `core` orchestrates and exposes FFI.
 - After API surface edits in `crates/core/src/api`, run `./scripts/codegen.sh`.
 - Prefer `rtk`-prefixed shell commands when available to reduce tool noise.

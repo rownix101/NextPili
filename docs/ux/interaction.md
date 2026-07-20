@@ -1,9 +1,10 @@
 # 人机交互（Interaction）
 
-> 状态：草案 v0.1  
-> 依赖：[UX 索引](./README.md) · [设计规范](./design-system.md) · [动效](./motion.md) · [多平台](./multi-platform.md)
+> 状态：草案 v0.2  
+> 依赖：[UX 索引](./README.md) · [设计规范](./design-system.md) · [动效](./motion.md) · [多平台](./multi-platform.md)  
+> 参考：[Apple HIG · Playing haptics](https://developer.apple.com/design/human-interface-guidelines/playing-haptics) · [Android Haptics principles](https://developer.android.com/develop/ui/views/haptics/haptics-principles) · [Microsoft Design · Haptics](https://microsoft.design/articles/haptics-design-and-implementation/)
 
-本文约定信息架构、导航、输入方式、播放器交互、反馈与错误处理。桌面优先，同时预留触摸与移动语义。
+本文约定信息架构、导航、输入方式、播放器交互、**视觉/触觉反馈**与错误处理。桌面优先，同时预留触摸与移动语义。
 
 ---
 
@@ -61,9 +62,9 @@
 └──────┴─────────────────────────────┴────────────┘
 ```
 
-- **NavigationRail**：一级导航；可折叠为仅图标。
-- **顶栏**：搜索、全局操作；不重复一级导航。
-- **二级**：`TabBar` / `SegmentedButton`（推荐 | 热门 | 排行）。
+- **NavigationRail**：一级导航；展开 = **图标+标签**（标签始终可见）；折叠 = icon-only + Tooltip + Semantics（图标策略见 [design-system §7](./design-system.md#7-图标--已锁定)）。
+- **顶栏**：搜索、全局操作；不重复一级导航。桌面优先可见搜索框，避免仅一枚放大镜（§7.6）。
+- **二级**：`TabBar` / `SegmentedButton`（推荐 | 热门 | 排行）——**文字分段**；勿用无标签图标 Tab。
 - **深层页**：内容区 `Navigator` 栈；系统返回 / 顶栏返回 / 鼠标侧键（若平台支持）。
 
 ### 2.2 窄窗口
@@ -168,6 +169,8 @@
 - 暂停时：**保持显示**控件。
 - 进度条：**hover 放大**命中区域；拖拽时显示预览时间（缩略图可选后续）。
 - 点击进度条：seek 到位置；键盘微调见上表。
+- **图标形态**（底栏）：播停/静音/全屏/弹幕 → 允许 icon-only（通用媒体隐喻 + Semantics）；清晰度/倍速 → **文字或菜单项文案**为主（design-system §7.7）。
+- **触觉**：见 §6.4.5；拖 seek 不连续震，端点可 `boundary`。
 
 ### 4.2 清晰度 / 线路 / 音轨
 
@@ -239,14 +242,18 @@
 
 ### 6.1 反馈层级
 
-| 层级 | 组件 | 场景 |
-|------|------|------|
-| 即时 | 涟漪/hover/按压缩放 | 点击可感知 |
-| 轻量 | Tooltip、按钮 loading | 悬停说明、提交中 |
-| 中间 | Snackbar / Toast | 已收藏、已复制、可撤销删除 |
-| 阻断 | Dialog | 丢弃未保存、退出登录、权限 |
+| 层级 | 通道 | 组件 / 形态 | 场景 |
+|------|------|-------------|------|
+| 即时 | 视觉 | 涟漪 / hover / 按压缩放 | 点击可感知 |
+| 即时 | **触觉** | 短促 haptics（见 §6.4） | 确认输入、步进、结果 |
+| 轻量 | 视觉 | Tooltip、按钮 loading | 悬停说明、提交中 |
+| 中间 | 视觉 | Snackbar / Toast | 已收藏、已复制、可撤销删除 |
+| 阻断 | 视觉 | Dialog | 丢弃未保存、退出登录、权限 |
 
-原则：**能非阻断就不弹窗**；破坏性才确认。
+原则：
+
+- **能非阻断就不弹窗**；破坏性才确认。
+- **多通道互补**：触觉补视觉，不替代文案与状态；无触觉时 UI 仍完整可用（对齐 Apple / Microsoft「haptics optional」）。
 
 ### 6.2 撤销
 
@@ -255,17 +262,164 @@
 
 ### 6.3 剪贴板与分享
 
-- 复制链接：Toast「已复制」。
+- 复制链接：Toast「已复制」；**可**伴随 `haptic.impactLight`。
 - 系统分享面板：移动向；桌面以复制为主。
+
+### 6.4 触觉 / 震动反馈（Haptics）
+
+用短暂、有语义的震动确认「操作被接受 / 状态变了 / 到了边界」；**禁止**装饰性长震。  
+对齐 Apple HIG、Android Haptics、Windows 11 haptic language，按 NextPili **桌面优先 + 触摸预留**裁剪。
+
+| | Example |
+|--|---------|
+| ✅ | 收藏成功 → 一次 `haptic.impactLight`（与图标动效同拍） |
+| ❌ | 列表滚动 / 弹幕飞过 / 缓冲中 → 任何触觉 |
+
+#### 6.4.1 原则
+
+| # | 原则 | 说明 |
+|---|------|------|
+| 1 | **有因果** | 仅响应**用户主动操作**或**明确结果**；禁止为后台轮询、列表自动刷新、弹幕飘过等被动事件震动 |
+| 2 | **信号非噪音** | 少而准；同类操作同一种 pattern；能省略则省略 |
+| 3 | **清晰优于嗡嗡** | 优先短促触感；**禁止**长时间 buzz 当点击反馈 |
+| 4 | **语义一致** | 系统预定义语义优先；禁止把 `error` pattern 用在成功上 |
+| 5 | **多模态对齐** | 与视觉动效、可选音效**同拍**；强度与动画 sharpness 匹配（轻点击 ↔ 轻 haptics） |
+| 6 | **延迟可感即失败** | 端到端延迟目标 **< 50ms**；超时则跳过本次触觉 |
+| 7 | **可关闭、可降级** | 设置开关 + 尊重系统「关闭触感/振动」；无硬件时静默 no-op，**禁止**降级成整机乱震 |
+| 8 | **不干扰媒体** | 播放页避免高频触觉；禁止在录制/相机/陀螺仪敏感路径强制震动 |
+
+#### 6.4.2 能力与平台预期
+
+| 平台 / 设备 | 能力预期 | 策略 |
+|-------------|----------|------|
+| 手机 / 平板（P2） | 系统触觉引擎（iOS Taptic / Android VibrationEffect） | **主落地**；走语义 API |
+| Windows 触控板 / 笔（若 OS 与设备支持） | Input haptics（Align / Step / Success 等） | 指针拖拽步进、吸附时可用 |
+| macOS Force Touch 触控板 | 有限系统反馈 | 仅在平台 API 可达时启用 |
+| 普通鼠标 + Linux 桌面 | 通常 **无** 可靠执行器 | 默认无触觉；依赖视觉反馈 |
+| 游戏手柄 | 可选 rumble | 首期 **不做**（与 §3.4 一致） |
+
+实现只依赖 **能力探测**：`canVibrate` / 平台 haptics 支持标志为 false 时全部跳过。
+
+#### 6.4.3 语义 Token（产品层）
+
+产品与代码统一用语义名，**禁止**业务里写毫秒波形魔法数。映射到平台时再落到具体 API。
+
+| Token | 体感 | 语义 | 平台粗映射（参考） |
+|-------|------|------|-------------------|
+| `haptic.selection` | 极轻 tick | 离散值变化、列表/分段选中切换 | iOS `selection` · Android `CLOCK_TICK` / `CONTEXT_CLICK` · Win `Step` |
+| `haptic.impactLight` | 轻叩 | 轻量确认：开关、次要按钮、复制 | iOS `impact light` · Android `EFFECT_TICK` / `CONFIRM`（轻） |
+| `haptic.impactMedium` | 中等 | 主操作确认：发送评论 / 弹幕等 | iOS `impact medium` · Android `EFFECT_CLICK` |
+| `haptic.impactHeavy` | 偏重 | 少用：拖放落定、重要完成（非错误） | iOS `impact heavy` · Android `EFFECT_HEAVY_CLICK` |
+| `haptic.success` | 上扬/轻双拍 | 正向结果：登录成功等「完成」态（非轻量复制类） | iOS `notification success` · Android `CONFIRM` · Win `Success` |
+| `haptic.warning` | 警示节奏 | 接近限制：字数将满、频率限制前提示 | iOS `notification warning` |
+| `haptic.error` | 下挫/锐利 | 失败结果：发送失败、登录失败、非法输入 | iOS `notification error` · Android `REJECT` · Win `Error` |
+| `haptic.boundary` | 软碰撞 | 到顶/到底、滑块端点、不可再 seek | Win `Collide`；移动端用 light impact 代替 |
+| `haptic.snap` | 锐利吸附 | 进度条/倍速档吸附、对齐 | Win `Align`；移动端 `selection` 或 light impact |
+
+强度层级（Android 选型起点）：`selection` / tick < light < medium < heavy；`error` / 负向可比同级略强以获注意，但 **仍须短促**。
+
+#### 6.4.4 何时用 / 何时不用
+
+**应当使用（有用户意图或明确结果）：**
+
+| 场景 | Token | 备注 |
+|------|-------|------|
+| Toggle / 分段控件切换 | `selection` 或 `impactLight` | 与视觉状态同步一次 |
+| 滑块越过刻度（音量、不透明度、倍速档） | `selection` / `snap` | **仅刻度**，非连续拖动全程 |
+| 进度条拖到 0% / 100% 端点 | `boundary` | 每端一次，快速连拖防抖 |
+| 点赞 / 收藏 / 稍后再看 **成功** | `impactLight` 或 `success` | 与图标动效同拍；失败用 `error` |
+| 发送评论 / 弹幕 **成功** | `impactMedium` | 失败 `error` |
+| 长按进入多选 / 菜单将出 | `impactMedium` | 对齐 Android `LONG_PRESS` 语义 |
+| 下拉刷新 **完成** | `impactLight` | 开始拉动不震 |
+| 复制链接成功 | `impactLight` | 已有 Toast |
+| 登录成功 | `success` | 一次即可 |
+| 登录/发送失败、表单校验失败 | `error` | 与错误文案同时；禁止连点重复轰炸 |
+
+**禁止（默认不用）：**
+
+| ❌ 场景 | 原因 |
+|---------|------|
+| 列表滚动、无限加载、骨架屏结束 | 被动 / 高频 |
+| Hover、焦点环移动、Tooltip 出现 | 指针探索，非结果 |
+| 弹幕飞过、播放进度走动、缓冲中 | 媒体噪音 |
+| 每次键盘按键 | 系统输入法已有则不叠加 |
+| 路由切换、普通 Tab 切换 | 非 selection 控件本体时不震 |
+| 来电级长振动 | 产品无此场景；禁止 buzzy 长震 |
+| 播放器 chrome 自动显隐 | 无用户意图 |
+
+**频率护栏：**
+
+| 规则 | 值 |
+|------|-----|
+| 连续手势内同类 token 最短间隔 | **≥ 30–50ms**（软建议；吸附用「进入新区才触发」） |
+| 快速拖进度条 | 仅 **端点** 与章节标记；禁止按时间 tick 震 |
+| 同一语义失败反馈 | 1 秒内最多 **1** 次 |
+
+#### 6.4.5 播放器专项
+
+| 操作 | 触觉 | 说明 |
+|------|------|------|
+| 单击播放/暂停 | 可选 `impactLight` | 桌面默认 **关**（鼠标场景无感且易烦）；触摸设备默认 **开** |
+| 拖动 seek 过程 | 无 | 避免噪声 |
+| seek 到片头/片尾 | `boundary` | |
+| 倍速/清晰度菜单点选 | `selection` | |
+| 全屏切换 | 可选 `impactLight` | 触摸优先；桌面可选关 |
+| 弹幕开关 | `selection` | |
+| 解码/网络错误浮层出现 | **无** 或单次 `error` | 若已有显著视觉，可只震一次 |
+
+播放中默认策略：**克制**。沉浸消费路径以视觉为主，触觉只服务「明确手势确认」。
+
+#### 6.4.6 设置与系统尊重
+
+| 项 | 约定 |
+|----|------|
+| 应用内开关 | 设置 →「触感反馈 / 振动」；默认：**触摸设备开、纯指针桌面关**（可记住用户选择） |
+| 强度 | 首期可仅开/关；若做强度，跟系统滑条或提供 低/中/高 三档，映射到 token 强度而非自定义波形 |
+| 系统关闭 | OS 关闭触感/振动时 **强制全关**，应用开关不可绕过 |
+| 减少动态效果 | 不自动关触觉（通道不同）；但用户关触觉时动效仍按 motion 规范 |
+| 无障碍 | 触觉是增强而非唯一通道；错误/成功必须有可见文案或图标状态 |
+
+#### 6.4.7 实现约定（Flutter）
+
+```text
+app/lib/core/haptics/
+  haptics.dart          # 语义 API：Haptics.selection() 等
+  haptics_settings.dart # 开关 / 能力探测
+```
+
+业务与组件只调 `core/haptics` 语义 API；平台映射与能力探测集中在这一层。
+
+#### Example
+
+```dart
+// 收藏成功（与图标动效同帧）
+await Haptics.impactLight();
+
+// 发送失败（与错误 Toast 同拍）
+await Haptics.error();
+```
+
+成功 / 失败路径各触发一次语义 token，不写毫秒波形。
+
+| | 约定 |
+|--|------|
+| ✅ | `Haptics.selection()` / `.success()` / `.error()` … |
+| ❌ | 业务里 `HapticFeedback.vibrate()` / 自定义 ms 波形 |
+| ✅ | 无执行器或开关关 → 静默 no-op |
+| ❌ | Toast 后再延迟 200ms 补震 |
+| ✅ | 单测 fake：失败路径调 `error`、滚动路径零调用 |
+
+Windows 高级触控板若后续接入，仅在 haptics 层适配，不改 feature 代码。
 
 ---
 
 ## 7. 焦点、语义与无障碍
 
 - 所有可点击控件可获焦；Tab 顺序符合视觉顺序（播放器内控件有合理序列）。
-- `Semantics`：图标按钮提供 label（「播放」「静音」「全屏」）。
-- 动画：遵循「减少动态效果」系统设置（见 motion）。
-- 不要仅用颜色表示状态（如仅红色表示错误）。
+- **图标按钮**：`Semantics` + 桌面 Tooltip；已有可见文字时不要重复读图标（design-system §7.8；措辞 [copy.md](./copy.md)）。
+- 动画：遵循「减少动态效果」（[motion](./motion.md)）。
+- **触觉**：§6.4；关触感 / 无硬件时任务仍可完成；状态不只靠震动。
+- 状态不只靠颜色（须形态、文案或图标差分）。
 - 字幕与弹幕：可调字号；冲突时用户可选隐藏其一。
 
 ---
@@ -298,3 +452,9 @@
 - [ ] 右键菜单覆盖视频卡核心操作
 - [ ] 错误态可恢复；登录门闸文案明确
 - [ ] 控件自动隐藏不与拖拽进度条冲突
+- [ ] 触觉：仅语义场景触发；滚动/弹幕/缓冲无震动
+- [ ] 触觉：开关关闭或无硬件时 UI 完整可用
+- [ ] 触觉：成功/失败 pattern 不混用；延迟体感 < 50ms 或跳过
+- [ ] 播放器拖 seek 无连续震动；端点至多 boundary 一次
+- [ ] 导航展开态标签始终可见；无「仅 hover 才出标签」的一级导航
+- [ ] 主 CTA / 删除等非 icon-only；播放器通用控件 icon-only 均有 Semantics

@@ -3,6 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../bridge/core_api.dart';
+import '../../core/icons/app_icons.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/spacing.dart';
+import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/loading.dart';
+import '../../core/widgets/np_button.dart';
+import '../../core/widgets/page_header.dart';
+import '../../core/widgets/video_card.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -29,13 +37,15 @@ class _HomePageState extends ConsumerState<HomePage>
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('NextPili'),
+      backgroundColor: colors.canvas,
+      appBar: PageHeader(
+        title: 'NextPili',
         actions: [
-          IconButton(
+          NpIconButton(
             tooltip: '账号',
-            icon: const Icon(Icons.person_outline),
+            icon: AppIcons.user,
             onPressed: () => context.push('/auth'),
           ),
         ],
@@ -275,32 +285,29 @@ class _FeedBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (loading && items.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final cross = _crossAxisCount(constraints.maxWidth);
+          return GridView.builder(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: cross,
+              mainAxisSpacing: AppSpacing.md - 4,
+              crossAxisSpacing: AppSpacing.md - 4,
+              childAspectRatio: 16 / 13,
+            ),
+            itemCount: cross * 2,
+            itemBuilder: (_, _) => const VideoCardSkeleton(),
+          );
+        },
+      );
     }
     if (error != null && items.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.cloud_off_outlined,
-                size: 48,
-                color: Theme.of(context).colorScheme.error,
-              ),
-              const SizedBox(height: 12),
-              Text(error!, textAlign: TextAlign.center),
-              const SizedBox(height: 16),
-              FilledButton(onPressed: onRetry, child: const Text('重试')),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () => context.push('/auth'),
-                child: const Text('去登录'),
-              ),
-            ],
-          ),
-        ),
+      return EmptyState.error(
+        message: error!,
+        onRetry: onRetry,
+        secondaryLabel: '去登录',
+        onSecondary: () => context.push('/auth'),
       );
     }
 
@@ -308,37 +315,32 @@ class _FeedBody extends StatelessWidget {
       onRefresh: onRefresh,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final width = constraints.maxWidth;
-          final cross = width >= 1400
-              ? 5
-              : width >= 1100
-                  ? 4
-                  : width >= 800
-                      ? 3
-                      : width >= 520
-                          ? 2
-                          : 1;
+          final cross = _crossAxisCount(constraints.maxWidth);
           return CustomScrollView(
             controller: scrollController,
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               SliverPadding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(AppSpacing.md),
                 sliver: SliverGrid(
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: cross,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
+                    mainAxisSpacing: AppSpacing.md - 4,
+                    crossAxisSpacing: AppSpacing.md - 4,
                     childAspectRatio: 16 / 13,
                   ),
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final item = items[index];
-                      return _FeedCard(
-                        item: item,
+                      return VideoCard(
+                        title: item.title,
+                        coverUrl: item.cover,
+                        ownerName: item.ownerName,
+                        durationLabel: _formatDuration(i64(item.durationMs)),
                         onTap: () {
-                          final id =
-                              item.bvid.isNotEmpty ? item.bvid : 'av${i64(item.aid)}';
+                          final id = item.bvid.isNotEmpty
+                              ? item.bvid
+                              : 'av${i64(item.aid)}';
                           context.push('/video/${Uri.encodeComponent(id)}');
                         },
                       );
@@ -350,14 +352,14 @@ class _FeedBody extends StatelessWidget {
               if (loadingMore)
                 const SliverToBoxAdapter(
                   child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 24),
-                    child: Center(child: CircularProgressIndicator()),
+                    padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                    child: AppLoading(size: 24),
                   ),
                 ),
               if (!loadingMore && items.isEmpty)
                 const SliverFillRemaining(
                   hasScrollBody: false,
-                  child: Center(child: Text('暂无内容')),
+                  child: EmptyState(message: '暂无内容'),
                 ),
             ],
           );
@@ -365,132 +367,13 @@ class _FeedBody extends StatelessWidget {
       ),
     );
   }
-}
 
-class _FeedCard extends StatelessWidget {
-  const _FeedCard({required this.item, required this.onTap});
-
-  final FeedItemDto item;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final duration = _formatDuration(i64(item.durationMs));
-
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      elevation: 0,
-      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
-      child: InkWell(
-        onTap: onTap,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              flex: 7,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  _CoverImage(url: item.cover),
-                  if (duration.isNotEmpty)
-                    Positioned(
-                      right: 6,
-                      bottom: 6,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.72),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          duration,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            Expanded(
-              flex: 4,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleSmall,
-                    ),
-                    const Spacer(),
-                    Text(
-                      item.ownerName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CoverImage extends StatelessWidget {
-  const _CoverImage({required this.url});
-
-  final String url;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    if (url.isEmpty) {
-      return ColoredBox(
-        color: theme.colorScheme.surfaceContainerHigh,
-        child: Icon(
-          Icons.movie_outlined,
-          color: theme.colorScheme.onSurfaceVariant,
-        ),
-      );
-    }
-    return Image.network(
-      url,
-      fit: BoxFit.cover,
-      errorBuilder: (_, error, stackTrace) => ColoredBox(
-        color: theme.colorScheme.surfaceContainerHigh,
-        child: Icon(
-          Icons.broken_image_outlined,
-          color: theme.colorScheme.onSurfaceVariant,
-        ),
-      ),
-      loadingBuilder: (context, child, progress) {
-        if (progress == null) return child;
-        return ColoredBox(
-          color: theme.colorScheme.surfaceContainerHigh,
-          child: const Center(
-            child: SizedBox(
-              width: 22,
-              height: 22,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-          ),
-        );
-      },
-    );
+  int _crossAxisCount(double width) {
+    if (width >= 1400) return 5;
+    if (width >= 1100) return 4;
+    if (width >= 800) return 3;
+    if (width >= 520) return 2;
+    return 1;
   }
 }
 

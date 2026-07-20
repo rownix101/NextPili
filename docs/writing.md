@@ -199,7 +199,7 @@
 | 分层、依赖、跨 crate ADR | `architecture.md` | 端点参数表、色值 token |
 | 模块职责、状态、流程 | `design/*` | 复制整张 API 字段表 |
 | 端点、签名、Cookie、响应 | `api/**` | 架构 ADR 长文 |
-| 配色、玻璃、动效、快捷键 | `ux/*` | `design/` 展开 token 全集 |
+| 配色、玻璃、图标用/不用、动效、快捷键、触觉 | `ux/*` | `design/` 展开 token 全集 |
 | Flutter 目录 / Riverpod 落点 | `design/flutter.md` | UX 视觉细则 |
 
 ### 页面解剖
@@ -452,6 +452,8 @@ bar=2&foo=1&wts=1700000000&w_rid=<32位hex>
 |------|---------|
 | Token | `color.bg.canvas` = `#0B0F1A`（Dark） |
 | 玻璃规则 | ✅ Rail / ❌ Feed 卡片（表） |
+| 图标规则 | ✅ 播放 icon-only / ❌ 登录仅图标；展开导航有标签 |
+| 触觉规则 | ✅ 收藏成功 `haptic.impactLight` / ❌ 列表滚动震 |
 | 动效 | 时长 token 数值 + 使用场景一行 |
 | 交互 | 快捷键表：按键 | 动作 |
 

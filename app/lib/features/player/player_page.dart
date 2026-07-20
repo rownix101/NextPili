@@ -4,6 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../../bridge/core_api.dart';
+import '../../core/icons/app_icons.dart';
+import '../../core/theme/player_colors.dart';
+import '../../core/theme/spacing.dart';
+import '../../core/widgets/loading.dart';
+import '../../core/widgets/np_button.dart';
 import 'player_adapter.dart';
 
 /// Full-screen-ish player route for a single cid.
@@ -76,7 +81,6 @@ class _PlayerPageState extends State<PlayerPage> {
   Future<void> _switchQuality(StreamDto stream) async {
     try {
       if (stream.qn != null) {
-        // Prefer re-fetch when server may gate higher qn streams.
         final pos = _adapter.player.state.position;
         final source = await CoreApi.instance.playUrl(
           id: widget.videoId,
@@ -109,7 +113,7 @@ class _PlayerPageState extends State<PlayerPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final player = PlayerColors.of(context);
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
@@ -119,20 +123,18 @@ class _PlayerPageState extends State<PlayerPage> {
             if (_error != null)
               Center(
                 child: Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         _error!,
                         textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          color: Colors.white,
-                        ),
+                        style: TextStyle(color: player.controlFg),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.md),
                       FilledButton(
-                        onPressed: () => _load(),
+                        onPressed: _load,
                         child: const Text('重试'),
                       ),
                     ],
@@ -140,7 +142,7 @@ class _PlayerPageState extends State<PlayerPage> {
                 ),
               )
             else if (_loading)
-              const Center(child: CircularProgressIndicator())
+              const AppLoading()
             else
               GestureDetector(
                 onTap: () => setState(() => _showChrome = !_showChrome),
@@ -158,6 +160,7 @@ class _PlayerPageState extends State<PlayerPage> {
                 right: 0,
                 child: _TopBar(
                   title: widget.title.isEmpty ? widget.videoId : widget.title,
+                  colors: player,
                   onBack: () {
                     if (context.canPop()) {
                       context.pop();
@@ -175,7 +178,7 @@ class _PlayerPageState extends State<PlayerPage> {
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  child: _BottomChrome(adapter: _adapter),
+                  child: _BottomChrome(adapter: _adapter, colors: player),
                 ),
             ],
           ],
@@ -192,6 +195,7 @@ class _TopBar extends StatelessWidget {
     required this.qualities,
     required this.current,
     required this.onQuality,
+    required this.colors,
   });
 
   final String title;
@@ -199,23 +203,26 @@ class _TopBar extends StatelessWidget {
   final List<StreamDto> qualities;
   final StreamDto? current;
   final ValueChanged<StreamDto> onQuality;
+  final PlayerColors colors;
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.black54,
+      color: colors.chromeGlass,
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
+          NpIconButton(
+            icon: AppIcons.arrowLeft,
+            color: colors.controlFg,
             onPressed: onBack,
+            tooltip: '返回',
           ),
           Expanded(
             child: Text(
               title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Colors.white, fontSize: 16),
+              style: TextStyle(color: colors.controlFg, fontSize: 16),
             ),
           ),
           if (qualities.isNotEmpty)
@@ -223,7 +230,7 @@ class _TopBar extends StatelessWidget {
               tooltip: '清晰度',
               icon: Text(
                 current?.qualityLabel ?? '清晰度',
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: colors.controlFg),
               ),
               onSelected: onQuality,
               itemBuilder: (context) => [
@@ -248,15 +255,16 @@ class _TopBar extends StatelessWidget {
 }
 
 class _BottomChrome extends StatelessWidget {
-  const _BottomChrome({required this.adapter});
+  const _BottomChrome({required this.adapter, required this.colors});
 
   final MediaKitPlayerAdapter adapter;
+  final PlayerColors colors;
 
   @override
   Widget build(BuildContext context) {
     final player = adapter.player;
     return Material(
-      color: Colors.black54,
+      color: colors.chromeGlass,
       child: StreamBuilder(
         stream: player.stream.position,
         builder: (context, posSnap) {
@@ -274,13 +282,18 @@ class _BottomChrome extends StatelessWidget {
                       : dur.inMilliseconds.toDouble();
                   final value = pos.inMilliseconds.clamp(0, maxMs.toInt());
                   return Padding(
-                    padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.sm,
+                      AppSpacing.xs,
+                      AppSpacing.sm,
+                      AppSpacing.sm,
+                    ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Row(
                           children: [
-                            IconButton(
+                            NpIconButton(
                               onPressed: () {
                                 if (playing) {
                                   adapter.pause();
@@ -288,37 +301,39 @@ class _BottomChrome extends StatelessWidget {
                                   adapter.play();
                                 }
                               },
-                              icon: Icon(
-                                playing ? Icons.pause : Icons.play_arrow,
-                                color: Colors.white,
-                              ),
+                              icon: playing ? AppIcons.pause : AppIcons.play,
+                              color: colors.controlFg,
+                              tooltip: playing ? '暂停' : '播放',
                             ),
                             Text(
                               '${_fmt(pos)} / ${_fmt(dur)}',
-                              style: const TextStyle(
-                                color: Colors.white70,
+                              style: TextStyle(
+                                color: colors.controlFgMuted,
                                 fontSize: 12,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
                               ),
                             ),
                             const Spacer(),
-                            IconButton(
+                            NpIconButton(
                               tooltip: '全屏（占位）',
                               onPressed: () {
-                                // Desktop: toggle immersive chrome later.
                                 SystemChrome.setEnabledSystemUIMode(
                                   SystemUiMode.immersiveSticky,
                                 );
                               },
-                              icon: const Icon(
-                                Icons.fullscreen,
-                                color: Colors.white,
-                              ),
+                              icon: AppIcons.fullscreen,
+                              color: colors.controlFg,
                             ),
                           ],
                         ),
                         SliderTheme(
                           data: SliderTheme.of(context).copyWith(
                             trackHeight: 2,
+                            activeTrackColor: colors.progressPlayed,
+                            inactiveTrackColor: colors.progressTrack,
+                            thumbColor: colors.progressPlayed,
                             thumbShape: const RoundSliderThumbShape(
                               enabledThumbRadius: 6,
                             ),
