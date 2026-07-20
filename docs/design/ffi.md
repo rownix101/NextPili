@@ -69,6 +69,8 @@ social:    reply_list, danmaku_view, ...
 user:      history_list, toview_list, fav_folders, fav_resources
 search:    search_video, search_suggest
 dynamics:  dynamics_feed
+live:      live_recommend, live_room, live_play_url
+pgc:       pgc_rank, pgc_season, pgc_play_url
 engagement: video_relation, video_like, video_coin, video_favorite, relation_follow
 ```
 

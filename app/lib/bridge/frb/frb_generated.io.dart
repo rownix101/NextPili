@@ -7,6 +7,8 @@ import 'api/auth.dart';
 import 'api/dynamics.dart';
 import 'api/engagement.dart';
 import 'api/feed.dart';
+import 'api/live.dart';
+import 'api/pgc.dart';
 import 'api/search.dart';
 import 'api/settings.dart';
 import 'api/simple.dart';
@@ -160,6 +162,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<HistoryItemDto> dco_decode_list_history_item_dto(dynamic raw);
 
   @protected
+  List<LiveRoomCardDto> dco_decode_list_live_room_card_dto(dynamic raw);
+
+  @protected
+  List<PgcEpisodeDto> dco_decode_list_pgc_episode_dto(dynamic raw);
+
+  @protected
+  List<PgcRankItemDto> dco_decode_list_pgc_rank_item_dto(dynamic raw);
+
+  @protected
   Int64List dco_decode_list_prim_i_64_strict(dynamic raw);
 
   @protected
@@ -182,6 +193,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<VideoPageDto> dco_decode_list_video_page_dto(dynamic raw);
+
+  @protected
+  LiveRecommendPageDto dco_decode_live_recommend_page_dto(dynamic raw);
+
+  @protected
+  LiveRoomCardDto dco_decode_live_room_card_dto(dynamic raw);
+
+  @protected
+  LiveRoomDto dco_decode_live_room_dto(dynamic raw);
 
   @protected
   MediaFormatDto dco_decode_media_format_dto(dynamic raw);
@@ -226,6 +246,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PasswordRiskVerifyDto dco_decode_password_risk_verify_dto(dynamic raw);
+
+  @protected
+  PgcEpisodeDto dco_decode_pgc_episode_dto(dynamic raw);
+
+  @protected
+  PgcRankItemDto dco_decode_pgc_rank_item_dto(dynamic raw);
+
+  @protected
+  PgcRankPageDto dco_decode_pgc_rank_page_dto(dynamic raw);
+
+  @protected
+  PgcSeasonDto dco_decode_pgc_season_dto(dynamic raw);
 
   @protected
   PopularFeedDto dco_decode_popular_feed_dto(dynamic raw);
@@ -463,6 +495,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<LiveRoomCardDto> sse_decode_list_live_room_card_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<PgcEpisodeDto> sse_decode_list_pgc_episode_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<PgcRankItemDto> sse_decode_list_pgc_rank_item_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   Int64List sse_decode_list_prim_i_64_strict(SseDeserializer deserializer);
 
   @protected
@@ -493,6 +540,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<VideoPageDto> sse_decode_list_video_page_dto(
     SseDeserializer deserializer,
   );
+
+  @protected
+  LiveRecommendPageDto sse_decode_live_recommend_page_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  LiveRoomCardDto sse_decode_live_room_card_dto(SseDeserializer deserializer);
+
+  @protected
+  LiveRoomDto sse_decode_live_room_dto(SseDeserializer deserializer);
 
   @protected
   MediaFormatDto sse_decode_media_format_dto(SseDeserializer deserializer);
@@ -549,6 +607,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PasswordRiskVerifyDto sse_decode_password_risk_verify_dto(
     SseDeserializer deserializer,
   );
+
+  @protected
+  PgcEpisodeDto sse_decode_pgc_episode_dto(SseDeserializer deserializer);
+
+  @protected
+  PgcRankItemDto sse_decode_pgc_rank_item_dto(SseDeserializer deserializer);
+
+  @protected
+  PgcRankPageDto sse_decode_pgc_rank_page_dto(SseDeserializer deserializer);
+
+  @protected
+  PgcSeasonDto sse_decode_pgc_season_dto(SseDeserializer deserializer);
 
   @protected
   PopularFeedDto sse_decode_popular_feed_dto(SseDeserializer deserializer);
@@ -840,6 +910,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_live_room_card_dto(
+    List<LiveRoomCardDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_pgc_episode_dto(
+    List<PgcEpisodeDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_pgc_rank_item_dto(
+    List<PgcRankItemDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_prim_i_64_strict(
     Int64List self,
     SseSerializer serializer,
@@ -883,6 +971,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     List<VideoPageDto> self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_live_recommend_page_dto(
+    LiveRecommendPageDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_live_room_card_dto(
+    LiveRoomCardDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_live_room_dto(LiveRoomDto self, SseSerializer serializer);
 
   @protected
   void sse_encode_media_format_dto(
@@ -958,6 +1061,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     PasswordRiskVerifyDto self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_pgc_episode_dto(PgcEpisodeDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_pgc_rank_item_dto(
+    PgcRankItemDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_pgc_rank_page_dto(
+    PgcRankPageDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_pgc_season_dto(PgcSeasonDto self, SseSerializer serializer);
 
   @protected
   void sse_encode_popular_feed_dto(

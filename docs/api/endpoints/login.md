@@ -79,7 +79,7 @@ POST /x/passport-login/login/sms  # AppSign；新号即注册
 - **桌面 / 平板**：短信（登录/注册）+ 密码 + TV/HD 扫码
 - **不提供** Cookie 粘贴导入 UI（登录成功后的 jar 仍由 Rust 持久化）
 
-`cid` 为中国大陆时使用护照国家列表 **id=1**（不是拨号 86）。
+App 短信 `cid` 为**国际拨号区号**（中国大陆 `86`），与 PiliPlus / bilibili App 一致；区号表来自 `passport.bilibili.com/web/generic/country/list`。
 
 ---
 
@@ -117,7 +117,7 @@ POST /x/passport-login/login/sms # 登录（含新号注册）AppSign
 
 | 参数 | 说明 |
 |------|------|
-| `cid` | 国际区号，中国 `86` |
+| `cid` | 国际拨号区号（App）；中国大陆 `86` |
 | `tel` | 手机号 |
 | `buvid` / `local_id` | 设备 id |
 | `login_session_id` | `md5(buvid + timestamp_ms)` |

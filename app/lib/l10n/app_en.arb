@@ -35,10 +35,59 @@
   "playUrlFetching": "Getting stream…",
 
   "navHome": "Home",
+  "navLive": "Live",
+  "navPgc": "Anime",
   "navSearch": "Search",
   "navDynamics": "Feed",
   "navLibrary": "Library",
   "navSettings": "Settings",
+
+  "pgcTitle": "Anime & shows",
+  "pgcEmpty": "No ranking items",
+  "pgcNoEpisode": "No playable episodes",
+  "pgcTabAnime": "Anime",
+  "pgcTabGuochuang": "CN anime",
+  "pgcTabMovie": "Movies",
+  "pgcTabTv": "TV",
+  "pgcTabDoc": "Docs",
+  "pgcTabVariety": "Variety",
+  "pgcRating": "Score {score}",
+  "@pgcRating": {
+    "placeholders": {
+      "score": { "type": "String" }
+    }
+  },
+  "pgcEpisodesCount": "{count} episodes",
+  "@pgcEpisodesCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "pgcEpisodeLabel": "Ep {index} {title}",
+  "@pgcEpisodeLabel": {
+    "placeholders": {
+      "index": { "type": "String" },
+      "title": { "type": "String" }
+    }
+  },
+  "pgcEpisodeFallback": "Episode {id}",
+  "@pgcEpisodeFallback": {
+    "placeholders": {
+      "id": { "type": "String" }
+    }
+  },
+
+  "liveTitle": "Live",
+  "liveEmpty": "No live rooms right now",
+  "liveBadge": "LIVE",
+  "liveOffline": "Offline",
+  "liveRound": "Replay",
+  "liveOnline": "{count} watching",
+  "@liveOnline": {
+    "placeholders": {
+      "count": { "type": "String" }
+    }
+  },
 
   "dynamicsTitle": "Following",
   "dynamicsEmpty": "No posts from people you follow",
@@ -118,6 +167,8 @@
   "authSmsIntro": "Sign in or register with your phone number and SMS code. New numbers create an account automatically. Account data stays on this device.",
   "authCountryCode": "Country",
   "authCountryChina": "+86 China",
+  "authCountrySearchHint": "Search country or dial code",
+  "authCountrySearchEmpty": "No matching region",
   "authPhone": "Phone number",
   "authGetCaptcha": "Get captcha",
   "authOpenGeeHelper": "Open GeeTest helper",

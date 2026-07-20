@@ -11,10 +11,12 @@ class AppShell extends StatelessWidget {
   final Widget child;
 
   int _indexForLocation(String location) {
-    if (location.startsWith('/search')) return 1;
-    if (location.startsWith('/dynamics')) return 2;
-    if (location.startsWith('/library')) return 3;
-    if (location.startsWith('/settings')) return 4;
+    if (location.startsWith('/live')) return 1;
+    if (location.startsWith('/pgc')) return 2;
+    if (location.startsWith('/search')) return 3;
+    if (location.startsWith('/dynamics')) return 4;
+    if (location.startsWith('/library')) return 5;
+    if (location.startsWith('/settings')) return 6;
     return 0;
   }
 
@@ -23,12 +25,16 @@ class AppShell extends StatelessWidget {
       case 0:
         context.go('/home');
       case 1:
-        context.go('/search');
+        context.go('/live');
       case 2:
-        context.go('/dynamics');
+        context.go('/pgc');
       case 3:
-        context.go('/library');
+        context.go('/search');
       case 4:
+        context.go('/dynamics');
+      case 5:
+        context.go('/library');
+      case 6:
         context.go('/settings');
     }
   }
@@ -46,6 +52,16 @@ class AppShell extends StatelessWidget {
         icon: const Icon(AppIcons.home),
         selectedIcon: const Icon(AppIcons.home),
         label: Text(l10n.navHome),
+      ),
+      NavigationRailDestination(
+        icon: const Icon(AppIcons.live),
+        selectedIcon: const Icon(AppIcons.live),
+        label: Text(l10n.navLive),
+      ),
+      NavigationRailDestination(
+        icon: const Icon(AppIcons.movie),
+        selectedIcon: const Icon(AppIcons.movie),
+        label: Text(l10n.navPgc),
       ),
       NavigationRailDestination(
         icon: const Icon(AppIcons.search),
@@ -74,6 +90,16 @@ class AppShell extends StatelessWidget {
         icon: const Icon(AppIcons.home),
         selectedIcon: const Icon(AppIcons.home),
         label: l10n.navHome,
+      ),
+      NavigationDestination(
+        icon: const Icon(AppIcons.live),
+        selectedIcon: const Icon(AppIcons.live),
+        label: l10n.navLive,
+      ),
+      NavigationDestination(
+        icon: const Icon(AppIcons.movie),
+        selectedIcon: const Icon(AppIcons.movie),
+        label: l10n.navPgc,
       ),
       NavigationDestination(
         icon: const Icon(AppIcons.search),

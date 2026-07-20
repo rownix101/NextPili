@@ -102,6 +102,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get navHome => '首页';
 
   @override
+  String get navLive => '直播';
+
+  @override
+  String get navPgc => '番剧';
+
+  @override
   String get navSearch => '搜索';
 
   @override
@@ -112,6 +118,73 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get navSettings => '设置';
+
+  @override
+  String get pgcTitle => '番剧';
+
+  @override
+  String get pgcEmpty => '暂无榜单内容';
+
+  @override
+  String get pgcNoEpisode => '暂无可播放剧集';
+
+  @override
+  String get pgcTabAnime => '番剧';
+
+  @override
+  String get pgcTabGuochuang => '国创';
+
+  @override
+  String get pgcTabMovie => '电影';
+
+  @override
+  String get pgcTabTv => '电视剧';
+
+  @override
+  String get pgcTabDoc => '纪录片';
+
+  @override
+  String get pgcTabVariety => '综艺';
+
+  @override
+  String pgcRating(String score) {
+    return '评分 $score';
+  }
+
+  @override
+  String pgcEpisodesCount(int count) {
+    return '共 $count 话';
+  }
+
+  @override
+  String pgcEpisodeLabel(String index, String title) {
+    return '第 $index 话 $title';
+  }
+
+  @override
+  String pgcEpisodeFallback(String id) {
+    return '剧集 $id';
+  }
+
+  @override
+  String get liveTitle => '直播';
+
+  @override
+  String get liveEmpty => '暂无直播推荐';
+
+  @override
+  String get liveBadge => '直播中';
+
+  @override
+  String get liveOffline => '未开播';
+
+  @override
+  String get liveRound => '轮播中';
+
+  @override
+  String liveOnline(String count) {
+    return '$count 人气';
+  }
 
   @override
   String get dynamicsTitle => '动态';
@@ -324,6 +397,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get authCountryChina => '+86 中国';
+
+  @override
+  String get authCountrySearchHint => '搜索国家/地区或区号';
+
+  @override
+  String get authCountrySearchEmpty => '无匹配区号';
 
   @override
   String get authPhone => '手机号';

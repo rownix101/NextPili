@@ -11,6 +11,7 @@ abstract final class AppIcons {
   static const IconData user = LucideIcons.user;
   static const IconData users = LucideIcons.users;
   static const IconData dynamics = LucideIcons.radio;
+  static const IconData live = LucideIcons.tv;
 
   // Media
   static const IconData play = LucideIcons.play;

@@ -51,6 +51,12 @@ dependencies:
   flutter_lucide: ^1.11.0
   google_fonts: ^6.2.1
   qr_flutter: ^4.1.0
+  # GeeTest embedded captcha (PiliPlus-compatible).
+  flutter_inappwebview: ^6.1.5
+  desktop_webview_window:
+    git:
+      url: https://github.com/Predidit/linux_webview_window
+      ref: main
 
 
 dev_dependencies:

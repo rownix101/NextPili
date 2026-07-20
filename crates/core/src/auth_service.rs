@@ -545,7 +545,7 @@ pub struct CaptchaDto {
 
 #[derive(Debug, Clone)]
 pub struct SmsSendDto {
-    /// Passport country id (中国大陆 = 1).
+    /// International dialing code (中国大陆 = 86). App SMS `cid`.
     pub cid: i32,
     pub tel: String,
     pub token: String,

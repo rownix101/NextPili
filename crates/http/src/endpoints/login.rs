@@ -303,7 +303,7 @@ impl LoginApi {
 
     /// Send SMS verification code (App passport API + AppSign).
     ///
-    /// `cid` is the passport country **id** (中国大陆 = 1), not the dialing code 86.
+    /// `cid` is the international dialing code (中国大陆 = 86), matching PiliPlus.
     pub async fn sms_send(
         client: &BiliClient,
         req: &SmsSendRequest<'_>,

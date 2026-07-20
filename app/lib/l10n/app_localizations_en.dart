@@ -103,6 +103,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navHome => 'Home';
 
   @override
+  String get navLive => 'Live';
+
+  @override
+  String get navPgc => 'Anime';
+
+  @override
   String get navSearch => 'Search';
 
   @override
@@ -113,6 +119,73 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get navSettings => 'Settings';
+
+  @override
+  String get pgcTitle => 'Anime & shows';
+
+  @override
+  String get pgcEmpty => 'No ranking items';
+
+  @override
+  String get pgcNoEpisode => 'No playable episodes';
+
+  @override
+  String get pgcTabAnime => 'Anime';
+
+  @override
+  String get pgcTabGuochuang => 'CN anime';
+
+  @override
+  String get pgcTabMovie => 'Movies';
+
+  @override
+  String get pgcTabTv => 'TV';
+
+  @override
+  String get pgcTabDoc => 'Docs';
+
+  @override
+  String get pgcTabVariety => 'Variety';
+
+  @override
+  String pgcRating(String score) {
+    return 'Score $score';
+  }
+
+  @override
+  String pgcEpisodesCount(int count) {
+    return '$count episodes';
+  }
+
+  @override
+  String pgcEpisodeLabel(String index, String title) {
+    return 'Ep $index $title';
+  }
+
+  @override
+  String pgcEpisodeFallback(String id) {
+    return 'Episode $id';
+  }
+
+  @override
+  String get liveTitle => 'Live';
+
+  @override
+  String get liveEmpty => 'No live rooms right now';
+
+  @override
+  String get liveBadge => 'LIVE';
+
+  @override
+  String get liveOffline => 'Offline';
+
+  @override
+  String get liveRound => 'Replay';
+
+  @override
+  String liveOnline(String count) {
+    return '$count watching';
+  }
 
   @override
   String get dynamicsTitle => 'Following';
@@ -329,6 +402,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authCountryChina => '+86 China';
+
+  @override
+  String get authCountrySearchHint => 'Search country or dial code';
+
+  @override
+  String get authCountrySearchEmpty => 'No matching region';
 
   @override
   String get authPhone => 'Phone number';

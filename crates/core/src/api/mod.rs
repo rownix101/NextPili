@@ -4,6 +4,8 @@ pub mod auth;
 pub mod dynamics;
 pub mod engagement;
 pub mod feed;
+pub mod live;
+pub mod pgc;
 pub mod search;
 pub mod settings;
 pub mod simple;
@@ -26,6 +28,12 @@ pub use engagement::{
 };
 pub use feed::{
     feed_popular, feed_recommend, FeedItemDto, PopularFeedDto, RecommendFeedDto,
+};
+pub use live::{
+    live_play_url, live_recommend, live_room, LiveRecommendPageDto, LiveRoomCardDto, LiveRoomDto,
+};
+pub use pgc::{
+    pgc_play_url, pgc_rank, pgc_season, PgcEpisodeDto, PgcRankItemDto, PgcRankPageDto, PgcSeasonDto,
 };
 pub use search::{
     search_suggest, search_video, SearchSuggestDto, SearchVideoItemDto, SearchVideoPageDto,

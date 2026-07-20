@@ -9,11 +9,12 @@ import '../../core/theme/shapes.dart';
 import '../../core/theme/spacing.dart';
 import '../../core/widgets/np_button.dart';
 import '../../l10n/l10n.dart';
+import 'dial_prefix.dart';
+import 'dial_prefix_picker.dart';
 
 /// Dual-pane login card inspired by bilibili web sign-in (QR left, form right).
 ///
-/// Captcha / GeeTest stays available but secondary so the primary fields match
-/// the reference layout. No third-party OAuth (WeChat / Weibo / QQ).
+/// Captcha uses embedded GeeTest (PiliPlus-style). No third-party OAuth.
 class AuthLoginPanel extends StatelessWidget {
   const AuthLoginPanel({
     super.key,
@@ -31,25 +32,21 @@ class AuthLoginPanel extends StatelessWidget {
     required this.obscurePassword,
     required this.onToggleObscure,
     required this.pwdCaptcha,
-    required this.pwdGeeValidateController,
-    required this.pwdGeeSeccodeController,
+    required this.pwdGeeReady,
     required this.pwdHint,
-    required this.onPreparePwdCaptcha,
-    required this.onOpenPwdGee,
+    required this.onSolvePwdCaptcha,
     required this.onPasswordLogin,
     required this.onRegister,
     required this.onForgotPassword,
     required this.telController,
     required this.codeController,
-    required this.smsGeeValidateController,
-    required this.smsGeeSeccodeController,
     required this.smsCaptcha,
+    required this.smsGeeReady,
     required this.captchaKey,
     required this.smsHint,
-    required this.cid,
-    required this.onCidChanged,
-    required this.onPrepareSmsCaptcha,
-    required this.onOpenSmsGee,
+    required this.dial,
+    required this.onDialChanged,
+    required this.onSolveSmsCaptcha,
     required this.onSendSms,
     required this.onSmsLogin,
   });
@@ -69,26 +66,22 @@ class AuthLoginPanel extends StatelessWidget {
   final bool obscurePassword;
   final VoidCallback onToggleObscure;
   final CaptchaDto? pwdCaptcha;
-  final TextEditingController pwdGeeValidateController;
-  final TextEditingController pwdGeeSeccodeController;
+  final bool pwdGeeReady;
   final String pwdHint;
-  final VoidCallback onPreparePwdCaptcha;
-  final VoidCallback onOpenPwdGee;
+  final VoidCallback onSolvePwdCaptcha;
   final VoidCallback onPasswordLogin;
   final VoidCallback onRegister;
   final VoidCallback onForgotPassword;
 
   final TextEditingController telController;
   final TextEditingController codeController;
-  final TextEditingController smsGeeValidateController;
-  final TextEditingController smsGeeSeccodeController;
   final CaptchaDto? smsCaptcha;
+  final bool smsGeeReady;
   final String? captchaKey;
   final String smsHint;
-  final int cid;
-  final ValueChanged<int> onCidChanged;
-  final VoidCallback onPrepareSmsCaptcha;
-  final VoidCallback onOpenSmsGee;
+  final DialPrefix dial;
+  final ValueChanged<DialPrefix> onDialChanged;
+  final VoidCallback onSolveSmsCaptcha;
   final VoidCallback onSendSms;
   final VoidCallback onSmsLogin;
 
@@ -103,25 +96,21 @@ class AuthLoginPanel extends StatelessWidget {
       obscurePassword: obscurePassword,
       onToggleObscure: onToggleObscure,
       pwdCaptcha: pwdCaptcha,
-      pwdGeeValidateController: pwdGeeValidateController,
-      pwdGeeSeccodeController: pwdGeeSeccodeController,
+      pwdGeeReady: pwdGeeReady,
       pwdHint: pwdHint,
-      onPreparePwdCaptcha: onPreparePwdCaptcha,
-      onOpenPwdGee: onOpenPwdGee,
+      onSolvePwdCaptcha: onSolvePwdCaptcha,
       onPasswordLogin: onPasswordLogin,
       onRegister: onRegister,
       onForgotPassword: onForgotPassword,
       telController: telController,
       codeController: codeController,
-      smsGeeValidateController: smsGeeValidateController,
-      smsGeeSeccodeController: smsGeeSeccodeController,
       smsCaptcha: smsCaptcha,
+      smsGeeReady: smsGeeReady,
       captchaKey: captchaKey,
       smsHint: smsHint,
-      cid: cid,
-      onCidChanged: onCidChanged,
-      onPrepareSmsCaptcha: onPrepareSmsCaptcha,
-      onOpenSmsGee: onOpenSmsGee,
+      dial: dial,
+      onDialChanged: onDialChanged,
+      onSolveSmsCaptcha: onSolveSmsCaptcha,
       onSendSms: onSendSms,
       onSmsLogin: onSmsLogin,
     );
@@ -347,25 +336,21 @@ class _CredentialPane extends StatelessWidget {
     required this.obscurePassword,
     required this.onToggleObscure,
     required this.pwdCaptcha,
-    required this.pwdGeeValidateController,
-    required this.pwdGeeSeccodeController,
+    required this.pwdGeeReady,
     required this.pwdHint,
-    required this.onPreparePwdCaptcha,
-    required this.onOpenPwdGee,
+    required this.onSolvePwdCaptcha,
     required this.onPasswordLogin,
     required this.onRegister,
     required this.onForgotPassword,
     required this.telController,
     required this.codeController,
-    required this.smsGeeValidateController,
-    required this.smsGeeSeccodeController,
     required this.smsCaptcha,
+    required this.smsGeeReady,
     required this.captchaKey,
     required this.smsHint,
-    required this.cid,
-    required this.onCidChanged,
-    required this.onPrepareSmsCaptcha,
-    required this.onOpenSmsGee,
+    required this.dial,
+    required this.onDialChanged,
+    required this.onSolveSmsCaptcha,
     required this.onSendSms,
     required this.onSmsLogin,
   });
@@ -378,26 +363,22 @@ class _CredentialPane extends StatelessWidget {
   final bool obscurePassword;
   final VoidCallback onToggleObscure;
   final CaptchaDto? pwdCaptcha;
-  final TextEditingController pwdGeeValidateController;
-  final TextEditingController pwdGeeSeccodeController;
+  final bool pwdGeeReady;
   final String pwdHint;
-  final VoidCallback onPreparePwdCaptcha;
-  final VoidCallback onOpenPwdGee;
+  final VoidCallback onSolvePwdCaptcha;
   final VoidCallback onPasswordLogin;
   final VoidCallback onRegister;
   final VoidCallback onForgotPassword;
 
   final TextEditingController telController;
   final TextEditingController codeController;
-  final TextEditingController smsGeeValidateController;
-  final TextEditingController smsGeeSeccodeController;
   final CaptchaDto? smsCaptcha;
+  final bool smsGeeReady;
   final String? captchaKey;
   final String smsHint;
-  final int cid;
-  final ValueChanged<int> onCidChanged;
-  final VoidCallback onPrepareSmsCaptcha;
-  final VoidCallback onOpenSmsGee;
+  final DialPrefix dial;
+  final ValueChanged<DialPrefix> onDialChanged;
+  final VoidCallback onSolveSmsCaptcha;
   final VoidCallback onSendSms;
   final VoidCallback onSmsLogin;
 
@@ -424,7 +405,8 @@ class _CredentialPane extends StatelessWidget {
               isScrollable: true,
               tabAlignment: TabAlignment.start,
               dividerColor: Colors.transparent,
-              labelPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              labelPadding:
+                  const EdgeInsets.symmetric(horizontal: AppSpacing.md),
               tabs: [
                 Tab(text: l10n.authTabPassword),
                 Tab(text: l10n.authTabSms),
@@ -443,11 +425,9 @@ class _CredentialPane extends StatelessWidget {
                   obscurePassword: obscurePassword,
                   onToggleObscure: onToggleObscure,
                   captcha: pwdCaptcha,
-                  geeValidateController: pwdGeeValidateController,
-                  geeSeccodeController: pwdGeeSeccodeController,
+                  geeReady: pwdGeeReady,
                   hint: pwdHint,
-                  onPrepareCaptcha: onPreparePwdCaptcha,
-                  onOpenGee: onOpenPwdGee,
+                  onSolveCaptcha: onSolvePwdCaptcha,
                   onLogin: onPasswordLogin,
                   onRegister: onRegister,
                   onForgotPassword: onForgotPassword,
@@ -456,15 +436,13 @@ class _CredentialPane extends StatelessWidget {
                   busy: busy,
                   telController: telController,
                   codeController: codeController,
-                  geeValidateController: smsGeeValidateController,
-                  geeSeccodeController: smsGeeSeccodeController,
                   captcha: smsCaptcha,
+                  geeReady: smsGeeReady,
                   captchaKey: captchaKey,
                   hint: smsHint,
-                  cid: cid,
-                  onCidChanged: onCidChanged,
-                  onPrepareCaptcha: onPrepareSmsCaptcha,
-                  onOpenGee: onOpenSmsGee,
+                  dial: dial,
+                  onDialChanged: onDialChanged,
+                  onSolveCaptcha: onSolveSmsCaptcha,
                   onSendSms: onSendSms,
                   onLogin: onSmsLogin,
                 );
@@ -499,11 +477,9 @@ class _PasswordForm extends StatelessWidget {
     required this.obscurePassword,
     required this.onToggleObscure,
     required this.captcha,
-    required this.geeValidateController,
-    required this.geeSeccodeController,
+    required this.geeReady,
     required this.hint,
-    required this.onPrepareCaptcha,
-    required this.onOpenGee,
+    required this.onSolveCaptcha,
     required this.onLogin,
     required this.onRegister,
     required this.onForgotPassword,
@@ -515,11 +491,9 @@ class _PasswordForm extends StatelessWidget {
   final bool obscurePassword;
   final VoidCallback onToggleObscure;
   final CaptchaDto? captcha;
-  final TextEditingController geeValidateController;
-  final TextEditingController geeSeccodeController;
+  final bool geeReady;
   final String hint;
-  final VoidCallback onPrepareCaptcha;
-  final VoidCallback onOpenGee;
+  final VoidCallback onSolveCaptcha;
   final VoidCallback onLogin;
   final VoidCallback onRegister;
   final VoidCallback onForgotPassword;
@@ -609,16 +583,15 @@ class _PasswordForm extends StatelessWidget {
         _CaptchaSection(
           busy: busy,
           captcha: captcha,
-          geeValidateController: geeValidateController,
-          geeSeccodeController: geeSeccodeController,
-          onPrepareCaptcha: onPrepareCaptcha,
-          onOpenGee: onOpenGee,
+          geeReady: geeReady,
+          onSolveCaptcha: onSolveCaptcha,
         ),
         if (hint.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.sm),
           Text(
             hint,
-            style: theme.textTheme.bodySmall?.copyWith(color: colors.fgSecondary),
+            style:
+                theme.textTheme.bodySmall?.copyWith(color: colors.fgSecondary),
           ),
         ],
         const SizedBox(height: AppSpacing.lg),
@@ -638,15 +611,13 @@ class _SmsForm extends StatelessWidget {
     required this.busy,
     required this.telController,
     required this.codeController,
-    required this.geeValidateController,
-    required this.geeSeccodeController,
     required this.captcha,
+    required this.geeReady,
     required this.captchaKey,
     required this.hint,
-    required this.cid,
-    required this.onCidChanged,
-    required this.onPrepareCaptcha,
-    required this.onOpenGee,
+    required this.dial,
+    required this.onDialChanged,
+    required this.onSolveCaptcha,
     required this.onSendSms,
     required this.onLogin,
   });
@@ -654,17 +625,24 @@ class _SmsForm extends StatelessWidget {
   final bool busy;
   final TextEditingController telController;
   final TextEditingController codeController;
-  final TextEditingController geeValidateController;
-  final TextEditingController geeSeccodeController;
   final CaptchaDto? captcha;
+  final bool geeReady;
   final String? captchaKey;
   final String hint;
-  final int cid;
-  final ValueChanged<int> onCidChanged;
-  final VoidCallback onPrepareCaptcha;
-  final VoidCallback onOpenGee;
+  final DialPrefix dial;
+  final ValueChanged<DialPrefix> onDialChanged;
+  final VoidCallback onSolveCaptcha;
   final VoidCallback onSendSms;
   final VoidCallback onLogin;
+
+  Future<void> _pickDial(BuildContext context) async {
+    if (busy) return;
+    final next = await showDialPrefixPicker(
+      context: context,
+      selected: dial,
+    );
+    if (next != null) onDialChanged(next);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -679,21 +657,30 @@ class _SmsForm extends StatelessWidget {
           children: [
             _InlineField(
               label: l10n.authPhone,
-              leading: SizedBox(
-                width: 72,
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<int>(
-                    value: cid,
-                    isExpanded: true,
-                    isDense: true,
-                    items: const [
-                      DropdownMenuItem(value: 1, child: Text('+86')),
-                    ],
-                    onChanged: busy
-                        ? null
-                        : (v) {
-                            if (v != null) onCidChanged(v);
-                          },
+              leading: Tooltip(
+                message: '${dial.cname} ${dial.displayDial}',
+                child: InkWell(
+                  onTap: busy ? null : () => _pickDial(context),
+                  borderRadius: AppShapes.borderSm,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          dial.displayDial,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colors.fgPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_drop_down,
+                          size: 18,
+                          color: colors.fgMuted,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -750,24 +737,21 @@ class _SmsForm extends StatelessWidget {
         _CaptchaSection(
           busy: busy,
           captcha: captcha,
-          geeValidateController: geeValidateController,
-          geeSeccodeController: geeSeccodeController,
-          onPrepareCaptcha: onPrepareCaptcha,
-          onOpenGee: onOpenGee,
+          geeReady: geeReady,
+          onSolveCaptcha: onSolveCaptcha,
           sentReady: captchaKey != null && captchaKey!.isNotEmpty,
         ),
         if (hint.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.sm),
           Text(
             hint,
-            style: theme.textTheme.bodySmall?.copyWith(color: colors.fgSecondary),
+            style:
+                theme.textTheme.bodySmall?.copyWith(color: colors.fgSecondary),
           ),
         ],
         const SizedBox(height: AppSpacing.lg),
         NpButton(
-          label: busy
-              ? l10n.authLoggingInOrRegistering
-              : l10n.authLoginOrRegister,
+          label: busy ? l10n.authLoggingIn : l10n.login,
           loading: busy,
           onPressed: busy ? null : onLogin,
           expanded: true,
@@ -821,19 +805,15 @@ class _CaptchaSection extends StatelessWidget {
   const _CaptchaSection({
     required this.busy,
     required this.captcha,
-    required this.geeValidateController,
-    required this.geeSeccodeController,
-    required this.onPrepareCaptcha,
-    required this.onOpenGee,
+    required this.geeReady,
+    required this.onSolveCaptcha,
     this.sentReady = false,
   });
 
   final bool busy;
   final CaptchaDto? captcha;
-  final TextEditingController geeValidateController;
-  final TextEditingController geeSeccodeController;
-  final VoidCallback onPrepareCaptcha;
-  final VoidCallback onOpenGee;
+  final bool geeReady;
+  final VoidCallback onSolveCaptcha;
   final bool sentReady;
 
   @override
@@ -841,62 +821,45 @@ class _CaptchaSection extends StatelessWidget {
     final l10n = context.l10n;
     final colors = AppColors.of(context);
     final theme = Theme.of(context);
+    final subtitle = sentReady
+        ? l10n.authCaptchaKeyReady
+        : (geeReady
+            ? l10n.authCaptchaKeyReady
+            : (captcha == null ? null : l10n.authSmsHintCompleteGee));
 
     return Theme(
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
         tilePadding: EdgeInsets.zero,
         childrenPadding: const EdgeInsets.only(bottom: AppSpacing.sm),
-        initiallyExpanded: captcha != null || sentReady,
+        initiallyExpanded: captcha != null || geeReady || sentReady,
         title: Text(
           l10n.authCaptchaSection,
-          style: theme.textTheme.labelLarge?.copyWith(color: colors.fgSecondary),
+          style:
+              theme.textTheme.labelLarge?.copyWith(color: colors.fgSecondary),
         ),
-        subtitle: captcha == null
+        subtitle: subtitle == null
             ? null
             : Text(
-                sentReady ? l10n.authCaptchaKeyReady : 'gt / challenge ready',
-                style: theme.textTheme.bodySmall?.copyWith(color: colors.fgMuted),
+                subtitle,
+                style:
+                    theme.textTheme.bodySmall?.copyWith(color: colors.fgMuted),
               ),
         children: [
-          if (captcha != null)
-            SelectableText(
-              'gt: ${captcha!.gt}\nchallenge: ${captcha!.challenge}',
-              style: theme.textTheme.bodySmall,
+          NpButton(
+            label: l10n.authGetCaptcha,
+            icon: AppIcons.shield,
+            variant: NpButtonVariant.secondary,
+            onPressed: busy ? null : onSolveCaptcha,
+            expanded: true,
+          ),
+          if (geeReady) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              l10n.authCaptchaKeyReady,
+              style: theme.textTheme.bodySmall?.copyWith(color: colors.accent),
             ),
-          const SizedBox(height: AppSpacing.sm),
-          Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
-            children: [
-              NpButton(
-                label: l10n.authGetCaptcha,
-                icon: AppIcons.shield,
-                variant: NpButtonVariant.secondary,
-                onPressed: busy ? null : onPrepareCaptcha,
-              ),
-              NpButton(
-                label: l10n.authOpenGeeHelper,
-                icon: AppIcons.externalLink,
-                variant: NpButtonVariant.secondary,
-                onPressed: busy || captcha == null ? null : onOpenGee,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          TextField(
-            controller: geeValidateController,
-            enabled: !busy,
-            decoration: const InputDecoration(labelText: 'gee_validate'),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          TextField(
-            controller: geeSeccodeController,
-            enabled: !busy,
-            decoration: InputDecoration(
-              labelText: l10n.authGeeSeccodeOptional,
-            ),
-          ),
+          ],
         ],
       ),
     );

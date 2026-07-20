@@ -7,6 +7,8 @@ import 'api/auth.dart';
 import 'api/dynamics.dart';
 import 'api/engagement.dart';
 import 'api/feed.dart';
+import 'api/live.dart';
+import 'api/pgc.dart';
 import 'api/search.dart';
 import 'api/settings.dart';
 import 'api/simple.dart';
@@ -77,7 +79,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => 960193846;
+  int get rustContentHash => 2083743640;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -137,6 +139,18 @@ abstract class RustLibApi extends BaseApi {
 
   List<AccountPublicDto> crateApiAuthListAccounts();
 
+  Future<MediaSourceDto> crateApiLiveLivePlayUrl({
+    required PlatformInt64 roomId,
+    required int qn,
+  });
+
+  Future<LiveRecommendPageDto> crateApiLiveLiveRecommend({
+    required int page,
+    required int pageSize,
+  });
+
+  Future<LiveRoomDto> crateApiLiveLiveRoom({required PlatformInt64 roomId});
+
   Future<CaptchaDto> crateApiAuthLoginCaptcha();
 
   Future<PasswordLoginResultDto> crateApiAuthLoginPassword({
@@ -167,6 +181,23 @@ abstract class RustLibApi extends BaseApi {
   void crateApiAuthLogout({String? accountId});
 
   String crateApiAuthNewLoginSessionId();
+
+  Future<MediaSourceDto> crateApiPgcPgcPlayUrl({
+    required PlatformInt64 epId,
+    required PlatformInt64 cid,
+    required int qn,
+    required int fnval,
+  });
+
+  Future<PgcRankPageDto> crateApiPgcPgcRank({
+    required int seasonType,
+    required int day,
+  });
+
+  Future<PgcSeasonDto> crateApiPgcPgcSeason({
+    required PlatformInt64 seasonId,
+    required PlatformInt64 epId,
+  });
 
   String crateApiSimplePing();
 
@@ -647,6 +678,102 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "list_accounts", argNames: []);
 
   @override
+  Future<MediaSourceDto> crateApiLiveLivePlayUrl({
+    required PlatformInt64 roomId,
+    required int qn,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_i_64(roomId, serializer);
+          sse_encode_u_32(qn, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 14,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_media_source_dto,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiLiveLivePlayUrlConstMeta,
+        argValues: [roomId, qn],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiLiveLivePlayUrlConstMeta => const TaskConstMeta(
+    debugName: "live_play_url",
+    argNames: ["roomId", "qn"],
+  );
+
+  @override
+  Future<LiveRecommendPageDto> crateApiLiveLiveRecommend({
+    required int page,
+    required int pageSize,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_i_32(page, serializer);
+          sse_encode_u_32(pageSize, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 15,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_live_recommend_page_dto,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiLiveLiveRecommendConstMeta,
+        argValues: [page, pageSize],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiLiveLiveRecommendConstMeta => const TaskConstMeta(
+    debugName: "live_recommend",
+    argNames: ["page", "pageSize"],
+  );
+
+  @override
+  Future<LiveRoomDto> crateApiLiveLiveRoom({required PlatformInt64 roomId}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_i_64(roomId, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 16,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_live_room_dto,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiLiveLiveRoomConstMeta,
+        argValues: [roomId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiLiveLiveRoomConstMeta =>
+      const TaskConstMeta(debugName: "live_room", argNames: ["roomId"]);
+
+  @override
   Future<CaptchaDto> crateApiAuthLoginCaptcha() {
     return handler.executeNormal(
       NormalTask(
@@ -655,7 +782,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 14,
+            funcId: 17,
             port: port_,
           );
         },
@@ -685,7 +812,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 15,
+            funcId: 18,
             port: port_,
           );
         },
@@ -712,7 +839,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 16,
+            funcId: 19,
             port: port_,
           );
         },
@@ -745,7 +872,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 17,
+            funcId: 20,
             port: port_,
           );
         },
@@ -778,7 +905,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 18,
+            funcId: 21,
             port: port_,
           );
         },
@@ -813,7 +940,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 19,
+            funcId: 22,
             port: port_,
           );
         },
@@ -843,7 +970,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 20,
+            funcId: 23,
             port: port_,
           );
         },
@@ -871,7 +998,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 21,
+            funcId: 24,
             port: port_,
           );
         },
@@ -899,7 +1026,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 22,
+            funcId: 25,
             port: port_,
           );
         },
@@ -924,7 +1051,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_opt_String(accountId, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 23)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 26)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
@@ -946,7 +1073,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 24)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 27)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_String,
@@ -963,12 +1090,118 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "new_login_session_id", argNames: []);
 
   @override
+  Future<MediaSourceDto> crateApiPgcPgcPlayUrl({
+    required PlatformInt64 epId,
+    required PlatformInt64 cid,
+    required int qn,
+    required int fnval,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_i_64(epId, serializer);
+          sse_encode_i_64(cid, serializer);
+          sse_encode_u_32(qn, serializer);
+          sse_encode_u_32(fnval, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 28,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_media_source_dto,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiPgcPgcPlayUrlConstMeta,
+        argValues: [epId, cid, qn, fnval],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiPgcPgcPlayUrlConstMeta => const TaskConstMeta(
+    debugName: "pgc_play_url",
+    argNames: ["epId", "cid", "qn", "fnval"],
+  );
+
+  @override
+  Future<PgcRankPageDto> crateApiPgcPgcRank({
+    required int seasonType,
+    required int day,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_i_32(seasonType, serializer);
+          sse_encode_i_32(day, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 29,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_pgc_rank_page_dto,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiPgcPgcRankConstMeta,
+        argValues: [seasonType, day],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiPgcPgcRankConstMeta => const TaskConstMeta(
+    debugName: "pgc_rank",
+    argNames: ["seasonType", "day"],
+  );
+
+  @override
+  Future<PgcSeasonDto> crateApiPgcPgcSeason({
+    required PlatformInt64 seasonId,
+    required PlatformInt64 epId,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_i_64(seasonId, serializer);
+          sse_encode_i_64(epId, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 30,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_pgc_season_dto,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiPgcPgcSeasonConstMeta,
+        argValues: [seasonId, epId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiPgcPgcSeasonConstMeta => const TaskConstMeta(
+    debugName: "pgc_season",
+    argNames: ["seasonId", "epId"],
+  );
+
+  @override
   String crateApiSimplePing() {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 25)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 31)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_String,
@@ -1002,7 +1235,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 26,
+            funcId: 32,
             port: port_,
           );
         },
@@ -1038,7 +1271,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 27,
+            funcId: 33,
             port: port_,
           );
         },
@@ -1064,7 +1297,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 28)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 34)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
@@ -1094,7 +1327,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 29,
+            funcId: 35,
             port: port_,
           );
         },
@@ -1133,7 +1366,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 30,
+            funcId: 36,
             port: port_,
           );
         },
@@ -1163,7 +1396,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 31,
+            funcId: 37,
             port: port_,
           );
         },
@@ -1195,7 +1428,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 32,
+            funcId: 38,
             port: port_,
           );
         },
@@ -1223,7 +1456,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_slot_dto(slot, serializer);
           sse_encode_opt_String(accountId, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 33)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 39)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
@@ -1255,7 +1488,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 34,
+            funcId: 40,
             port: port_,
           );
         },
@@ -1286,7 +1519,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_opt_box_autoadd_u_32(preferredQn, serializer);
           sse_encode_opt_String(proxy, serializer);
           sse_encode_opt_String(locale, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 35)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 41)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_settings_dto,
@@ -1323,7 +1556,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 36,
+            funcId: 42,
             port: port_,
           );
         },
@@ -1354,7 +1587,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 37,
+            funcId: 43,
             port: port_,
           );
         },
@@ -1388,7 +1621,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 38,
+            funcId: 44,
             port: port_,
           );
         },
@@ -1427,7 +1660,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 39,
+            funcId: 45,
             port: port_,
           );
         },
@@ -1464,7 +1697,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 40,
+            funcId: 46,
             port: port_,
           );
         },
@@ -1499,7 +1732,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 41,
+            funcId: 47,
             port: port_,
           );
         },
@@ -1949,6 +2182,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<LiveRoomCardDto> dco_decode_list_live_room_card_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_live_room_card_dto).toList();
+  }
+
+  @protected
+  List<PgcEpisodeDto> dco_decode_list_pgc_episode_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_pgc_episode_dto).toList();
+  }
+
+  @protected
+  List<PgcRankItemDto> dco_decode_list_pgc_rank_item_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_pgc_rank_item_dto).toList();
+  }
+
+  @protected
   Int64List dco_decode_list_prim_i_64_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return dcoDecodeInt64List(raw);
@@ -1996,6 +2247,57 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<VideoPageDto> dco_decode_list_video_page_dto(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_video_page_dto).toList();
+  }
+
+  @protected
+  LiveRecommendPageDto dco_decode_live_recommend_page_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return LiveRecommendPageDto(
+      items: dco_decode_list_live_room_card_dto(arr[0]),
+      page: dco_decode_i_32(arr[1]),
+      hasMore: dco_decode_bool(arr[2]),
+    );
+  }
+
+  @protected
+  LiveRoomCardDto dco_decode_live_room_card_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 8)
+      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    return LiveRoomCardDto(
+      roomId: dco_decode_i_64(arr[0]),
+      uid: dco_decode_i_64(arr[1]),
+      title: dco_decode_String(arr[2]),
+      uname: dco_decode_String(arr[3]),
+      face: dco_decode_String(arr[4]),
+      cover: dco_decode_String(arr[5]),
+      online: dco_decode_i_64(arr[6]),
+      areaName: dco_decode_String(arr[7]),
+    );
+  }
+
+  @protected
+  LiveRoomDto dco_decode_live_room_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 10)
+      throw Exception('unexpected arr length: expect 10 but see ${arr.length}');
+    return LiveRoomDto(
+      roomId: dco_decode_i_64(arr[0]),
+      shortId: dco_decode_i_64(arr[1]),
+      uid: dco_decode_i_64(arr[2]),
+      title: dco_decode_String(arr[3]),
+      cover: dco_decode_String(arr[4]),
+      uname: dco_decode_String(arr[5]),
+      face: dco_decode_String(arr[6]),
+      online: dco_decode_i_64(arr[7]),
+      liveStatus: dco_decode_i_32(arr[8]),
+      areaName: dco_decode_String(arr[9]),
+    );
   }
 
   @protected
@@ -2147,6 +2449,75 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       source: dco_decode_String(arr[3]),
       captchaKey: dco_decode_String(arr[4]),
       riskUrl: dco_decode_String(arr[5]),
+    );
+  }
+
+  @protected
+  PgcEpisodeDto dco_decode_pgc_episode_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 9)
+      throw Exception('unexpected arr length: expect 9 but see ${arr.length}');
+    return PgcEpisodeDto(
+      epId: dco_decode_i_64(arr[0]),
+      aid: dco_decode_i_64(arr[1]),
+      bvid: dco_decode_String(arr[2]),
+      cid: dco_decode_i_64(arr[3]),
+      title: dco_decode_String(arr[4]),
+      longTitle: dco_decode_String(arr[5]),
+      cover: dco_decode_String(arr[6]),
+      durationMs: dco_decode_i_64(arr[7]),
+      badge: dco_decode_String(arr[8]),
+    );
+  }
+
+  @protected
+  PgcRankItemDto dco_decode_pgc_rank_item_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 7)
+      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    return PgcRankItemDto(
+      seasonId: dco_decode_i_64(arr[0]),
+      title: dco_decode_String(arr[1]),
+      cover: dco_decode_String(arr[2]),
+      badge: dco_decode_String(arr[3]),
+      indexShow: dco_decode_String(arr[4]),
+      rating: dco_decode_String(arr[5]),
+      order: dco_decode_i_32(arr[6]),
+    );
+  }
+
+  @protected
+  PgcRankPageDto dco_decode_pgc_rank_page_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return PgcRankPageDto(
+      items: dco_decode_list_pgc_rank_item_dto(arr[0]),
+      seasonType: dco_decode_i_32(arr[1]),
+      note: dco_decode_String(arr[2]),
+    );
+  }
+
+  @protected
+  PgcSeasonDto dco_decode_pgc_season_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 10)
+      throw Exception('unexpected arr length: expect 10 but see ${arr.length}');
+    return PgcSeasonDto(
+      seasonId: dco_decode_i_64(arr[0]),
+      seasonTitle: dco_decode_String(arr[1]),
+      title: dco_decode_String(arr[2]),
+      cover: dco_decode_String(arr[3]),
+      evaluate: dco_decode_String(arr[4]),
+      seasonType: dco_decode_i_32(arr[5]),
+      typeName: dco_decode_String(arr[6]),
+      ratingScore: dco_decode_String(arr[7]),
+      episodes: dco_decode_list_pgc_episode_dto(arr[8]),
+      defaultEpId: dco_decode_i_64(arr[9]),
     );
   }
 
@@ -3033,6 +3404,48 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<LiveRoomCardDto> sse_decode_list_live_room_card_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <LiveRoomCardDto>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_live_room_card_dto(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<PgcEpisodeDto> sse_decode_list_pgc_episode_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <PgcEpisodeDto>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_pgc_episode_dto(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<PgcRankItemDto> sse_decode_list_pgc_rank_item_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <PgcRankItemDto>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_pgc_rank_item_dto(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   Int64List sse_decode_list_prim_i_64_strict(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
@@ -3124,6 +3537,71 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       ans_.add(sse_decode_video_page_dto(deserializer));
     }
     return ans_;
+  }
+
+  @protected
+  LiveRecommendPageDto sse_decode_live_recommend_page_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_items = sse_decode_list_live_room_card_dto(deserializer);
+    var var_page = sse_decode_i_32(deserializer);
+    var var_hasMore = sse_decode_bool(deserializer);
+    return LiveRecommendPageDto(
+      items: var_items,
+      page: var_page,
+      hasMore: var_hasMore,
+    );
+  }
+
+  @protected
+  LiveRoomCardDto sse_decode_live_room_card_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_roomId = sse_decode_i_64(deserializer);
+    var var_uid = sse_decode_i_64(deserializer);
+    var var_title = sse_decode_String(deserializer);
+    var var_uname = sse_decode_String(deserializer);
+    var var_face = sse_decode_String(deserializer);
+    var var_cover = sse_decode_String(deserializer);
+    var var_online = sse_decode_i_64(deserializer);
+    var var_areaName = sse_decode_String(deserializer);
+    return LiveRoomCardDto(
+      roomId: var_roomId,
+      uid: var_uid,
+      title: var_title,
+      uname: var_uname,
+      face: var_face,
+      cover: var_cover,
+      online: var_online,
+      areaName: var_areaName,
+    );
+  }
+
+  @protected
+  LiveRoomDto sse_decode_live_room_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_roomId = sse_decode_i_64(deserializer);
+    var var_shortId = sse_decode_i_64(deserializer);
+    var var_uid = sse_decode_i_64(deserializer);
+    var var_title = sse_decode_String(deserializer);
+    var var_cover = sse_decode_String(deserializer);
+    var var_uname = sse_decode_String(deserializer);
+    var var_face = sse_decode_String(deserializer);
+    var var_online = sse_decode_i_64(deserializer);
+    var var_liveStatus = sse_decode_i_32(deserializer);
+    var var_areaName = sse_decode_String(deserializer);
+    return LiveRoomDto(
+      roomId: var_roomId,
+      shortId: var_shortId,
+      uid: var_uid,
+      title: var_title,
+      cover: var_cover,
+      uname: var_uname,
+      face: var_face,
+      online: var_online,
+      liveStatus: var_liveStatus,
+      areaName: var_areaName,
+    );
   }
 
   @protected
@@ -3335,6 +3813,92 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       source: var_source,
       captchaKey: var_captchaKey,
       riskUrl: var_riskUrl,
+    );
+  }
+
+  @protected
+  PgcEpisodeDto sse_decode_pgc_episode_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_epId = sse_decode_i_64(deserializer);
+    var var_aid = sse_decode_i_64(deserializer);
+    var var_bvid = sse_decode_String(deserializer);
+    var var_cid = sse_decode_i_64(deserializer);
+    var var_title = sse_decode_String(deserializer);
+    var var_longTitle = sse_decode_String(deserializer);
+    var var_cover = sse_decode_String(deserializer);
+    var var_durationMs = sse_decode_i_64(deserializer);
+    var var_badge = sse_decode_String(deserializer);
+    return PgcEpisodeDto(
+      epId: var_epId,
+      aid: var_aid,
+      bvid: var_bvid,
+      cid: var_cid,
+      title: var_title,
+      longTitle: var_longTitle,
+      cover: var_cover,
+      durationMs: var_durationMs,
+      badge: var_badge,
+    );
+  }
+
+  @protected
+  PgcRankItemDto sse_decode_pgc_rank_item_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_seasonId = sse_decode_i_64(deserializer);
+    var var_title = sse_decode_String(deserializer);
+    var var_cover = sse_decode_String(deserializer);
+    var var_badge = sse_decode_String(deserializer);
+    var var_indexShow = sse_decode_String(deserializer);
+    var var_rating = sse_decode_String(deserializer);
+    var var_order = sse_decode_i_32(deserializer);
+    return PgcRankItemDto(
+      seasonId: var_seasonId,
+      title: var_title,
+      cover: var_cover,
+      badge: var_badge,
+      indexShow: var_indexShow,
+      rating: var_rating,
+      order: var_order,
+    );
+  }
+
+  @protected
+  PgcRankPageDto sse_decode_pgc_rank_page_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_items = sse_decode_list_pgc_rank_item_dto(deserializer);
+    var var_seasonType = sse_decode_i_32(deserializer);
+    var var_note = sse_decode_String(deserializer);
+    return PgcRankPageDto(
+      items: var_items,
+      seasonType: var_seasonType,
+      note: var_note,
+    );
+  }
+
+  @protected
+  PgcSeasonDto sse_decode_pgc_season_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_seasonId = sse_decode_i_64(deserializer);
+    var var_seasonTitle = sse_decode_String(deserializer);
+    var var_title = sse_decode_String(deserializer);
+    var var_cover = sse_decode_String(deserializer);
+    var var_evaluate = sse_decode_String(deserializer);
+    var var_seasonType = sse_decode_i_32(deserializer);
+    var var_typeName = sse_decode_String(deserializer);
+    var var_ratingScore = sse_decode_String(deserializer);
+    var var_episodes = sse_decode_list_pgc_episode_dto(deserializer);
+    var var_defaultEpId = sse_decode_i_64(deserializer);
+    return PgcSeasonDto(
+      seasonId: var_seasonId,
+      seasonTitle: var_seasonTitle,
+      title: var_title,
+      cover: var_cover,
+      evaluate: var_evaluate,
+      seasonType: var_seasonType,
+      typeName: var_typeName,
+      ratingScore: var_ratingScore,
+      episodes: var_episodes,
+      defaultEpId: var_defaultEpId,
     );
   }
 
@@ -4159,6 +4723,42 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_live_room_card_dto(
+    List<LiveRoomCardDto> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_live_room_card_dto(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_pgc_episode_dto(
+    List<PgcEpisodeDto> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_pgc_episode_dto(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_pgc_rank_item_dto(
+    List<PgcRankItemDto> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_pgc_rank_item_dto(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_prim_i_64_strict(
     Int64List self,
     SseSerializer serializer,
@@ -4248,6 +4848,48 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     for (final item in self) {
       sse_encode_video_page_dto(item, serializer);
     }
+  }
+
+  @protected
+  void sse_encode_live_recommend_page_dto(
+    LiveRecommendPageDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_live_room_card_dto(self.items, serializer);
+    sse_encode_i_32(self.page, serializer);
+    sse_encode_bool(self.hasMore, serializer);
+  }
+
+  @protected
+  void sse_encode_live_room_card_dto(
+    LiveRoomCardDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_64(self.roomId, serializer);
+    sse_encode_i_64(self.uid, serializer);
+    sse_encode_String(self.title, serializer);
+    sse_encode_String(self.uname, serializer);
+    sse_encode_String(self.face, serializer);
+    sse_encode_String(self.cover, serializer);
+    sse_encode_i_64(self.online, serializer);
+    sse_encode_String(self.areaName, serializer);
+  }
+
+  @protected
+  void sse_encode_live_room_dto(LiveRoomDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_64(self.roomId, serializer);
+    sse_encode_i_64(self.shortId, serializer);
+    sse_encode_i_64(self.uid, serializer);
+    sse_encode_String(self.title, serializer);
+    sse_encode_String(self.cover, serializer);
+    sse_encode_String(self.uname, serializer);
+    sse_encode_String(self.face, serializer);
+    sse_encode_i_64(self.online, serializer);
+    sse_encode_i_32(self.liveStatus, serializer);
+    sse_encode_String(self.areaName, serializer);
   }
 
   @protected
@@ -4418,6 +5060,64 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.source, serializer);
     sse_encode_String(self.captchaKey, serializer);
     sse_encode_String(self.riskUrl, serializer);
+  }
+
+  @protected
+  void sse_encode_pgc_episode_dto(
+    PgcEpisodeDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_64(self.epId, serializer);
+    sse_encode_i_64(self.aid, serializer);
+    sse_encode_String(self.bvid, serializer);
+    sse_encode_i_64(self.cid, serializer);
+    sse_encode_String(self.title, serializer);
+    sse_encode_String(self.longTitle, serializer);
+    sse_encode_String(self.cover, serializer);
+    sse_encode_i_64(self.durationMs, serializer);
+    sse_encode_String(self.badge, serializer);
+  }
+
+  @protected
+  void sse_encode_pgc_rank_item_dto(
+    PgcRankItemDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_64(self.seasonId, serializer);
+    sse_encode_String(self.title, serializer);
+    sse_encode_String(self.cover, serializer);
+    sse_encode_String(self.badge, serializer);
+    sse_encode_String(self.indexShow, serializer);
+    sse_encode_String(self.rating, serializer);
+    sse_encode_i_32(self.order, serializer);
+  }
+
+  @protected
+  void sse_encode_pgc_rank_page_dto(
+    PgcRankPageDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_pgc_rank_item_dto(self.items, serializer);
+    sse_encode_i_32(self.seasonType, serializer);
+    sse_encode_String(self.note, serializer);
+  }
+
+  @protected
+  void sse_encode_pgc_season_dto(PgcSeasonDto self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_64(self.seasonId, serializer);
+    sse_encode_String(self.seasonTitle, serializer);
+    sse_encode_String(self.title, serializer);
+    sse_encode_String(self.cover, serializer);
+    sse_encode_String(self.evaluate, serializer);
+    sse_encode_i_32(self.seasonType, serializer);
+    sse_encode_String(self.typeName, serializer);
+    sse_encode_String(self.ratingScore, serializer);
+    sse_encode_list_pgc_episode_dto(self.episodes, serializer);
+    sse_encode_i_64(self.defaultEpId, serializer);
   }
 
   @protected

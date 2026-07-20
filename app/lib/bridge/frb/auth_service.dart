@@ -348,7 +348,7 @@ class SmsLoginDto {
 }
 
 class SmsSendDto {
-  /// Passport country id (中国大陆 = 1).
+  /// International dialing code (中国大陆 = 86). App SMS `cid`.
   final int cid;
   final String tel;
   final String token;

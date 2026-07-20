@@ -13,8 +13,8 @@ pub use account::{now_ms, Account, AccountRegistry, AccountRegistrySnapshot};
 pub use app_sign::AppSigner;
 pub use buvid::generate_buvid3;
 pub use constants::{
-    API_BASE, APPKEY_ANDROID_HD, APPSEC_ANDROID_HD, APP_BASE, MOBI_APP_ANDROID_HD, PASS_BASE,
-    PLATFORM_ANDROID, SEARCH_BASE, UA_ANDROID_HD, UA_WEB, WEB_REFERER, WWW_BASE,
+    API_BASE, APPKEY_ANDROID_HD, APPSEC_ANDROID_HD, APP_BASE, LIVE_BASE, MOBI_APP_ANDROID_HD,
+    PASS_BASE, PLATFORM_ANDROID, SEARCH_BASE, UA_ANDROID_HD, UA_WEB, WEB_REFERER, WWW_BASE,
 };
 pub use cookie::CookieJar;
 pub use password::{encrypt_password, PasswordCryptoError};

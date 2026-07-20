@@ -247,6 +247,14 @@ Body：UTF-8 JSON：
 
 ### 9. 实现清单（Rust）
 
+**REST 可看（已落地）**
+
+- [x] `getUserRecommend` → `live_recommend`
+- [x] `getH5InfoByRoom` → `live_room`
+- [x] `getRoomPlayInfo`（WBI）→ `live_play_url`（FLV/HLS → `MediaSourceDto`）
+
+**WebSocket 弹幕（后置）**
+
 - [ ] `getDanmuInfo`（WBI）→ token + hosts 
 - [ ] 多 host 故障转移 WSS 
 - [ ] 16B 包头编解码 

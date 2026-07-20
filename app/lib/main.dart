@@ -1,7 +1,13 @@
+import 'dart:io' show Directory, Platform;
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 import 'app.dart';
 import 'bridge/core_api.dart';
@@ -9,12 +15,14 @@ import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/glass_theme.dart';
 import 'core/theme/spacing.dart';
+import 'features/auth/geetest/geetest_webview_dialog.dart';
 import 'l10n/l10n.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
   await LiquidGlassWidgets.initialize();
+  await _initGeetestWebViewEnvironment();
 
   String? bootError;
   try {
@@ -44,6 +52,22 @@ Future<void> main() async {
       ),
     ),
   );
+}
+
+/// Windows WebView2 user-data folder for embedded GeeTest (PiliPlus pattern).
+Future<void> _initGeetestWebViewEnvironment() async {
+  if (kIsWeb || !Platform.isWindows) return;
+  try {
+    if (await WebViewEnvironment.getAvailableVersion() == null) return;
+    final support = await getApplicationSupportDirectory();
+    final folder = p.join(support.path, 'flutter_inappwebview');
+    await Directory(folder).create(recursive: true);
+    geetestWebViewEnvironment = await WebViewEnvironment.create(
+      settings: WebViewEnvironmentSettings(userDataFolder: folder),
+    );
+  } catch (e, st) {
+    debugPrint('GeeTest WebViewEnvironment init failed: $e\n$st');
+  }
 }
 
 class _BootstrapErrorApp extends StatelessWidget {

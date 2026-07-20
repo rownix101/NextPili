@@ -103,7 +103,7 @@ shutdown()
 | `fav_folders` | 当前用户创建的收藏夹列表 |
 | `fav_resources` | 收藏夹内容分页（只读） |
 
-### P6 写操作（部分）+ 动态只读
+### P6 写操作（部分）+ 动态只读 + 直播 REST
 
 | 用例 | 行为摘要 |
 |------|----------|
@@ -115,8 +115,14 @@ shutdown()
 | `fav_folders(rid)` | 可选 `rid=aid` 填充 `in_folder` |
 | `relation_follow` | 关注 / 取关 UP |
 | `dynamics_feed` | 关注动态时间线（offset 游标 · main 槽 · Cookie） |
+| `live_recommend` | 直播推荐分页（可选登录） |
+| `live_room` | 房间元数据（`getH5InfoByRoom`） |
+| `live_play_url` | `getRoomPlayInfo`（WBI）→ `MediaSourceDto`（FLV/HLS） |
+| `pgc_rank` | 番剧/影视排行（WBI · `season_type`） |
+| `pgc_season` | `season_id` / `ep_id` → 详情 + 分集 |
+| `pgc_play_url` | `/pgc/player/web/v2/playurl` → `result.video_info` → `MediaSourceDto` |
 
-其余：直播、番剧、楼中楼发评、发弹幕 → 继续按 `docs/api/endpoints` 逐项加，**先写用例名与 DTO 再实现 HTTP**。
+其余：直播弹幕 WS、多账号槽、楼中楼发评、发弹幕 → 继续按 `docs/api/endpoints` 逐项加，**先写用例名与 DTO 再实现 HTTP**。
 
 ---
 

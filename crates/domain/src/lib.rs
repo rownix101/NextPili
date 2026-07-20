@@ -10,6 +10,8 @@ pub mod error;
 pub mod feed;
 pub mod id;
 pub mod library;
+pub mod live;
+pub mod pgc;
 pub mod quality;
 pub mod reply;
 pub mod search;
@@ -25,6 +27,13 @@ pub use id::{AccountId, Cid, DurationMs, QualityQn, UserMid, VideoId};
 pub use library::{
     history_is_playable, FavFolder, FavFolderList, FavResourceItem, FavResourcePage, HistoryItem,
     HistoryPage, ToViewItem, ToViewPage,
+};
+pub use live::{
+    live_quality_label, live_stream_preference_score, pick_live_stream, LivePlaySource,
+    LiveRecommendPage, LiveRoomCard, LiveRoomInfo, LiveStreamOption,
+};
+pub use pgc::{
+    pgc_season_type_label, PgcEpisode, PgcRankItem, PgcRankPage, PgcSeason, PGC_RANK_TYPES,
 };
 pub use quality::{pick_audio_track, pick_quality, AudioTrack};
 pub use reply::{Reply, ReplyPage};

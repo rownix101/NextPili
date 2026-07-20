@@ -40,6 +40,8 @@ app/lib/
     shell/                  # 导航脚手架（玻璃 Rail / 顶栏）
     auth/                   # 登录、账号
     home/                   # 推荐、热门
+    live/                   # 直播列表 + 房间播放（REST）
+    pgc/                    # 番剧排行 + 季节详情/分集播放
     dynamics/               # 关注动态（只读）
     video/                  # 详情
     player/                 # 播放页 + PlayerAdapter

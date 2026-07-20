@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -15,6 +14,9 @@ import '../../core/widgets/np_button.dart';
 import '../../core/widgets/page_header.dart';
 import '../../l10n/l10n.dart';
 import 'auth_login_panel.dart';
+import 'dial_prefix.dart';
+import 'geetest/geetest_result.dart';
+import 'geetest/geetest_webview_dialog.dart';
 import 'password_risk_dialog.dart';
 
 final accountsProvider = StateProvider<List<AccountPublicDto>>((ref) {
@@ -52,14 +54,16 @@ class _AuthPageState extends ConsumerState<AuthPage>
   // SMS
   final _telController = TextEditingController();
   final _codeController = TextEditingController();
-  final _geeValidateController = TextEditingController();
-  final _geeSeccodeController = TextEditingController();
+  String? _smsGeeChallenge;
+  String? _smsGeeValidate;
+  String? _smsGeeSeccode;
 
   // Password
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _pwdGeeValidateController = TextEditingController();
-  final _pwdGeeSeccodeController = TextEditingController();
+  String? _pwdGeeChallenge;
+  String? _pwdGeeValidate;
+  String? _pwdGeeSeccode;
   CaptchaDto? _pwdCaptcha;
   String _pwdHint = '';
   bool _obscurePassword = true;
@@ -68,7 +72,8 @@ class _AuthPageState extends ConsumerState<AuthPage>
   String _loginSessionId = '';
   String? _captchaKey;
   String _smsHint = '';
-  int _cid = 1; // 中国大陆 passport country id
+  /// App SMS `cid` = dialing code (PiliPlus / bilibili App); mainland = 86.
+  DialPrefix _dial = kDialPrefixes.first;
 
   bool _busy = false;
   bool _hintsReady = false;
@@ -110,12 +115,8 @@ class _AuthPageState extends ConsumerState<AuthPage>
     _formTabs?.dispose();
     _telController.dispose();
     _codeController.dispose();
-    _geeValidateController.dispose();
-    _geeSeccodeController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
-    _pwdGeeValidateController.dispose();
-    _pwdGeeSeccodeController.dispose();
     super.dispose();
   }
 
@@ -225,7 +226,16 @@ class _AuthPageState extends ConsumerState<AuthPage>
     }
   }
 
-  Future<void> _prepareCaptcha() async {
+  Future<GeetestResult?> _runGeetest(String gt, String challenge) {
+    return GeetestWebviewDialog.show(
+      context: context,
+      gt: gt,
+      challenge: challenge,
+    );
+  }
+
+  /// Fetch captcha params + embedded GeeTest (PiliPlus-style).
+  Future<void> _solveSmsCaptcha() async {
     setState(() {
       _busy = true;
       _smsHint = context.l10n.authSmsHintFetching;
@@ -238,64 +248,68 @@ class _AuthPageState extends ConsumerState<AuthPage>
         _captcha = captcha;
         _loginSessionId = session;
         _captchaKey = null;
-        _geeValidateController.clear();
-        _geeSeccodeController.clear();
+        _smsGeeChallenge = null;
+        _smsGeeValidate = null;
+        _smsGeeSeccode = null;
         _smsHint = context.l10n.authSmsHintCompleteGee;
       });
+      final result = await _runGeetest(captcha.gt, captcha.challenge);
+      if (!mounted) return;
+      if (result == null) {
+        setState(() => _smsHint = context.l10n.authSmsHintCompleteGee);
+        return;
+      }
+      setState(() {
+        _smsGeeChallenge = result.challenge;
+        _smsGeeValidate = result.validate;
+        _smsGeeSeccode = result.seccode;
+        _smsHint = context.l10n.authCaptchaKeyReady;
+      });
+      _toast(context.l10n.authCaptchaKeyReady);
     } catch (e) {
       _toast(errorMessage(e, context.l10n));
-      setState(() => _smsHint = context.l10n.authSmsHintFetchFailed);
+      if (mounted) {
+        setState(() => _smsHint = context.l10n.authSmsHintFetchFailed);
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
-  Future<void> _openGeeValidator() async {
-    final c = _captcha;
-    final l10n = context.l10n;
-    if (c == null) {
-      _toast(l10n.authNeedCaptchaFirst);
-      return;
-    }
-    final uri = Uri.parse('https://kuresaru.github.io/geetest-validator/');
-    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!mounted) return;
-    if (!ok) {
-      _toast(l10n.authCannotOpenGeePage);
-    } else {
-      await Clipboard.setData(
-        ClipboardData(
-          text: 'gt=${c.gt}\nchallenge=${c.challenge}\ntoken=${c.token}',
-        ),
-      );
-      if (!mounted) return;
-      _toast(l10n.authCopiedGeeParams);
-    }
-  }
-
   Future<void> _sendSms() async {
     final tel = _telController.text.trim();
-    final captcha = _captcha;
-    if (captcha == null) {
-      await _prepareCaptcha();
-      return;
+    var captcha = _captcha;
+    var validate = _smsGeeValidate;
+    var seccode = _smsGeeSeccode;
+    var challenge = _smsGeeChallenge;
+
+    if (captcha == null ||
+        validate == null ||
+        validate.isEmpty ||
+        seccode == null ||
+        seccode.isEmpty) {
+      await _solveSmsCaptcha();
+      captcha = _captcha;
+      validate = _smsGeeValidate;
+      seccode = _smsGeeSeccode;
+      challenge = _smsGeeChallenge;
+      if (captcha == null ||
+          validate == null ||
+          validate.isEmpty ||
+          seccode == null ||
+          seccode.isEmpty) {
+        return;
+      }
     }
-    final validate = _geeValidateController.text.trim();
-    final seccode = _geeSeccodeController.text.trim().isEmpty
-        ? (validate.isEmpty ? '' : '$validate|jordan')
-        : _geeSeccodeController.text.trim();
-    if (validate.isEmpty) {
-      _toast(context.l10n.authNeedGeeValidate);
-      return;
-    }
+
     setState(() => _busy = true);
     try {
       final result = await CoreApi.instance.loginSmsSend(
         SmsSendDto(
-          cid: _cid,
+          cid: _dial.countryId,
           tel: tel,
           token: captcha.token,
-          geeChallenge: captcha.challenge,
+          geeChallenge: challenge ?? captcha.challenge,
           geeValidate: validate,
           geeSeccode: seccode,
           loginSessionId: _loginSessionId,
@@ -325,7 +339,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
     try {
       final acc = await CoreApi.instance.loginSms(
         SmsLoginDto(
-          cid: _cid,
+          cid: _dial.countryId,
           tel: _telController.text.trim(),
           code: _codeController.text.trim(),
           captchaKey: key,
@@ -343,7 +357,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
     }
   }
 
-  Future<void> _preparePwdCaptcha() async {
+  Future<void> _solvePwdCaptcha() async {
     setState(() {
       _busy = true;
       _pwdHint = context.l10n.authPwdHintFetching;
@@ -353,55 +367,59 @@ class _AuthPageState extends ConsumerState<AuthPage>
       if (!mounted) return;
       setState(() {
         _pwdCaptcha = captcha;
-        _pwdGeeValidateController.clear();
-        _pwdGeeSeccodeController.clear();
+        _pwdGeeChallenge = null;
+        _pwdGeeValidate = null;
+        _pwdGeeSeccode = null;
         _pwdHint = context.l10n.authPwdHintCompleteGee;
       });
+      final result = await _runGeetest(captcha.gt, captcha.challenge);
+      if (!mounted) return;
+      if (result == null) {
+        setState(() => _pwdHint = context.l10n.authPwdHintCompleteGee);
+        return;
+      }
+      setState(() {
+        _pwdGeeChallenge = result.challenge;
+        _pwdGeeValidate = result.validate;
+        _pwdGeeSeccode = result.seccode;
+        _pwdHint = context.l10n.authCaptchaKeyReady;
+      });
+      _toast(context.l10n.authCaptchaKeyReady);
     } catch (e) {
       _toast(errorMessage(e, context.l10n));
-      setState(() => _pwdHint = context.l10n.authPwdHintFetchFailed);
+      if (mounted) {
+        setState(() => _pwdHint = context.l10n.authPwdHintFetchFailed);
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
-  Future<void> _openPwdGeeValidator() async {
-    final c = _pwdCaptcha;
-    final l10n = context.l10n;
-    if (c == null) {
-      _toast(l10n.authNeedCaptchaFirst);
-      return;
-    }
-    final uri = Uri.parse('https://kuresaru.github.io/geetest-validator/');
-    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!mounted) return;
-    if (!ok) {
-      _toast(l10n.authCannotOpenGeePage);
-    } else {
-      await Clipboard.setData(
-        ClipboardData(
-          text: 'gt=${c.gt}\nchallenge=${c.challenge}\ntoken=${c.token}',
-        ),
-      );
-      if (!mounted) return;
-      _toast(l10n.authCopiedGeeParams);
-    }
-  }
-
   Future<void> _loginPassword() async {
-    final captcha = _pwdCaptcha;
-    if (captcha == null) {
-      await _preparePwdCaptcha();
-      return;
+    var captcha = _pwdCaptcha;
+    var validate = _pwdGeeValidate;
+    var seccode = _pwdGeeSeccode;
+    var challenge = _pwdGeeChallenge;
+
+    if (captcha == null ||
+        validate == null ||
+        validate.isEmpty ||
+        seccode == null ||
+        seccode.isEmpty) {
+      await _solvePwdCaptcha();
+      captcha = _pwdCaptcha;
+      validate = _pwdGeeValidate;
+      seccode = _pwdGeeSeccode;
+      challenge = _pwdGeeChallenge;
+      if (captcha == null ||
+          validate == null ||
+          validate.isEmpty ||
+          seccode == null ||
+          seccode.isEmpty) {
+        return;
+      }
     }
-    final validate = _pwdGeeValidateController.text.trim();
-    final seccode = _pwdGeeSeccodeController.text.trim().isEmpty
-        ? (validate.isEmpty ? '' : '$validate|jordan')
-        : _pwdGeeSeccodeController.text.trim();
-    if (validate.isEmpty) {
-      _toast(context.l10n.authNeedGeeValidate);
-      return;
-    }
+
     setState(() => _busy = true);
     try {
       final result = await CoreApi.instance.loginPassword(
@@ -409,7 +427,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
           username: _usernameController.text.trim(),
           password: _passwordController.text,
           token: captcha.token,
-          geeChallenge: captcha.challenge,
+          geeChallenge: challenge ?? captcha.challenge,
           geeValidate: validate,
           geeSeccode: seccode,
         ),
@@ -469,6 +487,10 @@ class _AuthPageState extends ConsumerState<AuthPage>
     final wide = width >= 840;
     final formTabs = _formTabs;
     final pagePadH = AppSpacing.pagePaddingH(width);
+    final smsGeeReady =
+        _smsGeeValidate != null && _smsGeeValidate!.isNotEmpty;
+    final pwdGeeReady =
+        _pwdGeeValidate != null && _pwdGeeValidate!.isNotEmpty;
 
     return Scaffold(
       backgroundColor: colors.canvas,
@@ -481,8 +503,6 @@ class _AuthPageState extends ConsumerState<AuthPage>
           : LayoutBuilder(
               builder: (context, constraints) {
                 final panelMaxW = showQr && wide ? 900.0 : 480.0;
-                // Dual-pane needs a fixed height so Expanded children layout.
-                // Stacked / form-only also use a min height for the credential card.
                 final panelH = showQr && wide
                     ? 520.0
                     : (showQr ? 720.0 : 540.0);
@@ -517,11 +537,9 @@ class _AuthPageState extends ConsumerState<AuthPage>
                               () => _obscurePassword = !_obscurePassword,
                             ),
                             pwdCaptcha: _pwdCaptcha,
-                            pwdGeeValidateController: _pwdGeeValidateController,
-                            pwdGeeSeccodeController: _pwdGeeSeccodeController,
+                            pwdGeeReady: pwdGeeReady,
                             pwdHint: _pwdHint,
-                            onPreparePwdCaptcha: _preparePwdCaptcha,
-                            onOpenPwdGee: _openPwdGeeValidator,
+                            onSolvePwdCaptcha: _solvePwdCaptcha,
                             onPasswordLogin: _loginPassword,
                             onRegister: () => formTabs.animateTo(1),
                             onForgotPassword: () => _openExternal(
@@ -530,15 +548,13 @@ class _AuthPageState extends ConsumerState<AuthPage>
                             ),
                             telController: _telController,
                             codeController: _codeController,
-                            smsGeeValidateController: _geeValidateController,
-                            smsGeeSeccodeController: _geeSeccodeController,
                             smsCaptcha: _captcha,
+                            smsGeeReady: smsGeeReady,
                             captchaKey: _captchaKey,
                             smsHint: _smsHint,
-                            cid: _cid,
-                            onCidChanged: (v) => setState(() => _cid = v),
-                            onPrepareSmsCaptcha: _prepareCaptcha,
-                            onOpenSmsGee: _openGeeValidator,
+                            dial: _dial,
+                            onDialChanged: (v) => setState(() => _dial = v),
+                            onSolveSmsCaptcha: _solveSmsCaptcha,
                             onSendSms: _sendSms,
                             onSmsLogin: _loginSms,
                           ),

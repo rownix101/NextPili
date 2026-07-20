@@ -22,6 +22,8 @@ pub const API_BASE: &str = "https://api.bilibili.com";
 pub const APP_BASE: &str = "https://app.bilibili.com";
 pub const PASS_BASE: &str = "https://passport.bilibili.com";
 pub const WWW_BASE: &str = "https://www.bilibili.com";
+/// Live API host (`api.live.bilibili.com`).
+pub const LIVE_BASE: &str = "https://api.live.bilibili.com";
 /// Search site host (hotword / suggest).
 pub const SEARCH_BASE: &str = "https://s.search.bilibili.com";
 

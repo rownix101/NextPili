@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../bridge/core_api.dart';
 import '../../core/icons/app_icons.dart';
@@ -8,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/spacing.dart';
 import '../../core/widgets/np_button.dart';
 import '../../l10n/l10n.dart';
+import 'geetest/geetest_webview_dialog.dart';
 
 /// Safe-center phone verify dialog (PiliPlus-style) after password login risk.
 Future<AccountPublicDto?> showPasswordRiskDialog({
@@ -36,11 +35,12 @@ class _PasswordRiskDialog extends StatefulWidget {
 }
 
 class _PasswordRiskDialogState extends State<_PasswordRiskDialog> {
-  final _geeValidateController = TextEditingController();
-  final _geeSeccodeController = TextEditingController();
   final _smsCodeController = TextEditingController();
 
   CaptchaDto? _captcha;
+  String? _geeChallenge;
+  String? _geeValidate;
+  String? _geeSeccode;
   String? _captchaKey;
   String _hint = '';
   bool _busy = false;
@@ -57,8 +57,6 @@ class _PasswordRiskDialogState extends State<_PasswordRiskDialog> {
 
   @override
   void dispose() {
-    _geeValidateController.dispose();
-    _geeSeccodeController.dispose();
     _smsCodeController.dispose();
     super.dispose();
   }
@@ -68,7 +66,7 @@ class _PasswordRiskDialogState extends State<_PasswordRiskDialog> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  Future<void> _prepareCaptcha() async {
+  Future<void> _solveCaptcha() async {
     setState(() {
       _busy = true;
       _hint = context.l10n.authRiskHintFetching;
@@ -78,57 +76,63 @@ class _PasswordRiskDialogState extends State<_PasswordRiskDialog> {
       if (!mounted) return;
       setState(() {
         _captcha = captcha;
-        _geeValidateController.clear();
-        _geeSeccodeController.clear();
+        _geeChallenge = null;
+        _geeValidate = null;
+        _geeSeccode = null;
         _hint = context.l10n.authRiskHintCompleteGee;
       });
+      final result = await GeetestWebviewDialog.show(
+        context: context,
+        gt: captcha.gt,
+        challenge: captcha.challenge,
+      );
+      if (!mounted) return;
+      if (result == null) {
+        setState(() => _hint = context.l10n.authRiskHintCompleteGee);
+        return;
+      }
+      setState(() {
+        _geeChallenge = result.challenge;
+        _geeValidate = result.validate;
+        _geeSeccode = result.seccode;
+        _hint = context.l10n.authCaptchaKeyReady;
+      });
+      _toast(context.l10n.authCaptchaKeyReady);
     } catch (e) {
       _toast(errorMessage(e, context.l10n));
-      setState(() => _hint = context.l10n.authRiskHintFetchFailed);
+      if (mounted) {
+        setState(() => _hint = context.l10n.authRiskHintFetchFailed);
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
-  Future<void> _openGee() async {
-    final c = _captcha;
-    final l10n = context.l10n;
-    if (c == null) {
-      _toast(l10n.authNeedCaptchaFirst);
-      return;
-    }
-    final uri = Uri.parse('https://kuresaru.github.io/geetest-validator/');
-    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!mounted) return;
-    if (!ok) {
-      _toast(l10n.authCannotOpenGeePageShort);
-    } else {
-      await Clipboard.setData(
-        ClipboardData(
-          text: 'gt=${c.gt}\nchallenge=${c.challenge}\ntoken=${c.token}',
-        ),
-      );
-      if (!mounted) return;
-      _toast(l10n.authCopiedGeeParamsShort);
-    }
-  }
-
   Future<void> _sendSms() async {
     var captcha = _captcha;
-    final l10n = context.l10n;
-    if (captcha == null) {
-      await _prepareCaptcha();
+    var validate = _geeValidate;
+    var seccode = _geeSeccode;
+    var challenge = _geeChallenge;
+
+    if (captcha == null ||
+        validate == null ||
+        validate.isEmpty ||
+        seccode == null ||
+        seccode.isEmpty) {
+      await _solveCaptcha();
       captcha = _captcha;
-      if (captcha == null) return;
+      validate = _geeValidate;
+      seccode = _geeSeccode;
+      challenge = _geeChallenge;
+      if (captcha == null ||
+          validate == null ||
+          validate.isEmpty ||
+          seccode == null ||
+          seccode.isEmpty) {
+        return;
+      }
     }
-    final validate = _geeValidateController.text.trim();
-    final seccode = _geeSeccodeController.text.trim().isEmpty
-        ? (validate.isEmpty ? '' : '$validate|jordan')
-        : _geeSeccodeController.text.trim();
-    if (validate.isEmpty) {
-      _toast(l10n.authNeedGeeValidate);
-      return;
-    }
+
     setState(() => _busy = true);
     try {
       final res = await CoreApi.instance.loginPasswordRiskSendSms(
@@ -136,7 +140,7 @@ class _PasswordRiskDialogState extends State<_PasswordRiskDialog> {
           tmpToken: widget.risk.tmpToken,
           riskUrl: widget.risk.riskUrl,
           token: captcha.token,
-          geeChallenge: captcha.challenge,
+          geeChallenge: challenge ?? captcha.challenge,
           geeValidate: validate,
           geeSeccode: seccode,
         ),
@@ -194,6 +198,7 @@ class _PasswordRiskDialogState extends State<_PasswordRiskDialog> {
     final colors = AppColors.of(context);
     final l10n = context.l10n;
     final hideTel = widget.risk.hideTel;
+    final geeReady = _geeValidate != null && _geeValidate!.isNotEmpty;
 
     return AlertDialog(
       title: Text(l10n.authRiskTitle, textAlign: TextAlign.center),
@@ -221,47 +226,23 @@ class _PasswordRiskDialogState extends State<_PasswordRiskDialog> {
               ],
               const SizedBox(height: AppSpacing.md),
               Text(_hint, style: theme.textTheme.bodySmall),
-              if (_captcha != null) ...[
+              const SizedBox(height: AppSpacing.md - 4),
+              NpButton(
+                label: l10n.authGetCaptcha,
+                icon: AppIcons.shield,
+                variant: NpButtonVariant.secondary,
+                onPressed: _busy ? null : _solveCaptcha,
+              ),
+              if (geeReady) ...[
                 const SizedBox(height: AppSpacing.sm),
-                SelectableText(
-                  'gt: ${_captcha!.gt}\nchallenge: ${_captcha!.challenge}',
-                  style: theme.textTheme.bodySmall,
+                Text(
+                  l10n.authCaptchaKeyReady,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colors.accent,
+                  ),
                 ),
               ],
-              const SizedBox(height: AppSpacing.md - 4),
-              Wrap(
-                spacing: AppSpacing.sm,
-                runSpacing: AppSpacing.sm,
-                alignment: WrapAlignment.center,
-                children: [
-                  NpButton(
-                    label: l10n.authGetCaptcha,
-                    icon: AppIcons.shield,
-                    variant: NpButtonVariant.secondary,
-                    onPressed: _busy ? null : _prepareCaptcha,
-                  ),
-                  NpButton(
-                    label: l10n.authOpenGeeHelper,
-                    icon: AppIcons.externalLink,
-                    variant: NpButtonVariant.secondary,
-                    onPressed: _busy || _captcha == null ? null : _openGee,
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md - 4),
-              TextField(
-                controller: _geeValidateController,
-                enabled: !_busy,
-                decoration: const InputDecoration(labelText: 'gee_validate'),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              TextField(
-                controller: _geeSeccodeController,
-                enabled: !_busy,
-                decoration: InputDecoration(
-                  labelText: l10n.authGeeSeccodeOptional,
-                ),
-              ),
               const SizedBox(height: AppSpacing.md - 4),
               NpButton(
                 label: _busy ? l10n.authSending : l10n.authSendCode,

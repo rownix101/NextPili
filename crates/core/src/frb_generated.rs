@@ -37,7 +37,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.11.1";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 960193846;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 2083743640;
 
 // Section: executor
 
@@ -509,6 +509,118 @@ fn wire__crate__api__auth__list_accounts_impl(
         },
     )
 }
+fn wire__crate__api__live__live_play_url_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "live_play_url",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_room_id = <i64>::sse_decode(&mut deserializer);
+            let api_qn = <u32>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, crate::error::AppError>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::live::live_play_url(api_room_id, api_qn).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__live__live_recommend_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "live_recommend",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_page = <i32>::sse_decode(&mut deserializer);
+            let api_page_size = <u32>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, crate::error::AppError>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::live::live_recommend(api_page, api_page_size).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__live__live_room_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "live_room",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_room_id = <i64>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, crate::error::AppError>(
+                    (move || async move {
+                        let output_ok = crate::api::live::live_room(api_room_id).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crate__api__auth__login_captcha_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -893,6 +1005,122 @@ fn wire__crate__api__auth__new_login_session_id_impl(
                 let output_ok = Result::<_, ()>::Ok(crate::api::auth::new_login_session_id())?;
                 Ok(output_ok)
             })())
+        },
+    )
+}
+fn wire__crate__api__pgc__pgc_play_url_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "pgc_play_url",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_ep_id = <i64>::sse_decode(&mut deserializer);
+            let api_cid = <i64>::sse_decode(&mut deserializer);
+            let api_qn = <u32>::sse_decode(&mut deserializer);
+            let api_fnval = <u32>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, crate::error::AppError>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::pgc::pgc_play_url(api_ep_id, api_cid, api_qn, api_fnval)
+                                .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__pgc__pgc_rank_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "pgc_rank",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_season_type = <i32>::sse_decode(&mut deserializer);
+            let api_day = <i32>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, crate::error::AppError>(
+                    (move || async move {
+                        let output_ok = crate::api::pgc::pgc_rank(api_season_type, api_day).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__pgc__pgc_season_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "pgc_season",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_season_id = <i64>::sse_decode(&mut deserializer);
+            let api_ep_id = <i64>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, crate::error::AppError>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::pgc::pgc_season(api_season_id, api_ep_id).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
         },
     )
 }
@@ -2042,6 +2270,44 @@ impl SseDecode for Vec<crate::api::user::HistoryItemDto> {
     }
 }
 
+impl SseDecode for Vec<crate::api::live::LiveRoomCardDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::live::LiveRoomCardDto>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::pgc::PgcEpisodeDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::pgc::PgcEpisodeDto>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::pgc::PgcRankItemDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::pgc::PgcRankItemDto>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<i64> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -2139,6 +2405,72 @@ impl SseDecode for Vec<crate::api::video::VideoPageDto> {
             ans_.push(<crate::api::video::VideoPageDto>::sse_decode(deserializer));
         }
         return ans_;
+    }
+}
+
+impl SseDecode for crate::api::live::LiveRecommendPageDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_items = <Vec<crate::api::live::LiveRoomCardDto>>::sse_decode(deserializer);
+        let mut var_page = <i32>::sse_decode(deserializer);
+        let mut var_hasMore = <bool>::sse_decode(deserializer);
+        return crate::api::live::LiveRecommendPageDto {
+            items: var_items,
+            page: var_page,
+            has_more: var_hasMore,
+        };
+    }
+}
+
+impl SseDecode for crate::api::live::LiveRoomCardDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_roomId = <i64>::sse_decode(deserializer);
+        let mut var_uid = <i64>::sse_decode(deserializer);
+        let mut var_title = <String>::sse_decode(deserializer);
+        let mut var_uname = <String>::sse_decode(deserializer);
+        let mut var_face = <String>::sse_decode(deserializer);
+        let mut var_cover = <String>::sse_decode(deserializer);
+        let mut var_online = <i64>::sse_decode(deserializer);
+        let mut var_areaName = <String>::sse_decode(deserializer);
+        return crate::api::live::LiveRoomCardDto {
+            room_id: var_roomId,
+            uid: var_uid,
+            title: var_title,
+            uname: var_uname,
+            face: var_face,
+            cover: var_cover,
+            online: var_online,
+            area_name: var_areaName,
+        };
+    }
+}
+
+impl SseDecode for crate::api::live::LiveRoomDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_roomId = <i64>::sse_decode(deserializer);
+        let mut var_shortId = <i64>::sse_decode(deserializer);
+        let mut var_uid = <i64>::sse_decode(deserializer);
+        let mut var_title = <String>::sse_decode(deserializer);
+        let mut var_cover = <String>::sse_decode(deserializer);
+        let mut var_uname = <String>::sse_decode(deserializer);
+        let mut var_face = <String>::sse_decode(deserializer);
+        let mut var_online = <i64>::sse_decode(deserializer);
+        let mut var_liveStatus = <i32>::sse_decode(deserializer);
+        let mut var_areaName = <String>::sse_decode(deserializer);
+        return crate::api::live::LiveRoomDto {
+            room_id: var_roomId,
+            short_id: var_shortId,
+            uid: var_uid,
+            title: var_title,
+            cover: var_cover,
+            uname: var_uname,
+            face: var_face,
+            online: var_online,
+            live_status: var_liveStatus,
+            area_name: var_areaName,
+        };
     }
 }
 
@@ -2360,6 +2692,96 @@ impl SseDecode for crate::auth_service::PasswordRiskVerifyDto {
             source: var_source,
             captcha_key: var_captchaKey,
             risk_url: var_riskUrl,
+        };
+    }
+}
+
+impl SseDecode for crate::api::pgc::PgcEpisodeDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_epId = <i64>::sse_decode(deserializer);
+        let mut var_aid = <i64>::sse_decode(deserializer);
+        let mut var_bvid = <String>::sse_decode(deserializer);
+        let mut var_cid = <i64>::sse_decode(deserializer);
+        let mut var_title = <String>::sse_decode(deserializer);
+        let mut var_longTitle = <String>::sse_decode(deserializer);
+        let mut var_cover = <String>::sse_decode(deserializer);
+        let mut var_durationMs = <i64>::sse_decode(deserializer);
+        let mut var_badge = <String>::sse_decode(deserializer);
+        return crate::api::pgc::PgcEpisodeDto {
+            ep_id: var_epId,
+            aid: var_aid,
+            bvid: var_bvid,
+            cid: var_cid,
+            title: var_title,
+            long_title: var_longTitle,
+            cover: var_cover,
+            duration_ms: var_durationMs,
+            badge: var_badge,
+        };
+    }
+}
+
+impl SseDecode for crate::api::pgc::PgcRankItemDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_seasonId = <i64>::sse_decode(deserializer);
+        let mut var_title = <String>::sse_decode(deserializer);
+        let mut var_cover = <String>::sse_decode(deserializer);
+        let mut var_badge = <String>::sse_decode(deserializer);
+        let mut var_indexShow = <String>::sse_decode(deserializer);
+        let mut var_rating = <String>::sse_decode(deserializer);
+        let mut var_order = <i32>::sse_decode(deserializer);
+        return crate::api::pgc::PgcRankItemDto {
+            season_id: var_seasonId,
+            title: var_title,
+            cover: var_cover,
+            badge: var_badge,
+            index_show: var_indexShow,
+            rating: var_rating,
+            order: var_order,
+        };
+    }
+}
+
+impl SseDecode for crate::api::pgc::PgcRankPageDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_items = <Vec<crate::api::pgc::PgcRankItemDto>>::sse_decode(deserializer);
+        let mut var_seasonType = <i32>::sse_decode(deserializer);
+        let mut var_note = <String>::sse_decode(deserializer);
+        return crate::api::pgc::PgcRankPageDto {
+            items: var_items,
+            season_type: var_seasonType,
+            note: var_note,
+        };
+    }
+}
+
+impl SseDecode for crate::api::pgc::PgcSeasonDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_seasonId = <i64>::sse_decode(deserializer);
+        let mut var_seasonTitle = <String>::sse_decode(deserializer);
+        let mut var_title = <String>::sse_decode(deserializer);
+        let mut var_cover = <String>::sse_decode(deserializer);
+        let mut var_evaluate = <String>::sse_decode(deserializer);
+        let mut var_seasonType = <i32>::sse_decode(deserializer);
+        let mut var_typeName = <String>::sse_decode(deserializer);
+        let mut var_ratingScore = <String>::sse_decode(deserializer);
+        let mut var_episodes = <Vec<crate::api::pgc::PgcEpisodeDto>>::sse_decode(deserializer);
+        let mut var_defaultEpId = <i64>::sse_decode(deserializer);
+        return crate::api::pgc::PgcSeasonDto {
+            season_id: var_seasonId,
+            season_title: var_seasonTitle,
+            title: var_title,
+            cover: var_cover,
+            evaluate: var_evaluate,
+            season_type: var_seasonType,
+            type_name: var_typeName,
+            rating_score: var_ratingScore,
+            episodes: var_episodes,
+            default_ep_id: var_defaultEpId,
         };
     }
 }
@@ -2795,48 +3217,54 @@ fn pde_ffi_dispatcher_primary_impl(
         9 => wire__crate__api__feed__feed_recommend_impl(port, ptr, rust_vec_len, data_len),
         11 => wire__crate__api__user__history_list_impl(port, ptr, rust_vec_len, data_len),
         12 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
-        14 => wire__crate__api__auth__login_captcha_impl(port, ptr, rust_vec_len, data_len),
-        15 => wire__crate__api__auth__login_password_impl(port, ptr, rust_vec_len, data_len),
-        16 => wire__crate__api__auth__login_password_risk_captcha_impl(
+        14 => wire__crate__api__live__live_play_url_impl(port, ptr, rust_vec_len, data_len),
+        15 => wire__crate__api__live__live_recommend_impl(port, ptr, rust_vec_len, data_len),
+        16 => wire__crate__api__live__live_room_impl(port, ptr, rust_vec_len, data_len),
+        17 => wire__crate__api__auth__login_captcha_impl(port, ptr, rust_vec_len, data_len),
+        18 => wire__crate__api__auth__login_password_impl(port, ptr, rust_vec_len, data_len),
+        19 => wire__crate__api__auth__login_password_risk_captcha_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        17 => wire__crate__api__auth__login_password_risk_send_sms_impl(
+        20 => wire__crate__api__auth__login_password_risk_send_sms_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        18 => wire__crate__api__auth__login_password_risk_verify_impl(
+        21 => wire__crate__api__auth__login_password_risk_verify_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        19 => wire__crate__api__auth__login_qr_poll_impl(port, ptr, rust_vec_len, data_len),
-        20 => wire__crate__api__auth__login_qr_start_impl(port, ptr, rust_vec_len, data_len),
-        21 => wire__crate__api__auth__login_sms_impl(port, ptr, rust_vec_len, data_len),
-        22 => wire__crate__api__auth__login_sms_send_impl(port, ptr, rust_vec_len, data_len),
-        26 => wire__crate__api__video__play_url_impl(port, ptr, rust_vec_len, data_len),
-        27 => wire__crate__api__video__playback_start_impl(port, ptr, rust_vec_len, data_len),
-        29 => wire__crate__api__engagement__relation_follow_impl(port, ptr, rust_vec_len, data_len),
-        30 => wire__crate__api__social__reply_list_impl(port, ptr, rust_vec_len, data_len),
-        31 => wire__crate__api__search__search_suggest_impl(port, ptr, rust_vec_len, data_len),
-        32 => wire__crate__api__search__search_video_impl(port, ptr, rust_vec_len, data_len),
-        34 => wire__crate__api__user__toview_list_impl(port, ptr, rust_vec_len, data_len),
-        36 => wire__crate__api__engagement__video_coin_impl(port, ptr, rust_vec_len, data_len),
-        37 => wire__crate__api__video__video_detail_impl(port, ptr, rust_vec_len, data_len),
-        38 => wire__crate__api__engagement__video_favorite_impl(port, ptr, rust_vec_len, data_len),
-        39 => wire__crate__api__engagement__video_favorite_deal_impl(
+        22 => wire__crate__api__auth__login_qr_poll_impl(port, ptr, rust_vec_len, data_len),
+        23 => wire__crate__api__auth__login_qr_start_impl(port, ptr, rust_vec_len, data_len),
+        24 => wire__crate__api__auth__login_sms_impl(port, ptr, rust_vec_len, data_len),
+        25 => wire__crate__api__auth__login_sms_send_impl(port, ptr, rust_vec_len, data_len),
+        28 => wire__crate__api__pgc__pgc_play_url_impl(port, ptr, rust_vec_len, data_len),
+        29 => wire__crate__api__pgc__pgc_rank_impl(port, ptr, rust_vec_len, data_len),
+        30 => wire__crate__api__pgc__pgc_season_impl(port, ptr, rust_vec_len, data_len),
+        32 => wire__crate__api__video__play_url_impl(port, ptr, rust_vec_len, data_len),
+        33 => wire__crate__api__video__playback_start_impl(port, ptr, rust_vec_len, data_len),
+        35 => wire__crate__api__engagement__relation_follow_impl(port, ptr, rust_vec_len, data_len),
+        36 => wire__crate__api__social__reply_list_impl(port, ptr, rust_vec_len, data_len),
+        37 => wire__crate__api__search__search_suggest_impl(port, ptr, rust_vec_len, data_len),
+        38 => wire__crate__api__search__search_video_impl(port, ptr, rust_vec_len, data_len),
+        40 => wire__crate__api__user__toview_list_impl(port, ptr, rust_vec_len, data_len),
+        42 => wire__crate__api__engagement__video_coin_impl(port, ptr, rust_vec_len, data_len),
+        43 => wire__crate__api__video__video_detail_impl(port, ptr, rust_vec_len, data_len),
+        44 => wire__crate__api__engagement__video_favorite_impl(port, ptr, rust_vec_len, data_len),
+        45 => wire__crate__api__engagement__video_favorite_deal_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        40 => wire__crate__api__engagement__video_like_impl(port, ptr, rust_vec_len, data_len),
-        41 => wire__crate__api__engagement__video_relation_impl(port, ptr, rust_vec_len, data_len),
+        46 => wire__crate__api__engagement__video_like_impl(port, ptr, rust_vec_len, data_len),
+        47 => wire__crate__api__engagement__video_relation_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -2853,12 +3281,12 @@ fn pde_ffi_dispatcher_sync_impl(
         4 => wire__crate__api__auth__device_buvid3_impl(ptr, rust_vec_len, data_len),
         10 => wire__crate__api__settings__get_settings_impl(ptr, rust_vec_len, data_len),
         13 => wire__crate__api__auth__list_accounts_impl(ptr, rust_vec_len, data_len),
-        23 => wire__crate__api__auth__logout_impl(ptr, rust_vec_len, data_len),
-        24 => wire__crate__api__auth__new_login_session_id_impl(ptr, rust_vec_len, data_len),
-        25 => wire__crate__api__simple__ping_impl(ptr, rust_vec_len, data_len),
-        28 => wire__crate__api__video__playback_stop_impl(ptr, rust_vec_len, data_len),
-        33 => wire__crate__api__auth__set_account_slot_impl(ptr, rust_vec_len, data_len),
-        35 => wire__crate__api__settings__update_settings_impl(ptr, rust_vec_len, data_len),
+        26 => wire__crate__api__auth__logout_impl(ptr, rust_vec_len, data_len),
+        27 => wire__crate__api__auth__new_login_session_id_impl(ptr, rust_vec_len, data_len),
+        31 => wire__crate__api__simple__ping_impl(ptr, rust_vec_len, data_len),
+        34 => wire__crate__api__video__playback_stop_impl(ptr, rust_vec_len, data_len),
+        39 => wire__crate__api__auth__set_account_slot_impl(ptr, rust_vec_len, data_len),
+        41 => wire__crate__api__settings__update_settings_impl(ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -3319,6 +3747,81 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::user::HistoryPageDto>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::live::LiveRecommendPageDto {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.items.into_into_dart().into_dart(),
+            self.page.into_into_dart().into_dart(),
+            self.has_more.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::live::LiveRecommendPageDto
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::live::LiveRecommendPageDto>
+    for crate::api::live::LiveRecommendPageDto
+{
+    fn into_into_dart(self) -> crate::api::live::LiveRecommendPageDto {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::live::LiveRoomCardDto {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.room_id.into_into_dart().into_dart(),
+            self.uid.into_into_dart().into_dart(),
+            self.title.into_into_dart().into_dart(),
+            self.uname.into_into_dart().into_dart(),
+            self.face.into_into_dart().into_dart(),
+            self.cover.into_into_dart().into_dart(),
+            self.online.into_into_dart().into_dart(),
+            self.area_name.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::live::LiveRoomCardDto
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::live::LiveRoomCardDto>
+    for crate::api::live::LiveRoomCardDto
+{
+    fn into_into_dart(self) -> crate::api::live::LiveRoomCardDto {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::live::LiveRoomDto {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.room_id.into_into_dart().into_dart(),
+            self.short_id.into_into_dart().into_dart(),
+            self.uid.into_into_dart().into_dart(),
+            self.title.into_into_dart().into_dart(),
+            self.cover.into_into_dart().into_dart(),
+            self.uname.into_into_dart().into_dart(),
+            self.face.into_into_dart().into_dart(),
+            self.online.into_into_dart().into_dart(),
+            self.live_status.into_into_dart().into_dart(),
+            self.area_name.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::live::LiveRoomDto {}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::live::LiveRoomDto>
+    for crate::api::live::LiveRoomDto
+{
+    fn into_into_dart(self) -> crate::api::live::LiveRoomDto {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::video::MediaFormatDto {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         match self {
@@ -3528,6 +4031,108 @@ impl flutter_rust_bridge::IntoIntoDart<crate::auth_service::PasswordRiskVerifyDt
     for crate::auth_service::PasswordRiskVerifyDto
 {
     fn into_into_dart(self) -> crate::auth_service::PasswordRiskVerifyDto {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::pgc::PgcEpisodeDto {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.ep_id.into_into_dart().into_dart(),
+            self.aid.into_into_dart().into_dart(),
+            self.bvid.into_into_dart().into_dart(),
+            self.cid.into_into_dart().into_dart(),
+            self.title.into_into_dart().into_dart(),
+            self.long_title.into_into_dart().into_dart(),
+            self.cover.into_into_dart().into_dart(),
+            self.duration_ms.into_into_dart().into_dart(),
+            self.badge.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::pgc::PgcEpisodeDto
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::pgc::PgcEpisodeDto>
+    for crate::api::pgc::PgcEpisodeDto
+{
+    fn into_into_dart(self) -> crate::api::pgc::PgcEpisodeDto {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::pgc::PgcRankItemDto {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.season_id.into_into_dart().into_dart(),
+            self.title.into_into_dart().into_dart(),
+            self.cover.into_into_dart().into_dart(),
+            self.badge.into_into_dart().into_dart(),
+            self.index_show.into_into_dart().into_dart(),
+            self.rating.into_into_dart().into_dart(),
+            self.order.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::pgc::PgcRankItemDto
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::pgc::PgcRankItemDto>
+    for crate::api::pgc::PgcRankItemDto
+{
+    fn into_into_dart(self) -> crate::api::pgc::PgcRankItemDto {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::pgc::PgcRankPageDto {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.items.into_into_dart().into_dart(),
+            self.season_type.into_into_dart().into_dart(),
+            self.note.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::pgc::PgcRankPageDto
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::pgc::PgcRankPageDto>
+    for crate::api::pgc::PgcRankPageDto
+{
+    fn into_into_dart(self) -> crate::api::pgc::PgcRankPageDto {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::pgc::PgcSeasonDto {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.season_id.into_into_dart().into_dart(),
+            self.season_title.into_into_dart().into_dart(),
+            self.title.into_into_dart().into_dart(),
+            self.cover.into_into_dart().into_dart(),
+            self.evaluate.into_into_dart().into_dart(),
+            self.season_type.into_into_dart().into_dart(),
+            self.type_name.into_into_dart().into_dart(),
+            self.rating_score.into_into_dart().into_dart(),
+            self.episodes.into_into_dart().into_dart(),
+            self.default_ep_id.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::pgc::PgcSeasonDto {}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::pgc::PgcSeasonDto>
+    for crate::api::pgc::PgcSeasonDto
+{
+    fn into_into_dart(self) -> crate::api::pgc::PgcSeasonDto {
         self
     }
 }
@@ -4398,6 +5003,36 @@ impl SseEncode for Vec<crate::api::user::HistoryItemDto> {
     }
 }
 
+impl SseEncode for Vec<crate::api::live::LiveRoomCardDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::live::LiveRoomCardDto>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::pgc::PgcEpisodeDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::pgc::PgcEpisodeDto>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::pgc::PgcRankItemDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::pgc::PgcRankItemDto>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<i64> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -4475,6 +5110,45 @@ impl SseEncode for Vec<crate::api::video::VideoPageDto> {
         for item in self {
             <crate::api::video::VideoPageDto>::sse_encode(item, serializer);
         }
+    }
+}
+
+impl SseEncode for crate::api::live::LiveRecommendPageDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Vec<crate::api::live::LiveRoomCardDto>>::sse_encode(self.items, serializer);
+        <i32>::sse_encode(self.page, serializer);
+        <bool>::sse_encode(self.has_more, serializer);
+    }
+}
+
+impl SseEncode for crate::api::live::LiveRoomCardDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i64>::sse_encode(self.room_id, serializer);
+        <i64>::sse_encode(self.uid, serializer);
+        <String>::sse_encode(self.title, serializer);
+        <String>::sse_encode(self.uname, serializer);
+        <String>::sse_encode(self.face, serializer);
+        <String>::sse_encode(self.cover, serializer);
+        <i64>::sse_encode(self.online, serializer);
+        <String>::sse_encode(self.area_name, serializer);
+    }
+}
+
+impl SseEncode for crate::api::live::LiveRoomDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i64>::sse_encode(self.room_id, serializer);
+        <i64>::sse_encode(self.short_id, serializer);
+        <i64>::sse_encode(self.uid, serializer);
+        <String>::sse_encode(self.title, serializer);
+        <String>::sse_encode(self.cover, serializer);
+        <String>::sse_encode(self.uname, serializer);
+        <String>::sse_encode(self.face, serializer);
+        <i64>::sse_encode(self.online, serializer);
+        <i32>::sse_encode(self.live_status, serializer);
+        <String>::sse_encode(self.area_name, serializer);
     }
 }
 
@@ -4640,6 +5314,59 @@ impl SseEncode for crate::auth_service::PasswordRiskVerifyDto {
         <String>::sse_encode(self.source, serializer);
         <String>::sse_encode(self.captcha_key, serializer);
         <String>::sse_encode(self.risk_url, serializer);
+    }
+}
+
+impl SseEncode for crate::api::pgc::PgcEpisodeDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i64>::sse_encode(self.ep_id, serializer);
+        <i64>::sse_encode(self.aid, serializer);
+        <String>::sse_encode(self.bvid, serializer);
+        <i64>::sse_encode(self.cid, serializer);
+        <String>::sse_encode(self.title, serializer);
+        <String>::sse_encode(self.long_title, serializer);
+        <String>::sse_encode(self.cover, serializer);
+        <i64>::sse_encode(self.duration_ms, serializer);
+        <String>::sse_encode(self.badge, serializer);
+    }
+}
+
+impl SseEncode for crate::api::pgc::PgcRankItemDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i64>::sse_encode(self.season_id, serializer);
+        <String>::sse_encode(self.title, serializer);
+        <String>::sse_encode(self.cover, serializer);
+        <String>::sse_encode(self.badge, serializer);
+        <String>::sse_encode(self.index_show, serializer);
+        <String>::sse_encode(self.rating, serializer);
+        <i32>::sse_encode(self.order, serializer);
+    }
+}
+
+impl SseEncode for crate::api::pgc::PgcRankPageDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Vec<crate::api::pgc::PgcRankItemDto>>::sse_encode(self.items, serializer);
+        <i32>::sse_encode(self.season_type, serializer);
+        <String>::sse_encode(self.note, serializer);
+    }
+}
+
+impl SseEncode for crate::api::pgc::PgcSeasonDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i64>::sse_encode(self.season_id, serializer);
+        <String>::sse_encode(self.season_title, serializer);
+        <String>::sse_encode(self.title, serializer);
+        <String>::sse_encode(self.cover, serializer);
+        <String>::sse_encode(self.evaluate, serializer);
+        <i32>::sse_encode(self.season_type, serializer);
+        <String>::sse_encode(self.type_name, serializer);
+        <String>::sse_encode(self.rating_score, serializer);
+        <Vec<crate::api::pgc::PgcEpisodeDto>>::sse_encode(self.episodes, serializer);
+        <i64>::sse_encode(self.default_ep_id, serializer);
     }
 }
 

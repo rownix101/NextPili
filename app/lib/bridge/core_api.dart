@@ -7,6 +7,8 @@ import 'frb/api/auth.dart' as frb_auth;
 import 'frb/api/dynamics.dart' as frb_dynamics;
 import 'frb/api/engagement.dart' as frb_engagement;
 import 'frb/api/feed.dart' as frb_feed;
+import 'frb/api/live.dart' as frb_live;
+import 'frb/api/pgc.dart' as frb_pgc;
 import 'frb/api/search.dart' as frb_search;
 import 'frb/api/settings.dart' as frb_settings;
 import 'frb/api/simple.dart' as frb;
@@ -21,6 +23,10 @@ export 'frb/api/simple.dart' show ApiVersion, BootstrapConfig;
 export 'frb/api/dynamics.dart' show DynamicItemDto, DynamicPageDto;
 export 'frb/api/feed.dart'
     show FeedItemDto, PopularFeedDto, RecommendFeedDto;
+export 'frb/api/live.dart'
+    show LiveRecommendPageDto, LiveRoomCardDto, LiveRoomDto;
+export 'frb/api/pgc.dart'
+    show PgcEpisodeDto, PgcRankItemDto, PgcRankPageDto, PgcSeasonDto;
 export 'frb/api/search.dart'
     show SearchSuggestDto, SearchVideoItemDto, SearchVideoPageDto;
 export 'frb/api/settings.dart' show SettingsDto;
@@ -175,6 +181,58 @@ class CoreApi {
         offset: offset,
         typeFilter: typeFilter,
         page: page,
+      );
+
+  /// Live recommend rooms (optional login).
+  Future<frb_live.LiveRecommendPageDto> liveRecommend({
+    int page = 1,
+    int pageSize = 20,
+  }) =>
+      frb_live.liveRecommend(page: page, pageSize: pageSize);
+
+  /// Live room metadata.
+  Future<frb_live.LiveRoomDto> liveRoom(int roomId) =>
+      frb_live.liveRoom(roomId: PlatformInt64Util.from(roomId));
+
+  /// Live playurl → [MediaSourceDto] (FLV / HLS segment).
+  Future<frb_video.MediaSourceDto> livePlayUrl({
+    required int roomId,
+    int qn = 0,
+  }) =>
+      frb_live.livePlayUrl(
+        roomId: PlatformInt64Util.from(roomId),
+        qn: qn,
+      );
+
+  /// PGC rank. `seasonType`: 1 番剧 · 4 国创 · 2 电影 …
+  Future<frb_pgc.PgcRankPageDto> pgcRank({
+    int seasonType = 1,
+    int day = 3,
+  }) =>
+      frb_pgc.pgcRank(seasonType: seasonType, day: day);
+
+  /// Season detail. Pass `seasonId` and/or `epId` (at least one > 0).
+  Future<frb_pgc.PgcSeasonDto> pgcSeason({
+    int seasonId = 0,
+    int epId = 0,
+  }) =>
+      frb_pgc.pgcSeason(
+        seasonId: PlatformInt64Util.from(seasonId),
+        epId: PlatformInt64Util.from(epId),
+      );
+
+  /// PGC playurl → [MediaSourceDto].
+  Future<frb_video.MediaSourceDto> pgcPlayUrl({
+    required int epId,
+    required int cid,
+    int qn = 0,
+    int fnval = 0,
+  }) =>
+      frb_pgc.pgcPlayUrl(
+        epId: PlatformInt64Util.from(epId),
+        cid: PlatformInt64Util.from(cid),
+        qn: qn,
+        fnval: fnval,
       );
 
   Future<frb_search.SearchSuggestDto> searchSuggest({required String term}) =>

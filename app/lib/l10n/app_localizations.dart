@@ -284,6 +284,18 @@ abstract class AppLocalizations {
   /// **'首页'**
   String get navHome;
 
+  /// No description provided for @navLive.
+  ///
+  /// In zh, this message translates to:
+  /// **'直播'**
+  String get navLive;
+
+  /// No description provided for @navPgc.
+  ///
+  /// In zh, this message translates to:
+  /// **'番剧'**
+  String get navPgc;
+
   /// No description provided for @navSearch.
   ///
   /// In zh, this message translates to:
@@ -307,6 +319,120 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'设置'**
   String get navSettings;
+
+  /// No description provided for @pgcTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'番剧'**
+  String get pgcTitle;
+
+  /// No description provided for @pgcEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无榜单内容'**
+  String get pgcEmpty;
+
+  /// No description provided for @pgcNoEpisode.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无可播放剧集'**
+  String get pgcNoEpisode;
+
+  /// No description provided for @pgcTabAnime.
+  ///
+  /// In zh, this message translates to:
+  /// **'番剧'**
+  String get pgcTabAnime;
+
+  /// No description provided for @pgcTabGuochuang.
+  ///
+  /// In zh, this message translates to:
+  /// **'国创'**
+  String get pgcTabGuochuang;
+
+  /// No description provided for @pgcTabMovie.
+  ///
+  /// In zh, this message translates to:
+  /// **'电影'**
+  String get pgcTabMovie;
+
+  /// No description provided for @pgcTabTv.
+  ///
+  /// In zh, this message translates to:
+  /// **'电视剧'**
+  String get pgcTabTv;
+
+  /// No description provided for @pgcTabDoc.
+  ///
+  /// In zh, this message translates to:
+  /// **'纪录片'**
+  String get pgcTabDoc;
+
+  /// No description provided for @pgcTabVariety.
+  ///
+  /// In zh, this message translates to:
+  /// **'综艺'**
+  String get pgcTabVariety;
+
+  /// No description provided for @pgcRating.
+  ///
+  /// In zh, this message translates to:
+  /// **'评分 {score}'**
+  String pgcRating(String score);
+
+  /// No description provided for @pgcEpisodesCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'共 {count} 话'**
+  String pgcEpisodesCount(int count);
+
+  /// No description provided for @pgcEpisodeLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'第 {index} 话 {title}'**
+  String pgcEpisodeLabel(String index, String title);
+
+  /// No description provided for @pgcEpisodeFallback.
+  ///
+  /// In zh, this message translates to:
+  /// **'剧集 {id}'**
+  String pgcEpisodeFallback(String id);
+
+  /// No description provided for @liveTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'直播'**
+  String get liveTitle;
+
+  /// No description provided for @liveEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无直播推荐'**
+  String get liveEmpty;
+
+  /// No description provided for @liveBadge.
+  ///
+  /// In zh, this message translates to:
+  /// **'直播中'**
+  String get liveBadge;
+
+  /// No description provided for @liveOffline.
+  ///
+  /// In zh, this message translates to:
+  /// **'未开播'**
+  String get liveOffline;
+
+  /// No description provided for @liveRound.
+  ///
+  /// In zh, this message translates to:
+  /// **'轮播中'**
+  String get liveRound;
+
+  /// No description provided for @liveOnline.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 人气'**
+  String liveOnline(String count);
 
   /// No description provided for @dynamicsTitle.
   ///
@@ -691,6 +817,18 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'+86 中国'**
   String get authCountryChina;
+
+  /// No description provided for @authCountrySearchHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索国家/地区或区号'**
+  String get authCountrySearchHint;
+
+  /// No description provided for @authCountrySearchEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'无匹配区号'**
+  String get authCountrySearchEmpty;
 
   /// No description provided for @authPhone.
   ///

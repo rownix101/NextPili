@@ -24,6 +24,7 @@ class PlayerPane extends StatefulWidget {
     this.bvid = '',
     this.title = '',
     this.qn = 0,
+    this.epId = 0,
     this.immersive = false,
     this.showBack = false,
     this.onBack,
@@ -36,6 +37,9 @@ class PlayerPane extends StatefulWidget {
   final String bvid;
   final String title;
   final int qn;
+
+  /// When > 0, fetch stream via PGC playurl (`ep_id` + `cid`).
+  final int epId;
 
   /// Full-bleed black chrome (route `/play`).
   final bool immersive;
@@ -68,9 +72,25 @@ class _PlayerPaneState extends State<PlayerPane> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.cid != widget.cid ||
         oldWidget.videoId != widget.videoId ||
-        oldWidget.qn != widget.qn) {
+        oldWidget.qn != widget.qn ||
+        oldWidget.epId != widget.epId) {
       _load();
     }
+  }
+
+  Future<MediaSourceDto> _fetchSource(int qn) {
+    if (widget.epId > 0) {
+      return CoreApi.instance.pgcPlayUrl(
+        epId: widget.epId,
+        cid: widget.cid,
+        qn: qn,
+      );
+    }
+    return CoreApi.instance.playUrl(
+      id: widget.videoId,
+      cid: widget.cid,
+      qn: qn,
+    );
   }
 
   Future<void> _load({int? qn}) async {
@@ -79,11 +99,7 @@ class _PlayerPaneState extends State<PlayerPane> {
       _error = null;
     });
     try {
-      final source = await CoreApi.instance.playUrl(
-        id: widget.videoId,
-        cid: widget.cid,
-        qn: qn ?? widget.qn,
-      );
+      final source = await _fetchSource(qn ?? widget.qn);
       if (!mounted) return;
       await _adapter.open(source);
       final aid = widget.aid != 0 ? widget.aid : i64(source.aid);
@@ -111,11 +127,7 @@ class _PlayerPaneState extends State<PlayerPane> {
     try {
       if (stream.qn != null) {
         final pos = _adapter.player.state.position;
-        final source = await CoreApi.instance.playUrl(
-          id: widget.videoId,
-          cid: widget.cid,
-          qn: stream.qn!,
-        );
+        final source = await _fetchSource(stream.qn!);
         if (!mounted) return;
         await _adapter.open(source);
         if (pos > Duration.zero) {

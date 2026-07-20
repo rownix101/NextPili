@@ -39,10 +39,59 @@
   "playUrlFetching": "正在获取播放地址…",
 
   "navHome": "首页",
+  "navLive": "直播",
+  "navPgc": "番剧",
   "navSearch": "搜索",
   "navDynamics": "动态",
   "navLibrary": "我的",
   "navSettings": "设置",
+
+  "pgcTitle": "番剧",
+  "pgcEmpty": "暂无榜单内容",
+  "pgcNoEpisode": "暂无可播放剧集",
+  "pgcTabAnime": "番剧",
+  "pgcTabGuochuang": "国创",
+  "pgcTabMovie": "电影",
+  "pgcTabTv": "电视剧",
+  "pgcTabDoc": "纪录片",
+  "pgcTabVariety": "综艺",
+  "pgcRating": "评分 {score}",
+  "@pgcRating": {
+    "placeholders": {
+      "score": { "type": "String" }
+    }
+  },
+  "pgcEpisodesCount": "共 {count} 话",
+  "@pgcEpisodesCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "pgcEpisodeLabel": "第 {index} 话 {title}",
+  "@pgcEpisodeLabel": {
+    "placeholders": {
+      "index": { "type": "String" },
+      "title": { "type": "String" }
+    }
+  },
+  "pgcEpisodeFallback": "剧集 {id}",
+  "@pgcEpisodeFallback": {
+    "placeholders": {
+      "id": { "type": "String" }
+    }
+  },
+
+  "liveTitle": "直播",
+  "liveEmpty": "暂无直播推荐",
+  "liveBadge": "直播中",
+  "liveOffline": "未开播",
+  "liveRound": "轮播中",
+  "liveOnline": "{count} 人气",
+  "@liveOnline": {
+    "placeholders": {
+      "count": { "type": "String" }
+    }
+  },
 
   "dynamicsTitle": "动态",
   "dynamicsEmpty": "暂无关注动态",
@@ -171,6 +220,8 @@
   "authSmsIntro": "使用手机号与短信验证码登录或注册。未注册号码将自动创建账号。账号信息仅保存在本机。",
   "authCountryCode": "区号",
   "authCountryChina": "+86 中国",
+  "authCountrySearchHint": "搜索国家/地区或区号",
+  "authCountrySearchEmpty": "无匹配区号",
   "authPhone": "手机号",
   "authGetCaptcha": "获取人机验证",
   "authOpenGeeHelper": "打开极验助手",
