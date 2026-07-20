@@ -3,12 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../bridge/core_api.dart';
 import '../../core/adaptive/form_factor.dart';
 import '../../core/icons/app_icons.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/shapes.dart';
 import '../../core/theme/spacing.dart';
 import '../../core/widgets/np_button.dart';
 import '../../core/widgets/page_header.dart';
@@ -36,7 +38,9 @@ class _AuthPageState extends ConsumerState<AuthPage>
   String? _qrUrl;
   String? _authCode;
   String _qrStatus = '未开始';
+  QrStatusKind? _qrKind;
   Timer? _pollTimer;
+  bool _qrStarting = false;
 
   // SMS
   final _telController = TextEditingController();
@@ -58,9 +62,30 @@ class _AuthPageState extends ConsumerState<AuthPage>
     final wantQr = supportsQrLogin(context);
     final len = wantQr ? 2 : 1;
     if (_tabs == null || _tabs!.length != len) {
+      _tabs?.removeListener(_onTabChanged);
       _tabs?.dispose();
       _tabs = TabController(length: len, vsync: this);
+      _tabs!.addListener(_onTabChanged);
     }
+  }
+
+  void _onTabChanged() {
+    final tabs = _tabs;
+    if (tabs == null || tabs.indexIsChanging) return;
+    if (supportsQrLogin(context) && tabs.index == 1) {
+      _ensureQr();
+    }
+  }
+
+  void _ensureQr() {
+    if (_qrStarting || _busy) return;
+    if (_qrUrl != null &&
+        _qrKind != QrStatusKind.expired &&
+        _qrKind != QrStatusKind.error &&
+        _qrKind != QrStatusKind.confirmed) {
+      return;
+    }
+    unawaited(_startQr());
   }
 
   @override
@@ -89,9 +114,12 @@ class _AuthPageState extends ConsumerState<AuthPage>
   }
 
   Future<void> _startQr() async {
+    if (_qrStarting) return;
     setState(() {
+      _qrStarting = true;
       _busy = true;
       _qrStatus = '申请二维码…';
+      _qrKind = null;
       _qrUrl = null;
       _authCode = null;
     });
@@ -102,16 +130,27 @@ class _AuthPageState extends ConsumerState<AuthPage>
       setState(() {
         _qrUrl = start.url;
         _authCode = start.authCode;
-        _qrStatus = '等待扫码';
+        _qrStatus = '请使用手机客户端扫码';
+        _qrKind = QrStatusKind.pending;
       });
       _pollTimer = Timer.periodic(const Duration(milliseconds: 1800), (_) {
         _pollOnce();
       });
     } catch (e) {
       _toast(errorMessage(e));
-      setState(() => _qrStatus = '申请失败');
+      if (mounted) {
+        setState(() {
+          _qrStatus = '申请失败';
+          _qrKind = QrStatusKind.error;
+        });
+      }
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _qrStarting = false;
+        });
+      }
     }
   }
 
@@ -121,13 +160,24 @@ class _AuthPageState extends ConsumerState<AuthPage>
     try {
       final poll = await CoreApi.instance.loginQrPoll(authCode: code);
       if (!mounted) return;
-      setState(() => _qrStatus = poll.message);
+      setState(() {
+        _qrStatus = switch (poll.status) {
+          QrStatusKind.pending => '请使用手机客户端扫码',
+          QrStatusKind.scanned => '已扫码，请在手机上确认',
+          QrStatusKind.confirmed => '登录成功',
+          QrStatusKind.expired => '二维码已过期',
+          QrStatusKind.error => poll.message,
+        };
+        _qrKind = poll.status;
+      });
       switch (poll.status) {
         case QrStatusKind.confirmed:
           _pollTimer?.cancel();
           _refreshAccounts();
           _toast('登录成功：${poll.account?.name ?? ''}');
         case QrStatusKind.expired:
+          _pollTimer?.cancel();
+          unawaited(_startQr());
         case QrStatusKind.error:
           _pollTimer?.cancel();
         case QrStatusKind.pending:
@@ -137,7 +187,10 @@ class _AuthPageState extends ConsumerState<AuthPage>
     } catch (e) {
       _pollTimer?.cancel();
       if (mounted) {
-        setState(() => _qrStatus = errorMessage(e));
+        setState(() {
+          _qrStatus = errorMessage(e);
+          _qrKind = QrStatusKind.error;
+        });
       }
     }
   }
@@ -318,18 +371,11 @@ class _AuthPageState extends ConsumerState<AuthPage>
                       ),
                       if (showQr)
                         _QrTab(
-                          busy: _busy,
+                          busy: _busy || _qrStarting,
                           qrUrl: _qrUrl,
                           status: _qrStatus,
-                          onStart: _startQr,
-                          onCopyUrl: _qrUrl == null
-                              ? null
-                              : () async {
-                                  await Clipboard.setData(
-                                    ClipboardData(text: _qrUrl!),
-                                  );
-                                  _toast('已复制登录 URL');
-                                },
+                          statusKind: _qrKind,
+                          onRefresh: _startQr,
                         ),
                     ],
                   ),
@@ -577,51 +623,112 @@ class _QrTab extends StatelessWidget {
     required this.busy,
     required this.qrUrl,
     required this.status,
-    required this.onStart,
-    required this.onCopyUrl,
+    required this.statusKind,
+    required this.onRefresh,
   });
 
   final bool busy;
   final String? qrUrl;
   final String status;
-  final VoidCallback onStart;
-  final VoidCallback? onCopyUrl;
+  final QrStatusKind? statusKind;
+  final VoidCallback onRefresh;
+
+  static const double _qrSize = 220;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    final theme = Theme.of(context);
+    final colors = AppColors.of(context);
+    final expired = statusKind == QrStatusKind.expired;
+    final failed = statusKind == QrStatusKind.error;
+    final confirmed = statusKind == QrStatusKind.confirmed;
+
+    return ListView(
       padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            '桌面 / 平板可用：TV/HD 扫码登录。手机端请使用短信登录。',
-            style: Theme.of(context).textTheme.bodyMedium,
+      children: [
+        Text(
+          '使用 bilibili 手机客户端扫码登录。二维码过期会自动刷新。',
+          style: theme.textTheme.bodyMedium,
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        Center(
+          child: Tooltip(
+            message: busy ? '刷新中…' : '点击刷新二维码',
+            child: Material(
+              color: Colors.white,
+              borderRadius: AppShapes.borderMd,
+              child: InkWell(
+                borderRadius: AppShapes.borderMd,
+                onTap: busy ? null : onRefresh,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: AppShapes.borderMd,
+                    border: Border.all(color: colors.borderSubtle),
+                  ),
+                  child: SizedBox(
+                    width: _qrSize + AppSpacing.lg * 2,
+                    height: _qrSize + AppSpacing.lg * 2,
+                    child: Center(child: _buildQrBody(colors)),
+                  ),
+                ),
+              ),
+            ),
           ),
-          const SizedBox(height: AppSpacing.md),
-          NpButton(
-            label: busy ? '处理中…' : '获取二维码',
-            icon: AppIcons.qrCode,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Text(
+          status,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.titleSmall?.copyWith(
+            color: confirmed
+                ? colors.success
+                : (expired || failed)
+                    ? colors.error
+                    : colors.fgPrimary,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Center(
+          child: NpButton(
+            label: busy
+                ? '刷新中…'
+                : (expired || failed || qrUrl == null)
+                    ? '刷新'
+                    : '重新获取',
+            icon: AppIcons.refresh,
             loading: busy,
-            onPressed: busy ? null : onStart,
+            variant: NpButtonVariant.secondary,
+            onPressed: busy ? null : onRefresh,
           ),
-          const SizedBox(height: AppSpacing.md - 4),
-          Text('状态：$status'),
-          if (qrUrl != null) ...[
-            const SizedBox(height: AppSpacing.md - 4),
-            SelectableText(
-              qrUrl!,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            NpButton(
-              label: '复制登录 URL',
-              icon: AppIcons.copy,
-              variant: NpButtonVariant.secondary,
-              onPressed: onCopyUrl,
-            ),
-          ],
-        ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQrBody(AppColors colors) {
+    if (busy && qrUrl == null) {
+      return const SizedBox(
+        width: 32,
+        height: 32,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      );
+    }
+    final url = qrUrl;
+    if (url == null || url.isEmpty) {
+      return Icon(AppIcons.qrCode, size: 48, color: colors.fgMuted);
+    }
+    return QrImageView(
+      data: url,
+      version: QrVersions.auto,
+      size: _qrSize,
+      backgroundColor: Colors.white,
+      eyeStyle: const QrEyeStyle(
+        eyeShape: QrEyeShape.square,
+        color: Colors.black,
+      ),
+      dataModuleStyle: const QrDataModuleStyle(
+        dataModuleShape: QrDataModuleShape.square,
+        color: Colors.black,
       ),
     );
   }

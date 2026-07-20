@@ -5,6 +5,7 @@
 
 import 'api/auth.dart';
 import 'api/feed.dart';
+import 'api/settings.dart';
 import 'api/simple.dart';
 import 'api/video.dart';
 import 'auth_service.dart';
@@ -133,6 +134,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RecommendFeedDto dco_decode_recommend_feed_dto(dynamic raw);
+
+  @protected
+  SettingsDto dco_decode_settings_dto(dynamic raw);
 
   @protected
   SlotDto dco_decode_slot_dto(dynamic raw);
@@ -294,6 +298,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RecommendFeedDto sse_decode_recommend_feed_dto(SseDeserializer deserializer);
+
+  @protected
+  SettingsDto sse_decode_settings_dto(SseDeserializer deserializer);
 
   @protected
   SlotDto sse_decode_slot_dto(SseDeserializer deserializer);
@@ -495,6 +502,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     RecommendFeedDto self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_settings_dto(SettingsDto self, SseSerializer serializer);
 
   @protected
   void sse_encode_slot_dto(SlotDto self, SseSerializer serializer);

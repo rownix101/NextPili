@@ -47,6 +47,7 @@ dependencies:
   liquid_glass_widgets: ^0.22.1
   flutter_lucide: ^1.11.0
   google_fonts: ^6.2.1
+  qr_flutter: ^4.1.0
 
 
 dev_dependencies:

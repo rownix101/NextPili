@@ -4,6 +4,7 @@ import 'package:path/path.dart' as p;
 
 import 'frb/api/auth.dart' as frb_auth;
 import 'frb/api/feed.dart' as frb_feed;
+import 'frb/api/settings.dart' as frb_settings;
 import 'frb/api/simple.dart' as frb;
 import 'frb/api/video.dart' as frb_video;
 import 'frb/auth_service.dart';
@@ -13,6 +14,7 @@ import 'frb/frb_generated.dart';
 export 'frb/api/simple.dart' show ApiVersion, BootstrapConfig;
 export 'frb/api/feed.dart'
     show FeedItemDto, PopularFeedDto, RecommendFeedDto;
+export 'frb/api/settings.dart' show SettingsDto;
 export 'frb/api/video.dart'
     show
         HeaderDto,
@@ -145,6 +147,20 @@ class CoreApi {
       );
 
   void playbackStop() => frb_video.playbackStop();
+
+  frb_settings.SettingsDto getSettings() => frb_settings.getSettings();
+
+  /// Patch settings. Pass `proxy: ''` to clear proxy.
+  frb_settings.SettingsDto updateSettings({
+    int? preferredQn,
+    String? proxy,
+    String? locale,
+  }) =>
+      frb_settings.updateSettings(
+        preferredQn: preferredQn,
+        proxy: proxy,
+        locale: locale,
+      );
 }
 
 /// Map FRB [AppError] / any into a short UI message.

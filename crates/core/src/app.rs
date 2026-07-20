@@ -11,7 +11,7 @@ use std::sync::{Arc, OnceLock};
 pub struct CoreApp {
     pub store: Store,
     pub accounts: RwLock<AccountRegistry>,
-    pub http: BiliClient,
+    http: RwLock<BiliClient>,
     pub media: MediaService,
     pub wbi: RwLock<WbiSigner>,
     pub heartbeat: HeartbeatSupervisor,
@@ -29,6 +29,20 @@ impl CoreApp {
 
     pub fn try_global() -> Option<Arc<CoreApp>> {
         APP.get().cloned()
+    }
+
+    /// Clone of the current HTTP client (cheap; reqwest Client is Arc-backed).
+    pub fn http(&self) -> BiliClient {
+        self.http.read().clone()
+    }
+
+    /// Rebuild HTTP client with a new proxy (None = direct).
+    pub fn set_http_proxy(&self, proxy: Option<String>) -> Result<(), AppError> {
+        let mut cfg = self.http.read().config().clone();
+        cfg.proxy = proxy;
+        let client = BiliClient::new(cfg).map_err(AppError::from)?;
+        *self.http.write() = client;
+        Ok(())
     }
 
     pub fn bootstrap(config: BootstrapParams) -> Result<Arc<CoreApp>, AppError> {
@@ -61,7 +75,7 @@ impl CoreApp {
         let app = Arc::new(CoreApp {
             store,
             accounts: RwLock::new(accounts),
-            http,
+            http: RwLock::new(http),
             media,
             wbi: RwLock::new(wbi),
             heartbeat,
@@ -76,7 +90,7 @@ impl CoreApp {
         );
 
         // Best-effort WBI warm-up (ignore network errors at boot).
-        let warm_http = app.http.clone();
+        let warm_http = app.http();
         let warm_buvid = app.store.buvid3();
         let warm_app = app.clone();
         if let Ok(handle) = tokio::runtime::Handle::try_current() {

@@ -15,7 +15,7 @@ pub use crate::auth_service::{
 pub async fn login_qr_start(local_id: Option<String>) -> Result<QrStartDto, AppError> {
     let app = CoreApp::global()?;
     let lid = resolve_local_id(&app, local_id);
-    auth_service::login_qr_start(&app.http, &lid).await
+    auth_service::login_qr_start(&app.http(), &lid).await
 }
 
 /// Poll QR login once. Caller should interval ~1.5–2s until confirmed/expired.
@@ -26,7 +26,8 @@ pub async fn login_qr_poll(
     let app = CoreApp::global()?;
     let lid = resolve_local_id(&app, local_id);
 
-    let status = http::LoginApi::qr_poll(&app.http, &auth_code, &lid).await?;
+    let http = app.http();
+    let status = http::LoginApi::qr_poll(&http, &auth_code, &lid).await?;
 
     use http::QrPollStatus;
     match status {
@@ -51,7 +52,7 @@ pub async fn login_qr_poll(
             account: None,
         }),
         QrPollStatus::Confirmed(success) => {
-            auth_service::finalize_qr_login(&app.http, &app.store, &app.accounts, &app.wbi, success)
+            auth_service::finalize_qr_login(&http, &app.store, &app.accounts, &app.wbi, success)
                 .await
         }
     }
@@ -60,7 +61,7 @@ pub async fn login_qr_poll(
 /// Fetch geetest parameters for SMS login.
 pub async fn login_captcha() -> Result<CaptchaDto, AppError> {
     let app = CoreApp::global()?;
-    auth_service::login_captcha(&app.http).await
+    auth_service::login_captcha(&app.http()).await
 }
 
 /// Generate a fresh SMS login session id (uuid without dashes).
@@ -72,13 +73,13 @@ pub fn new_login_session_id() -> String {
 /// Send SMS verification code after captcha is solved.
 pub async fn login_sms_send(req: SmsSendDto) -> Result<SmsSendDtoResult, AppError> {
     let app = CoreApp::global()?;
-    auth_service::login_sms_send(&app.http, &app.store, req).await
+    auth_service::login_sms_send(&app.http(), &app.store, req).await
 }
 
 /// Complete SMS login.
 pub async fn login_sms(req: SmsLoginDto) -> Result<AccountPublicDto, AppError> {
     let app = CoreApp::global()?;
-    auth_service::login_sms(&app.http, &app.store, &app.accounts, &app.wbi, req).await
+    auth_service::login_sms(&app.http(), &app.store, &app.accounts, &app.wbi, req).await
 }
 
 /// List known accounts (no secrets).

@@ -71,7 +71,7 @@ mod tests {
     fn version_shape() {
         let v = api_version();
         assert_eq!(v.major, 0);
-        assert_eq!(v.minor, 4);
+        assert_eq!(v.minor, 5);
         assert!(!v.core.is_empty());
     }
 }

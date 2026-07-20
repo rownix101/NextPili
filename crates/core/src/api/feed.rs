@@ -51,8 +51,9 @@ pub async fn feed_recommend(fresh_idx: i32, ps: u32) -> Result<RecommendFeedDto,
     let wbi = app.wbi.read().clone();
     let page_size = if ps == 0 { 12 } else { ps };
 
+    let http = app.http();
     let feed = FeedApi::recommend(
-        &app.http,
+        &http,
         account.as_ref(),
         Some(buvid.as_str()),
         &wbi,
@@ -81,8 +82,9 @@ pub async fn feed_popular(pn: i32, ps: u32) -> Result<PopularFeedDto, AppError> 
     };
     let page_size = if ps == 0 { 20 } else { ps };
 
+    let http = app.http();
     let feed = FeedApi::popular(
-        &app.http,
+        &http,
         account.as_ref(),
         Some(buvid.as_str()),
         pn,
@@ -116,7 +118,7 @@ async fn ensure_wbi(app: &CoreApp) -> Result<(), AppError> {
     let buvid = app.store.buvid3();
     let account = app.accounts.read().active_main().cloned();
     let mut wbi = app.wbi.read().clone();
-    NavApi::refresh_wbi(&app.http, &mut wbi, account.as_ref(), Some(buvid.as_str()))
+    NavApi::refresh_wbi(&app.http(), &mut wbi, account.as_ref(), Some(buvid.as_str()))
         .await
         .map_err(AppError::from)?;
     if !wbi.has_keys() {

@@ -2,6 +2,7 @@
 
 pub mod auth;
 pub mod feed;
+pub mod settings;
 pub mod simple;
 pub mod video;
 
@@ -13,6 +14,7 @@ pub use auth::{
 pub use feed::{
     feed_popular, feed_recommend, FeedItemDto, PopularFeedDto, RecommendFeedDto,
 };
+pub use settings::{get_settings, update_settings, SettingsDto};
 pub use simple::{api_version, bootstrap, ping, ApiVersion, BootstrapConfig};
 pub use video::{
     play_url, playback_start, playback_stop, video_detail, HeaderDto, MediaFormatDto,

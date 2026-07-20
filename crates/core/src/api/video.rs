@@ -115,8 +115,9 @@ pub async fn video_detail(id: String) -> Result<VideoDetailDto, AppError> {
             .cloned()
     };
 
+    let http = app.http();
     let detail = VideoApi::detail(
-        &app.http,
+        &http,
         account.as_ref(),
         Some(buvid.as_str()),
         &video_id,
@@ -193,8 +194,9 @@ pub async fn play_url(
     };
     let wbi = app.wbi.read().clone();
 
+    let http = app.http();
     let data = VideoApi::play_url(
-        &app.http,
+        &http,
         account.as_ref(),
         Some(buvid.as_str()),
         &wbi,
@@ -250,7 +252,7 @@ pub async fn playback_start(aid: i64, bvid: String, cid: i64) -> Result<(), AppE
             .cloned()
     };
     app.heartbeat.start(
-        app.http.clone(),
+        app.http(),
         account,
         buvid,
         crate::heartbeat::PlayContext { aid, bvid, cid },
@@ -324,7 +326,7 @@ async fn ensure_wbi(app: &CoreApp) -> Result<(), AppError> {
     let buvid = app.store.buvid3();
     let account = app.accounts.read().active_main().cloned();
     let mut wbi = app.wbi.read().clone();
-    NavApi::refresh_wbi(&app.http, &mut wbi, account.as_ref(), Some(buvid.as_str()))
+    NavApi::refresh_wbi(&app.http(), &mut wbi, account.as_ref(), Some(buvid.as_str()))
         .await
         .map_err(AppError::from)?;
     if !wbi.has_keys() {
