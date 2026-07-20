@@ -51,3 +51,8 @@ cache/
 
 # Local tool caches
 .flutter-plugins-dependencies
+
+#AI
+.agents/
+.codex/
+.claude/

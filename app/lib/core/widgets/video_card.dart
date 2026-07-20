@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/l10n.dart';
 import '../icons/app_icons.dart';
 import '../theme/app_colors.dart';
 import '../theme/shapes.dart';
@@ -65,7 +66,7 @@ class _VideoCardState extends State<VideoCard> {
                         left: AppSpacing.sm,
                         top: AppSpacing.sm,
                         child: _Badge(
-                          label: '直播',
+                          label: context.l10n.live,
                           color: colors.live,
                         ),
                       ),

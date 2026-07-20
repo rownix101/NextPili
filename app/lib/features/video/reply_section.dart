@@ -8,6 +8,7 @@ import '../../core/theme/spacing.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/loading.dart';
 import '../../core/widgets/np_button.dart';
+import '../../l10n/l10n.dart';
 
 /// Paginated main-floor comments for a video (`aid`).
 class ReplySection extends ConsumerStatefulWidget {
@@ -69,7 +70,7 @@ class _ReplySectionState extends ConsumerState<ReplySection> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = errorMessage(e);
+        _error = errorMessage(e, context.l10n);
       });
     }
   }
@@ -97,7 +98,7 @@ class _ReplySectionState extends ConsumerState<ReplySection> {
       if (!mounted) return;
       setState(() => _loadingMore = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage(e))),
+        SnackBar(content: Text(errorMessage(e, context.l10n))),
       );
     }
   }
@@ -112,6 +113,7 @@ class _ReplySectionState extends ConsumerState<ReplySection> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
+    final l10n = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -119,14 +121,16 @@ class _ReplySectionState extends ConsumerState<ReplySection> {
         Row(
           children: [
             Text(
-              _allCount > 0 ? '评论 ($_allCount)' : '评论',
+              _allCount > 0
+                  ? l10n.replyTitleWithCount(_allCount)
+                  : l10n.replyTitle,
               style: theme.textTheme.titleMedium,
             ),
             const Spacer(),
             SegmentedButton<int>(
-              segments: const [
-                ButtonSegment(value: 3, label: Text('热度')),
-                ButtonSegment(value: 2, label: Text('时间')),
+              segments: [
+                ButtonSegment(value: 3, label: Text(l10n.replySortHeat)),
+                ButtonSegment(value: 2, label: Text(l10n.replySortTime)),
               ],
               selected: {_mode},
               onSelectionChanged: (s) => _setMode(s.first),
@@ -147,7 +151,7 @@ class _ReplySectionState extends ConsumerState<ReplySection> {
           EmptyState.error(message: _error!, onRetry: _reload)
         else if (_items.isEmpty)
           EmptyState(
-            message: '还没有评论',
+            message: l10n.replyEmpty,
             icon: AppIcons.comment,
           )
         else ...[
@@ -165,7 +169,7 @@ class _ReplySectionState extends ConsumerState<ReplySection> {
                       ),
                     )
                   : NpButton(
-                      label: '加载更多',
+                      label: l10n.loadMore,
                       variant: NpButtonVariant.text,
                       onPressed: _loadMore,
                     ),
@@ -174,7 +178,7 @@ class _ReplySectionState extends ConsumerState<ReplySection> {
             Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.md),
               child: Text(
-                '没有更多了',
+                l10n.noMore,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: colors.fgMuted,
@@ -196,7 +200,8 @@ class _ReplyTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
-    final uname = reply.uname.isEmpty ? '用户' : reply.uname;
+    final l10n = context.l10n;
+    final uname = reply.uname.isEmpty ? l10n.user : reply.uname;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
@@ -246,7 +251,7 @@ class _ReplyTile extends StatelessWidget {
                 if (reply.childrenCount > 0) ...[
                   const SizedBox(height: 4),
                   Text(
-                    '${reply.childrenCount} 条回复',
+                    l10n.replyChildrenCount(reply.childrenCount),
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: colors.fgSecondary,
                     ),

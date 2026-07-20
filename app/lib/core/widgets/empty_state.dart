@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/l10n.dart';
 import '../icons/app_icons.dart';
 import '../theme/app_colors.dart';
 import '../theme/spacing.dart';
@@ -28,7 +29,7 @@ class EmptyState extends StatelessWidget {
     Key? key,
     required String message,
     VoidCallback? onRetry,
-    String retryLabel = '重试',
+    String? retryLabel,
     String? secondaryLabel,
     VoidCallback? onSecondary,
   }) {
@@ -47,6 +48,9 @@ class EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final theme = Theme.of(context);
+    final l10n = context.l10n;
+    final resolvedAction =
+        onAction == null ? null : (actionLabel ?? l10n.retry);
 
     return Center(
       child: Padding(
@@ -65,9 +69,9 @@ class EmptyState extends StatelessWidget {
                   color: colors.fgSecondary,
                 ),
               ),
-              if (actionLabel != null && onAction != null) ...[
+              if (resolvedAction != null && onAction != null) ...[
                 const SizedBox(height: AppSpacing.md),
-                NpButton(label: actionLabel!, onPressed: onAction),
+                NpButton(label: resolvedAction, onPressed: onAction),
               ],
               if (secondaryLabel != null && onSecondary != null) ...[
                 const SizedBox(height: AppSpacing.sm),

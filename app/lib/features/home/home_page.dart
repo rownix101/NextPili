@@ -6,11 +6,13 @@ import '../../bridge/core_api.dart';
 import '../../core/icons/app_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/spacing.dart';
+import '../../core/utils/format.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/loading.dart';
 import '../../core/widgets/np_button.dart';
 import '../../core/widgets/page_header.dart';
 import '../../core/widgets/video_card.dart';
+import '../../l10n/l10n.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -38,22 +40,23 @@ class _HomePageState extends ConsumerState<HomePage>
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final l10n = context.l10n;
     return Scaffold(
       backgroundColor: colors.canvas,
       appBar: PageHeader(
-        title: 'NextPili',
+        title: l10n.appTitle,
         actions: [
           NpIconButton(
-            tooltip: '账号',
+            tooltip: l10n.account,
             icon: AppIcons.user,
             onPressed: () => context.push('/auth'),
           ),
         ],
         bottom: TabBar(
           controller: _tabs,
-          tabs: const [
-            Tab(text: '推荐'),
-            Tab(text: '热门'),
+          tabs: [
+            Tab(text: l10n.homeTabRecommend),
+            Tab(text: l10n.homeTabPopular),
           ],
         ),
       ),
@@ -124,7 +127,7 @@ class _RecommendFeedTabState extends State<_RecommendFeedTab> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = errorMessage(e);
+        _error = errorMessage(e, context.l10n);
       });
     }
   }
@@ -145,7 +148,7 @@ class _RecommendFeedTabState extends State<_RecommendFeedTab> {
       if (!mounted) return;
       setState(() => _loadingMore = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage(e))),
+        SnackBar(content: Text(errorMessage(e, context.l10n))),
       );
     }
   }
@@ -223,7 +226,7 @@ class _PopularFeedTabState extends State<_PopularFeedTab> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = errorMessage(e);
+        _error = errorMessage(e, context.l10n);
       });
     }
   }
@@ -244,7 +247,7 @@ class _PopularFeedTabState extends State<_PopularFeedTab> {
       if (!mounted) return;
       setState(() => _loadingMore = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage(e))),
+        SnackBar(content: Text(errorMessage(e, context.l10n))),
       );
     }
   }
@@ -284,6 +287,7 @@ class _FeedBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     if (loading && items.isEmpty) {
       return LayoutBuilder(
         builder: (context, constraints) {
@@ -306,7 +310,7 @@ class _FeedBody extends StatelessWidget {
       return EmptyState.error(
         message: error!,
         onRetry: onRetry,
-        secondaryLabel: '去登录',
+        secondaryLabel: l10n.goLogin,
         onSecondary: () => context.push('/auth'),
       );
     }
@@ -336,7 +340,8 @@ class _FeedBody extends StatelessWidget {
                         title: item.title,
                         coverUrl: item.cover,
                         ownerName: item.ownerName,
-                        durationLabel: _formatDuration(i64(item.durationMs)),
+                        durationLabel:
+                            formatDurationMs(i64(item.durationMs)),
                         onTap: () {
                           final id = item.bvid.isNotEmpty
                               ? item.bvid
@@ -357,9 +362,9 @@ class _FeedBody extends StatelessWidget {
                   ),
                 ),
               if (!loadingMore && items.isEmpty)
-                const SliverFillRemaining(
+                SliverFillRemaining(
                   hasScrollBody: false,
-                  child: EmptyState(message: '暂无内容'),
+                  child: EmptyState(message: l10n.emptyContent),
                 ),
             ],
           );
@@ -375,16 +380,4 @@ class _FeedBody extends StatelessWidget {
     if (width >= 520) return 2;
     return 1;
   }
-}
-
-String _formatDuration(int ms) {
-  if (ms <= 0) return '';
-  final total = ms ~/ 1000;
-  final h = total ~/ 3600;
-  final m = (total % 3600) ~/ 60;
-  final s = total % 60;
-  if (h > 0) {
-    return '$h:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
-  }
-  return '$m:${s.toString().padLeft(2, '0')}';
 }

@@ -9,6 +9,7 @@ import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/glass_theme.dart';
 import 'core/theme/spacing.dart';
+import 'l10n/l10n.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,7 +29,7 @@ Future<void> main() async {
       'api=${ver.major}.${ver.minor}.${ver.patch}',
     );
   } catch (e, st) {
-    bootError = errorMessage(e);
+    bootError = errorMessage(e, lookupAppLocalizations(const Locale('zh')));
     debugPrint('Core bootstrap failed: $e\n$st');
   }
 
@@ -56,6 +57,8 @@ class _BootstrapErrorApp extends StatelessWidget {
       theme: buildLightTheme(),
       darkTheme: buildDarkTheme(),
       themeMode: ThemeMode.system,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Builder(
         builder: (context) {
           final colors = AppColors.of(context);
@@ -65,7 +68,7 @@ class _BootstrapErrorApp extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Text(
-                  '无法启动 Core：\n$message',
+                  context.l10n.bootCoreFailed(message),
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),

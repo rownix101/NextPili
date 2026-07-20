@@ -2,6 +2,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
+import '../l10n/app_localizations.dart';
 import 'frb/api/auth.dart' as frb_auth;
 import 'frb/api/feed.dart' as frb_feed;
 import 'frb/api/settings.dart' as frb_settings;
@@ -215,15 +216,27 @@ class CoreApi {
       );
 }
 
-/// Map FRB [AppError] / any into a short UI message.
-String errorMessage(Object error) {
+/// Map FRB [AppError] / any into user-facing copy (see docs/ux/copy.md).
+String errorMessage(Object error, AppLocalizations l10n) {
   if (error is AppError) {
-    return error.message;
+    return switch (error.kind) {
+      ErrorKind.network => l10n.errorNetworkUnavailable,
+      ErrorKind.unauthenticated => l10n.errorSessionExpired,
+      ErrorKind.csrf => l10n.errorCsrf,
+      ErrorKind.riskControl =>
+        error.message.trim().isEmpty ? l10n.errorRiskControl : error.message,
+      ErrorKind.notFound => l10n.errorNotFound,
+      ErrorKind.rateLimited => l10n.errorRateLimited,
+      ErrorKind.invalidArgument =>
+        error.message.trim().isEmpty ? l10n.errorGeneric : error.message,
+      ErrorKind.parse || ErrorKind.storage || ErrorKind.internal =>
+        l10n.errorGeneric,
+    };
   }
   if (error is AnyhowException) {
-    return error.message;
+    return l10n.errorGeneric;
   }
-  return error.toString();
+  return l10n.errorGeneric;
 }
 
 /// Convert FRB [PlatformInt64] to Dart [int].

@@ -9,20 +9,27 @@ import '../../core/theme/spacing.dart';
 import '../../core/widgets/content_surface.dart';
 import '../../core/widgets/loading.dart';
 import '../../core/widgets/page_header.dart';
+import '../../l10n/l10n.dart';
 
 /// Common Bilibili qn options (see docs/api/endpoints/video.md).
-const _qnOptions = <(int, String)>[
-  (16, '360P'),
-  (32, '480P'),
-  (64, '720P'),
-  (80, '1080P'),
-  (112, '1080P+'),
-  (116, '1080P60'),
-  (120, '4K'),
-  (125, 'HDR'),
-  (126, '杜比视界'),
-  (127, '8K'),
-];
+/// Labels that are not pure tech tokens resolve via l10n in [_labelForQn].
+const _qnCodes = <int>[16, 32, 64, 80, 112, 116, 120, 125, 126, 127];
+
+String _staticQnLabel(int qn, AppLocalizations l10n) {
+  return switch (qn) {
+    16 => '360P',
+    32 => '480P',
+    64 => '720P',
+    80 => '1080P',
+    112 => '1080P+',
+    116 => '1080P60',
+    120 => '4K',
+    125 => 'HDR',
+    126 => l10n.qualityDolbyVision,
+    127 => '8K',
+    _ => l10n.settingsQnLabel(qn),
+  };
+}
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -67,7 +74,7 @@ class _SettingsPageState extends State<SettingsPage> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = errorMessage(e);
+        _error = errorMessage(e, context.l10n);
       });
     }
   }
@@ -77,10 +84,10 @@ class _SettingsPageState extends State<SettingsPage> {
       final s = CoreApi.instance.updateSettings(preferredQn: qn);
       if (!mounted) return;
       setState(() => _settings = s);
-      _toast('默认清晰度已更新');
+      _toast(context.l10n.settingsQualityUpdated);
     } catch (e) {
       if (!mounted) return;
-      _toast(errorMessage(e));
+      _toast(errorMessage(e, context.l10n));
     }
   }
 
@@ -91,10 +98,11 @@ class _SettingsPageState extends State<SettingsPage> {
       if (!mounted) return;
       setState(() => _settings = s);
       _proxyController.text = s.proxy ?? '';
-      _toast(raw.isEmpty ? '已清除代理' : '代理已保存并生效');
+      final l10n = context.l10n;
+      _toast(raw.isEmpty ? l10n.settingsProxyCleared : l10n.settingsProxySaved);
     } catch (e) {
       if (!mounted) return;
-      _toast(errorMessage(e));
+      _toast(errorMessage(e, context.l10n));
     }
   }
 
@@ -105,10 +113,11 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: colors.canvas,
-      appBar: const PageHeader(title: '设置'),
+      appBar: PageHeader(title: l10n.settingsTitle),
       body: _loading
           ? const AppLoading()
           : _error != null
@@ -120,7 +129,10 @@ class _SettingsPageState extends State<SettingsPage> {
                       children: [
                         Text(_error!, textAlign: TextAlign.center),
                         const SizedBox(height: AppSpacing.md),
-                        FilledButton(onPressed: _load, child: const Text('重试')),
+                        FilledButton(
+                          onPressed: _load,
+                          child: Text(l10n.retry),
+                        ),
                       ],
                     ),
                   ),
@@ -132,8 +144,8 @@ class _SettingsPageState extends State<SettingsPage> {
                       child: Column(
                         children: [
                           ListTile(
-                            title: const Text('账号与登录'),
-                            subtitle: const Text('短信登录 · 桌面/平板扫码'),
+                            title: Text(l10n.settingsAccountTitle),
+                            subtitle: Text(l10n.settingsAccountSubtitle),
                             leading: Icon(
                               AppIcons.user,
                               color: colors.fgSecondary,
@@ -157,9 +169,12 @@ class _SettingsPageState extends State<SettingsPage> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           ListTile(
-                            title: const Text('默认清晰度'),
+                            title: Text(l10n.settingsDefaultQuality),
                             subtitle: Text(
-                              _labelForQn(_settings?.preferredQn ?? 80),
+                              _labelForQn(
+                                _settings?.preferredQn ?? 80,
+                                l10n,
+                              ),
                             ),
                             leading: Icon(
                               AppIcons.highQuality,
@@ -195,7 +210,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                     ),
                                     const SizedBox(width: AppSpacing.sm),
                                     Text(
-                                      'HTTP 代理',
+                                      l10n.settingsProxyTitle,
                                       style: Theme.of(context)
                                           .textTheme
                                           .titleMedium,
@@ -205,11 +220,10 @@ class _SettingsPageState extends State<SettingsPage> {
                                 const SizedBox(height: AppSpacing.sm),
                                 TextField(
                                   controller: _proxyController,
-                                  decoration: const InputDecoration(
+                                  decoration: InputDecoration(
                                     hintText: 'http://127.0.0.1:7890',
-                                    helperText:
-                                        '留空并保存可清除；支持 http / https / socks5',
-                                    border: OutlineInputBorder(),
+                                    helperText: l10n.settingsProxyHelper,
+                                    border: const OutlineInputBorder(),
                                     isDense: true,
                                   ),
                                   keyboardType: TextInputType.url,
@@ -220,7 +234,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                   alignment: Alignment.centerRight,
                                   child: FilledButton(
                                     onPressed: _saveProxy,
-                                    child: const Text('保存代理'),
+                                    child: Text(l10n.settingsProxySave),
                                   ),
                                 ),
                               ],
@@ -240,14 +254,15 @@ class _SettingsPageState extends State<SettingsPage> {
       context: context,
       showDragHandle: true,
       builder: (ctx) {
+        final sheetL10n = ctx.l10n;
         return SafeArea(
           child: ListView(
             shrinkWrap: true,
             children: [
-              for (final (qn, label) in _qnOptions)
+              for (final qn in _qnCodes)
                 ListTile(
-                  title: Text(label),
-                  subtitle: Text('qn $qn'),
+                  title: Text(_staticQnLabel(qn, sheetL10n)),
+                  subtitle: Text(sheetL10n.settingsQnLabel(qn)),
                   trailing: qn == current
                       ? Icon(
                           AppIcons.check,
@@ -267,9 +282,9 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 }
 
-String _labelForQn(int qn) {
-  for (final (code, label) in _qnOptions) {
-    if (code == qn) return '$label · qn $qn';
+String _labelForQn(int qn, AppLocalizations l10n) {
+  if (_qnCodes.contains(qn)) {
+    return l10n.settingsQnWithLabel(_staticQnLabel(qn, l10n), qn);
   }
-  return 'qn $qn';
+  return l10n.settingsQnLabel(qn);
 }

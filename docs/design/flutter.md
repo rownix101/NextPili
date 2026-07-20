@@ -226,5 +226,5 @@ core/*     → 不依赖 features
 ## 12. 代码风格
 
 - 与团队 Dart 分析器 / `flutter lints` 一致。
-- UI 字符串后期 l10n；MVP 可中文硬编码集中在 feature。
+- UI 字符串走 gen-l10n（`lib/l10n/app_zh.arb`）；见 [ux/localization.md](../ux/localization.md)。
 - 不做「上帝 Service」；能放 Notifier 的逻辑不放 static 单例。

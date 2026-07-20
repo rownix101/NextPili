@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/l10n.dart';
 import '../icons/app_icons.dart';
 import '../theme/app_colors.dart';
 import '../theme/spacing.dart';
@@ -39,7 +40,7 @@ class PageHeader extends StatelessWidget implements PreferredSizeWidget {
           (showBack
               ? NpIconButton(
                   icon: AppIcons.arrowLeft,
-                  tooltip: '返回',
+                  tooltip: context.l10n.back,
                   onPressed: onBack ?? () => Navigator.maybePop(context),
                 )
               : null),

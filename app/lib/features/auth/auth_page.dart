@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../bridge/core_api.dart';
@@ -14,6 +13,8 @@ import '../../core/theme/shapes.dart';
 import '../../core/theme/spacing.dart';
 import '../../core/widgets/np_button.dart';
 import '../../core/widgets/page_header.dart';
+import '../../l10n/l10n.dart';
+import 'auth_login_panel.dart';
 import 'password_risk_dialog.dart';
 
 final accountsProvider = StateProvider<List<AccountPublicDto>>((ref) {
@@ -24,6 +25,11 @@ final accountsProvider = StateProvider<List<AccountPublicDto>>((ref) {
   }
 });
 
+/// Passport URLs opened externally for flows we do not host in-app.
+const _registerUrl = 'https://passport.bilibili.com/register/index.html';
+const _forgotPasswordUrl =
+    'https://passport.bilibili.com/pc/passport/findPassword';
+
 class AuthPage extends ConsumerStatefulWidget {
   const AuthPage({super.key});
 
@@ -33,12 +39,13 @@ class AuthPage extends ConsumerStatefulWidget {
 
 class _AuthPageState extends ConsumerState<AuthPage>
     with SingleTickerProviderStateMixin {
-  TabController? _tabs;
+  /// 0 = password, 1 = SMS (matches bilibili web order).
+  TabController? _formTabs;
 
   // QR
   String? _qrUrl;
   String? _authCode;
-  String _qrStatus = '未开始';
+  String _qrStatus = '';
   QrStatusKind? _qrKind;
   Timer? _pollTimer;
   bool _qrStarting = false;
@@ -55,36 +62,35 @@ class _AuthPageState extends ConsumerState<AuthPage>
   final _pwdGeeValidateController = TextEditingController();
   final _pwdGeeSeccodeController = TextEditingController();
   CaptchaDto? _pwdCaptcha;
-  String _pwdHint = '完成人机验证后可登录';
+  String _pwdHint = '';
+  bool _obscurePassword = true;
 
   CaptchaDto? _captcha;
   String _loginSessionId = '';
   String? _captchaKey;
-  String _smsHint = '完成人机验证后可发送短信验证码';
+  String _smsHint = '';
   int _cid = 1; // 中国大陆 passport country id
 
   bool _busy = false;
-
-  int get _qrTabIndex => supportsQrLogin(context) ? 2 : -1;
+  bool _hintsReady = false;
+  bool _qrBootstrapped = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final wantQr = supportsQrLogin(context);
-    final len = wantQr ? 3 : 2;
-    if (_tabs == null || _tabs!.length != len) {
-      _tabs?.removeListener(_onTabChanged);
-      _tabs?.dispose();
-      _tabs = TabController(length: len, vsync: this);
-      _tabs!.addListener(_onTabChanged);
+    if (!_hintsReady) {
+      final l10n = context.l10n;
+      _qrStatus = l10n.authQrPanelHint;
+      _pwdHint = l10n.authPwdHintInitial;
+      _smsHint = l10n.authSmsHintInitial;
+      _hintsReady = true;
     }
-  }
-
-  void _onTabChanged() {
-    final tabs = _tabs;
-    if (tabs == null || tabs.indexIsChanging) return;
-    if (_qrTabIndex >= 0 && tabs.index == _qrTabIndex) {
-      _ensureQr();
+    _formTabs ??= TabController(length: 2, vsync: this);
+    if (supportsQrLogin(context) && !_qrBootstrapped) {
+      _qrBootstrapped = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _ensureQr();
+      });
     }
   }
 
@@ -102,7 +108,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
   @override
   void dispose() {
     _pollTimer?.cancel();
-    _tabs?.dispose();
+    _formTabs?.dispose();
     _telController.dispose();
     _codeController.dispose();
     _geeValidateController.dispose();
@@ -119,7 +125,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
       ref.read(accountsProvider.notifier).state =
           CoreApi.instance.listAccounts();
     } catch (e) {
-      _toast(errorMessage(e));
+      _toast(errorMessage(e, context.l10n));
     }
   }
 
@@ -128,12 +134,21 @@ class _AuthPageState extends ConsumerState<AuthPage>
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
+  Future<void> _openExternal(String url, String failToast) async {
+    final ok = await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.externalApplication,
+    );
+    if (!mounted) return;
+    if (!ok) _toast(failToast);
+  }
+
   Future<void> _startQr() async {
     if (_qrStarting) return;
     setState(() {
       _qrStarting = true;
       _busy = true;
-      _qrStatus = '申请二维码…';
+      _qrStatus = context.l10n.authQrRequesting;
       _qrKind = null;
       _qrUrl = null;
       _authCode = null;
@@ -145,17 +160,17 @@ class _AuthPageState extends ConsumerState<AuthPage>
       setState(() {
         _qrUrl = start.url;
         _authCode = start.authCode;
-        _qrStatus = '请使用手机客户端扫码';
+        _qrStatus = context.l10n.authQrScanHint;
         _qrKind = QrStatusKind.pending;
       });
       _pollTimer = Timer.periodic(const Duration(milliseconds: 1800), (_) {
         _pollOnce();
       });
     } catch (e) {
-      _toast(errorMessage(e));
+      _toast(errorMessage(e, context.l10n));
       if (mounted) {
         setState(() {
-          _qrStatus = '申请失败';
+          _qrStatus = context.l10n.authQrRequestFailed;
           _qrKind = QrStatusKind.error;
         });
       }
@@ -176,11 +191,12 @@ class _AuthPageState extends ConsumerState<AuthPage>
       final poll = await CoreApi.instance.loginQrPoll(authCode: code);
       if (!mounted) return;
       setState(() {
+        final l10n = context.l10n;
         _qrStatus = switch (poll.status) {
-          QrStatusKind.pending => '请使用手机客户端扫码',
-          QrStatusKind.scanned => '已扫码，请在手机上确认',
-          QrStatusKind.confirmed => '登录成功',
-          QrStatusKind.expired => '二维码已过期',
+          QrStatusKind.pending => l10n.authQrScanHint,
+          QrStatusKind.scanned => l10n.authQrScanned,
+          QrStatusKind.confirmed => l10n.authLoginSuccess,
+          QrStatusKind.expired => l10n.authQrExpired,
           QrStatusKind.error => poll.message,
         };
         _qrKind = poll.status;
@@ -189,7 +205,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
         case QrStatusKind.confirmed:
           _pollTimer?.cancel();
           _refreshAccounts();
-          _toast('登录成功：${poll.account?.name ?? ''}');
+          _toast(context.l10n.authLoginSuccessNamed(poll.account?.name ?? ''));
         case QrStatusKind.expired:
           _pollTimer?.cancel();
           unawaited(_startQr());
@@ -203,7 +219,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
       _pollTimer?.cancel();
       if (mounted) {
         setState(() {
-          _qrStatus = errorMessage(e);
+          _qrStatus = errorMessage(e, context.l10n);
           _qrKind = QrStatusKind.error;
         });
       }
@@ -213,7 +229,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
   Future<void> _prepareCaptcha() async {
     setState(() {
       _busy = true;
-      _smsHint = '获取人机验证参数…';
+      _smsHint = context.l10n.authSmsHintFetching;
     });
     try {
       final captcha = await CoreApi.instance.loginCaptcha();
@@ -225,11 +241,11 @@ class _AuthPageState extends ConsumerState<AuthPage>
         _captchaKey = null;
         _geeValidateController.clear();
         _geeSeccodeController.clear();
-        _smsHint = '请完成极验（gee_validate / gee_seccode），再发送短信';
+        _smsHint = context.l10n.authSmsHintCompleteGee;
       });
     } catch (e) {
-      _toast(errorMessage(e));
-      setState(() => _smsHint = '获取验证码失败');
+      _toast(errorMessage(e, context.l10n));
+      setState(() => _smsHint = context.l10n.authSmsHintFetchFailed);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -237,24 +253,24 @@ class _AuthPageState extends ConsumerState<AuthPage>
 
   Future<void> _openGeeValidator() async {
     final c = _captcha;
+    final l10n = context.l10n;
     if (c == null) {
-      _toast('请先获取人机验证参数');
+      _toast(l10n.authNeedCaptchaFirst);
       return;
     }
-    // Community geetest helper used by many third-party clients for desktop flows.
-    final uri = Uri.parse(
-      'https://kuresaru.github.io/geetest-validator/',
-    );
+    final uri = Uri.parse('https://kuresaru.github.io/geetest-validator/');
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!mounted) return;
     if (!ok) {
-      _toast('无法打开验证页面，请手动完成极验后填入结果');
+      _toast(l10n.authCannotOpenGeePage);
     } else {
       await Clipboard.setData(
         ClipboardData(
           text: 'gt=${c.gt}\nchallenge=${c.challenge}\ntoken=${c.token}',
         ),
       );
-      _toast('已复制 gt/challenge/token，完成验证后粘贴 validate/seccode');
+      if (!mounted) return;
+      _toast(l10n.authCopiedGeeParams);
     }
   }
 
@@ -270,7 +286,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
         ? (validate.isEmpty ? '' : '$validate|jordan')
         : _geeSeccodeController.text.trim();
     if (validate.isEmpty) {
-      _toast('请填入 gee_validate');
+      _toast(context.l10n.authNeedGeeValidate);
       return;
     }
     setState(() => _busy = true);
@@ -290,11 +306,11 @@ class _AuthPageState extends ConsumerState<AuthPage>
       setState(() {
         _captchaKey = result.captchaKey;
         _loginSessionId = result.loginSessionId;
-        _smsHint = '短信已发送，请输入验证码登录';
+        _smsHint = context.l10n.authSmsHintSent;
       });
-      _toast('验证码已发送');
+      _toast(context.l10n.authCodeSent);
     } catch (e) {
-      _toast(errorMessage(e));
+      _toast(errorMessage(e, context.l10n));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -303,7 +319,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
   Future<void> _loginSms() async {
     final key = _captchaKey;
     if (key == null || key.isEmpty) {
-      _toast('请先发送短信验证码');
+      _toast(context.l10n.authNeedSendSmsFirst);
       return;
     }
     setState(() => _busy = true);
@@ -317,11 +333,12 @@ class _AuthPageState extends ConsumerState<AuthPage>
           loginSessionId: _loginSessionId,
         ),
       );
+      if (!mounted) return;
       _refreshAccounts();
-      _toast('登录成功：${acc.name}');
+      _toast(context.l10n.authLoginSuccessNamed(acc.name));
       _codeController.clear();
     } catch (e) {
-      _toast(errorMessage(e));
+      _toast(errorMessage(e, context.l10n));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -330,7 +347,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
   Future<void> _preparePwdCaptcha() async {
     setState(() {
       _busy = true;
-      _pwdHint = '获取人机验证参数…';
+      _pwdHint = context.l10n.authPwdHintFetching;
     });
     try {
       final captcha = await CoreApi.instance.loginCaptcha();
@@ -339,11 +356,11 @@ class _AuthPageState extends ConsumerState<AuthPage>
         _pwdCaptcha = captcha;
         _pwdGeeValidateController.clear();
         _pwdGeeSeccodeController.clear();
-        _pwdHint = '请完成极验（gee_validate / gee_seccode），再登录';
+        _pwdHint = context.l10n.authPwdHintCompleteGee;
       });
     } catch (e) {
-      _toast(errorMessage(e));
-      setState(() => _pwdHint = '获取验证码失败');
+      _toast(errorMessage(e, context.l10n));
+      setState(() => _pwdHint = context.l10n.authPwdHintFetchFailed);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -351,21 +368,24 @@ class _AuthPageState extends ConsumerState<AuthPage>
 
   Future<void> _openPwdGeeValidator() async {
     final c = _pwdCaptcha;
+    final l10n = context.l10n;
     if (c == null) {
-      _toast('请先获取人机验证参数');
+      _toast(l10n.authNeedCaptchaFirst);
       return;
     }
     final uri = Uri.parse('https://kuresaru.github.io/geetest-validator/');
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!mounted) return;
     if (!ok) {
-      _toast('无法打开验证页面，请手动完成极验后填入结果');
+      _toast(l10n.authCannotOpenGeePage);
     } else {
       await Clipboard.setData(
         ClipboardData(
           text: 'gt=${c.gt}\nchallenge=${c.challenge}\ntoken=${c.token}',
         ),
       );
-      _toast('已复制 gt/challenge/token，完成验证后粘贴 validate/seccode');
+      if (!mounted) return;
+      _toast(l10n.authCopiedGeeParams);
     }
   }
 
@@ -380,7 +400,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
         ? (validate.isEmpty ? '' : '$validate|jordan')
         : _pwdGeeSeccodeController.text.trim();
     if (validate.isEmpty) {
-      _toast('请填入 gee_validate');
+      _toast(context.l10n.authNeedGeeValidate);
       return;
     }
     setState(() => _busy = true);
@@ -400,9 +420,9 @@ class _AuthPageState extends ConsumerState<AuthPage>
         case PasswordLoginResultKind.success:
           final acc = result.account;
           _refreshAccounts();
-          _toast('登录成功：${acc?.name ?? ''}');
+          _toast(context.l10n.authLoginSuccessNamed(acc?.name ?? ''));
           _passwordController.clear();
-          setState(() => _pwdHint = '登录成功');
+          setState(() => _pwdHint = context.l10n.authLoginSuccess);
         case PasswordLoginResultKind.needPhoneVerify:
           final risk = result.risk;
           if (risk == null) {
@@ -418,13 +438,13 @@ class _AuthPageState extends ConsumerState<AuthPage>
           if (!mounted) return;
           if (acc != null) {
             _refreshAccounts();
-            _toast('登录成功：${acc.name}');
+            _toast(context.l10n.authLoginSuccessNamed(acc.name));
             _passwordController.clear();
-            setState(() => _pwdHint = '登录成功');
+            setState(() => _pwdHint = context.l10n.authLoginSuccess);
           }
       }
     } catch (e) {
-      _toast(errorMessage(e));
+      _toast(errorMessage(e, context.l10n));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -434,153 +454,117 @@ class _AuthPageState extends ConsumerState<AuthPage>
     try {
       CoreApi.instance.logout(accountId: id);
       _refreshAccounts();
-      _toast('已退出');
+      _toast(context.l10n.authLoggedOut);
     } catch (e) {
-      _toast(errorMessage(e));
+      _toast(errorMessage(e, context.l10n));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final accounts = ref.watch(accountsProvider);
-    final theme = Theme.of(context);
     final colors = AppColors.of(context);
+    final l10n = context.l10n;
     final showQr = supportsQrLogin(context);
-    final tabs = _tabs;
+    final width = MediaQuery.sizeOf(context).width;
+    final wide = width >= 840;
+    final formTabs = _formTabs;
+    final pagePadH = AppSpacing.pagePaddingH(width);
 
     return Scaffold(
       backgroundColor: colors.canvas,
       appBar: PageHeader(
-        title: '账号与登录',
+        title: l10n.authTitle,
         showBack: true,
-        bottom: tabs == null
-            ? null
-            : TabBar(
-                controller: tabs,
-                tabs: [
-                  const Tab(text: '短信登录'),
-                  const Tab(text: '密码登录'),
-                  if (showQr) const Tab(text: '扫码登录'),
-                ],
-              ),
       ),
-      body: tabs == null
+      body: formTabs == null
           ? const SizedBox.shrink()
-          : Column(
-              children: [
-                Expanded(
-                  child: TabBarView(
-                    controller: tabs,
-                    children: [
-                      _SmsTab(
-                        busy: _busy,
-                        telController: _telController,
-                        codeController: _codeController,
-                        geeValidateController: _geeValidateController,
-                        geeSeccodeController: _geeSeccodeController,
-                        captcha: _captcha,
-                        captchaKey: _captchaKey,
-                        hint: _smsHint,
-                        cid: _cid,
-                        onCidChanged: (v) => setState(() => _cid = v),
-                        onPrepareCaptcha: _prepareCaptcha,
-                        onOpenGee: _openGeeValidator,
-                        onSendSms: _sendSms,
-                        onLogin: _loginSms,
-                      ),
-                      _PasswordTab(
-                        busy: _busy,
-                        usernameController: _usernameController,
-                        passwordController: _passwordController,
-                        geeValidateController: _pwdGeeValidateController,
-                        geeSeccodeController: _pwdGeeSeccodeController,
-                        captcha: _pwdCaptcha,
-                        hint: _pwdHint,
-                        onPrepareCaptcha: _preparePwdCaptcha,
-                        onOpenGee: _openPwdGeeValidator,
-                        onLogin: _loginPassword,
-                      ),
-                      if (showQr)
-                        _QrTab(
-                          busy: _busy || _qrStarting,
-                          qrUrl: _qrUrl,
-                          status: _qrStatus,
-                          statusKind: _qrKind,
-                          onRefresh: _startQr,
-                        ),
-                    ],
-                  ),
-                ),
-                Divider(height: 1, color: colors.borderSubtle),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                final panelMaxW = showQr && wide ? 900.0 : 480.0;
+                // Dual-pane needs a fixed height so Expanded children layout.
+                // Stacked / form-only also use a min height for the credential card.
+                final panelH = showQr && wide
+                    ? 520.0
+                    : (showQr ? 720.0 : 540.0);
+
+                return ListView(
+                  padding: EdgeInsets.fromLTRB(
+                    pagePadH,
                     AppSpacing.md,
-                    AppSpacing.md - 4,
-                    AppSpacing.md,
-                    AppSpacing.xs,
+                    pagePadH,
+                    AppSpacing.lg,
                   ),
-                  child: Row(
-                    children: [
-                      Text('已保存账号', style: theme.textTheme.titleMedium),
-                      const Spacer(),
-                      TextButton.icon(
-                        onPressed: _refreshAccounts,
-                        icon: const Icon(AppIcons.refresh, size: 18),
-                        label: const Text('刷新'),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  height: 140,
-                  child: accounts.isEmpty
-                      ? const Center(child: Text('暂无账号'))
-                      : ListView.builder(
-                          itemCount: accounts.length,
-                          itemBuilder: (context, i) {
-                            final a = accounts[i];
-                            return ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: colors.sunken,
-                                child: Text(
-                                  a.name.isNotEmpty
-                                      ? a.name.substring(0, 1)
-                                      : '?',
-                                ),
-                              ),
-                              title: Text(a.name),
-                              subtitle: Text(
-                                'mid ${a.mid} · ${a.isLogin ? "已登录" : "失效"}',
-                              ),
-                              trailing: NpIconButton(
-                                icon: AppIcons.logout,
-                                tooltip: '退出',
-                                onPressed: () => _logout(a.id),
-                              ),
-                            );
-                          },
+                  children: [
+                    Center(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: panelMaxW),
+                        child: SizedBox(
+                          height: panelH,
+                          child: AuthLoginPanel(
+                            showQr: showQr,
+                            wide: wide,
+                            formTabController: formTabs,
+                            busy: _busy && !_qrStarting,
+                            qrBusy: _busy || _qrStarting,
+                            qrUrl: _qrUrl,
+                            qrStatus: _qrStatus,
+                            qrKind: _qrKind,
+                            onRefreshQr: _startQr,
+                            usernameController: _usernameController,
+                            passwordController: _passwordController,
+                            obscurePassword: _obscurePassword,
+                            onToggleObscure: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
+                            pwdCaptcha: _pwdCaptcha,
+                            pwdGeeValidateController: _pwdGeeValidateController,
+                            pwdGeeSeccodeController: _pwdGeeSeccodeController,
+                            pwdHint: _pwdHint,
+                            onPreparePwdCaptcha: _preparePwdCaptcha,
+                            onOpenPwdGee: _openPwdGeeValidator,
+                            onPasswordLogin: _loginPassword,
+                            onRegister: () => _openExternal(
+                              _registerUrl,
+                              l10n.authOpenExternalRegister,
+                            ),
+                            onForgotPassword: () => _openExternal(
+                              _forgotPasswordUrl,
+                              l10n.authOpenExternalForgot,
+                            ),
+                            telController: _telController,
+                            codeController: _codeController,
+                            smsGeeValidateController: _geeValidateController,
+                            smsGeeSeccodeController: _geeSeccodeController,
+                            smsCaptcha: _captcha,
+                            captchaKey: _captchaKey,
+                            smsHint: _smsHint,
+                            cid: _cid,
+                            onCidChanged: (v) => setState(() => _cid = v),
+                            onPrepareSmsCaptcha: _prepareCaptcha,
+                            onOpenSmsGee: _openGeeValidator,
+                            onSendSms: _sendSms,
+                            onSmsLogin: _loginSms,
+                          ),
                         ),
-                ),
-                if (!showQr)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-                    child: Text(
-                      '手机端：短信 / 密码；扫码登录在桌面 / 平板可用',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colors.fgSecondary,
                       ),
                     ),
-                  ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.md - 4),
-                  child: Text(
-                    '设备 buvid3：${_safeBuvid()}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colors.fgSecondary,
+                    const SizedBox(height: AppSpacing.lg),
+                    Center(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: panelMaxW),
+                        child: _AccountsSection(
+                          accounts: accounts,
+                          onRefresh: _refreshAccounts,
+                          onLogout: _logout,
+                          showMobileHint: !showQr,
+                          buvid: _safeBuvid(),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ],
+                  ],
+                );
+              },
             ),
     );
   }
@@ -596,375 +580,129 @@ class _AuthPageState extends ConsumerState<AuthPage>
   }
 }
 
-class _SmsTab extends StatelessWidget {
-  const _SmsTab({
-    required this.busy,
-    required this.telController,
-    required this.codeController,
-    required this.geeValidateController,
-    required this.geeSeccodeController,
-    required this.captcha,
-    required this.captchaKey,
-    required this.hint,
-    required this.cid,
-    required this.onCidChanged,
-    required this.onPrepareCaptcha,
-    required this.onOpenGee,
-    required this.onSendSms,
-    required this.onLogin,
-  });
-
-  final bool busy;
-  final TextEditingController telController;
-  final TextEditingController codeController;
-  final TextEditingController geeValidateController;
-  final TextEditingController geeSeccodeController;
-  final CaptchaDto? captcha;
-  final String? captchaKey;
-  final String hint;
-  final int cid;
-  final ValueChanged<int> onCidChanged;
-  final VoidCallback onPrepareCaptcha;
-  final VoidCallback onOpenGee;
-  final VoidCallback onSendSms;
-  final VoidCallback onLogin;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = AppColors.of(context);
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      children: [
-        Text(
-          '使用手机号 + 短信验证码登录。凭据保存在本机 Rust 数据目录，不会在设置里粘贴 Cookie。',
-          style: theme.textTheme.bodyMedium,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Row(
-          children: [
-            SizedBox(
-              width: 140,
-              child: InputDecorator(
-                decoration: const InputDecoration(labelText: '区号'),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<int>(
-                    value: cid,
-                    isExpanded: true,
-                    items: const [
-                      DropdownMenuItem(value: 1, child: Text('+86 中国')),
-                    ],
-                    onChanged: busy
-                        ? null
-                        : (v) {
-                            if (v != null) onCidChanged(v);
-                          },
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md - 4),
-            Expanded(
-              child: TextField(
-                controller: telController,
-                enabled: !busy,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(labelText: '手机号'),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.md - 4),
-        Text(hint, style: theme.textTheme.bodySmall),
-        if (captcha != null) ...[
-          const SizedBox(height: AppSpacing.sm),
-          SelectableText(
-            'gt: ${captcha!.gt}\nchallenge: ${captcha!.challenge}',
-            style: theme.textTheme.bodySmall,
-          ),
-        ],
-        const SizedBox(height: AppSpacing.md - 4),
-        Wrap(
-          spacing: AppSpacing.sm,
-          runSpacing: AppSpacing.sm,
-          children: [
-            NpButton(
-              label: '获取人机验证',
-              icon: AppIcons.shield,
-              variant: NpButtonVariant.secondary,
-              onPressed: busy ? null : onPrepareCaptcha,
-            ),
-            NpButton(
-              label: '打开极验助手',
-              icon: AppIcons.externalLink,
-              variant: NpButtonVariant.secondary,
-              onPressed: busy || captcha == null ? null : onOpenGee,
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.md - 4),
-        TextField(
-          controller: geeValidateController,
-          enabled: !busy,
-          decoration: const InputDecoration(labelText: 'gee_validate'),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        TextField(
-          controller: geeSeccodeController,
-          enabled: !busy,
-          decoration: const InputDecoration(
-            labelText: 'gee_seccode（可留空，默认 validate|jordan）',
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md - 4),
-        NpButton(
-          label: busy ? '处理中…' : '发送短信验证码',
-          icon: AppIcons.sms,
-          loading: busy,
-          onPressed: busy ? null : onSendSms,
-        ),
-        if (captchaKey != null) ...[
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            'captcha_key 已就绪',
-            style: theme.textTheme.bodySmall?.copyWith(color: colors.accent),
-          ),
-        ],
-        const SizedBox(height: AppSpacing.md),
-        TextField(
-          controller: codeController,
-          enabled: !busy,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: '短信验证码'),
-        ),
-        const SizedBox(height: AppSpacing.md - 4),
-        NpButton(
-          label: '登录',
-          icon: AppIcons.login,
-          variant: NpButtonVariant.secondary,
-          onPressed: busy ? null : onLogin,
-        ),
-      ],
-    );
-  }
-}
-
-class _PasswordTab extends StatelessWidget {
-  const _PasswordTab({
-    required this.busy,
-    required this.usernameController,
-    required this.passwordController,
-    required this.geeValidateController,
-    required this.geeSeccodeController,
-    required this.captcha,
-    required this.hint,
-    required this.onPrepareCaptcha,
-    required this.onOpenGee,
-    required this.onLogin,
-  });
-
-  final bool busy;
-  final TextEditingController usernameController;
-  final TextEditingController passwordController;
-  final TextEditingController geeValidateController;
-  final TextEditingController geeSeccodeController;
-  final CaptchaDto? captcha;
-  final String hint;
-  final VoidCallback onPrepareCaptcha;
-  final VoidCallback onOpenGee;
-  final VoidCallback onLogin;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      children: [
-        Text(
-          '使用手机号或邮箱 + 密码登录。密码仅用于本次请求，经 RSA 加密后提交，不会落盘。',
-          style: theme.textTheme.bodyMedium,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        TextField(
-          controller: usernameController,
-          enabled: !busy,
-          keyboardType: TextInputType.emailAddress,
-          autofillHints: const [AutofillHints.username],
-          decoration: const InputDecoration(labelText: '账号（手机号 / 邮箱）'),
-        ),
-        const SizedBox(height: AppSpacing.md - 4),
-        TextField(
-          controller: passwordController,
-          enabled: !busy,
-          obscureText: true,
-          autofillHints: const [AutofillHints.password],
-          decoration: const InputDecoration(labelText: '密码'),
-        ),
-        const SizedBox(height: AppSpacing.md - 4),
-        Text(hint, style: theme.textTheme.bodySmall),
-        if (captcha != null) ...[
-          const SizedBox(height: AppSpacing.sm),
-          SelectableText(
-            'gt: ${captcha!.gt}\nchallenge: ${captcha!.challenge}',
-            style: theme.textTheme.bodySmall,
-          ),
-        ],
-        const SizedBox(height: AppSpacing.md - 4),
-        Wrap(
-          spacing: AppSpacing.sm,
-          runSpacing: AppSpacing.sm,
-          children: [
-            NpButton(
-              label: '获取人机验证',
-              icon: AppIcons.shield,
-              variant: NpButtonVariant.secondary,
-              onPressed: busy ? null : onPrepareCaptcha,
-            ),
-            NpButton(
-              label: '打开极验助手',
-              icon: AppIcons.externalLink,
-              variant: NpButtonVariant.secondary,
-              onPressed: busy || captcha == null ? null : onOpenGee,
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.md - 4),
-        TextField(
-          controller: geeValidateController,
-          enabled: !busy,
-          decoration: const InputDecoration(labelText: 'gee_validate'),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        TextField(
-          controller: geeSeccodeController,
-          enabled: !busy,
-          decoration: const InputDecoration(
-            labelText: 'gee_seccode（可留空，默认 validate|jordan）',
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        NpButton(
-          label: busy ? '登录中…' : '登录',
-          icon: AppIcons.lock,
-          loading: busy,
-          onPressed: busy ? null : onLogin,
-        ),
-      ],
-    );
-  }
-}
-
-class _QrTab extends StatelessWidget {
-  const _QrTab({
-    required this.busy,
-    required this.qrUrl,
-    required this.status,
-    required this.statusKind,
+class _AccountsSection extends StatelessWidget {
+  const _AccountsSection({
+    required this.accounts,
     required this.onRefresh,
+    required this.onLogout,
+    required this.showMobileHint,
+    required this.buvid,
   });
 
-  final bool busy;
-  final String? qrUrl;
-  final String status;
-  final QrStatusKind? statusKind;
+  final List<AccountPublicDto> accounts;
   final VoidCallback onRefresh;
-
-  static const double _qrSize = 220;
+  final void Function(String? id) onLogout;
+  final bool showMobileHint;
+  final String buvid;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
-    final expired = statusKind == QrStatusKind.expired;
-    final failed = statusKind == QrStatusKind.error;
-    final confirmed = statusKind == QrStatusKind.confirmed;
+    final l10n = context.l10n;
 
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      children: [
-        Text(
-          '使用 bilibili 手机客户端扫码登录。二维码过期会自动刷新。',
-          style: theme.textTheme.bodyMedium,
+    return Material(
+      color: colors.elevated,
+      borderRadius: AppShapes.borderLg,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: AppShapes.borderLg,
+          border: Border.all(color: colors.borderSubtle),
         ),
-        const SizedBox(height: AppSpacing.lg),
-        Center(
-          child: Tooltip(
-            message: busy ? '刷新中…' : '点击刷新二维码',
-            child: Material(
-              color: Colors.white,
-              borderRadius: AppShapes.borderMd,
-              child: InkWell(
-                borderRadius: AppShapes.borderMd,
-                onTap: busy ? null : onRefresh,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: AppShapes.borderMd,
-                    border: Border.all(color: colors.borderSubtle),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.sm,
+                AppSpacing.sm,
+                AppSpacing.sm,
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    l10n.authSavedAccounts,
+                    style: theme.textTheme.titleSmall,
                   ),
-                  child: SizedBox(
-                    width: _qrSize + AppSpacing.lg * 2,
-                    height: _qrSize + AppSpacing.lg * 2,
-                    child: Center(child: _buildQrBody(colors)),
+                  const Spacer(),
+                  TextButton.icon(
+                    onPressed: onRefresh,
+                    icon: const Icon(AppIcons.refresh, size: 16),
+                    label: Text(l10n.refresh),
+                  ),
+                ],
+              ),
+            ),
+            Divider(height: 1, color: colors.borderSubtle),
+            if (accounts.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Center(
+                  child: Text(
+                    l10n.authNoAccounts,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colors.fgSecondary,
+                    ),
+                  ),
+                ),
+              )
+            else
+              ...accounts.map((a) {
+                return ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: colors.sunken,
+                    child: Text(
+                      a.name.isNotEmpty ? a.name.substring(0, 1) : '?',
+                    ),
+                  ),
+                  title: Text(a.name),
+                  subtitle: Text(
+                    l10n.authAccountSubtitle(
+                      '${a.mid}',
+                      a.isLogin
+                          ? l10n.authAccountLoggedIn
+                          : l10n.authAccountInvalid,
+                    ),
+                  ),
+                  trailing: NpIconButton(
+                    icon: AppIcons.logout,
+                    tooltip: l10n.logout,
+                    onPressed: () => onLogout(a.id),
+                  ),
+                );
+              }),
+            if (showMobileHint)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  0,
+                  AppSpacing.md,
+                  AppSpacing.xs,
+                ),
+                child: Text(
+                  l10n.authMobileOnlyHint,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colors.fgSecondary,
                   ),
                 ),
               ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.xs,
+                AppSpacing.md,
+                AppSpacing.md,
+              ),
+              child: Text(
+                l10n.authDeviceBuvid(buvid),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colors.fgMuted,
+                ),
+              ),
             ),
-          ),
+          ],
         ),
-        const SizedBox(height: AppSpacing.md),
-        Text(
-          status,
-          textAlign: TextAlign.center,
-          style: theme.textTheme.titleSmall?.copyWith(
-            color: confirmed
-                ? colors.success
-                : (expired || failed)
-                    ? colors.error
-                    : colors.fgPrimary,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Center(
-          child: NpButton(
-            label: busy
-                ? '刷新中…'
-                : (expired || failed || qrUrl == null)
-                    ? '刷新'
-                    : '重新获取',
-            icon: AppIcons.refresh,
-            loading: busy,
-            variant: NpButtonVariant.secondary,
-            onPressed: busy ? null : onRefresh,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQrBody(AppColors colors) {
-    if (busy && qrUrl == null) {
-      return const SizedBox(
-        width: 32,
-        height: 32,
-        child: CircularProgressIndicator(strokeWidth: 2),
-      );
-    }
-    final url = qrUrl;
-    if (url == null || url.isEmpty) {
-      return Icon(AppIcons.qrCode, size: 48, color: colors.fgMuted);
-    }
-    return QrImageView(
-      data: url,
-      version: QrVersions.auto,
-      size: _qrSize,
-      backgroundColor: Colors.white,
-      eyeStyle: const QrEyeStyle(
-        eyeShape: QrEyeShape.square,
-        color: Colors.black,
-      ),
-      dataModuleStyle: const QrDataModuleStyle(
-        dataModuleShape: QrDataModuleShape.square,
-        color: Colors.black,
       ),
     );
   }

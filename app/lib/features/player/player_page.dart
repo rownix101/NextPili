@@ -9,6 +9,7 @@ import '../../core/theme/player_colors.dart';
 import '../../core/theme/spacing.dart';
 import '../../core/widgets/loading.dart';
 import '../../core/widgets/np_button.dart';
+import '../../l10n/l10n.dart';
 import 'danmaku_overlay.dart';
 import 'player_adapter.dart';
 
@@ -79,7 +80,7 @@ class _PlayerPageState extends State<PlayerPage> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = errorMessage(e);
+        _error = errorMessage(e, context.l10n);
       });
     }
   }
@@ -105,7 +106,7 @@ class _PlayerPageState extends State<PlayerPage> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage(e))),
+        SnackBar(content: Text(errorMessage(e, context.l10n))),
       );
     }
   }
@@ -120,6 +121,7 @@ class _PlayerPageState extends State<PlayerPage> {
   @override
   Widget build(BuildContext context) {
     final player = PlayerColors.of(context);
+    final l10n = context.l10n;
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
@@ -141,7 +143,7 @@ class _PlayerPageState extends State<PlayerPage> {
                       const SizedBox(height: AppSpacing.md),
                       FilledButton(
                         onPressed: _load,
-                        child: const Text('重试'),
+                        child: Text(l10n.retry),
                       ),
                     ],
                   ),
@@ -232,6 +234,7 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Material(
       color: colors.chromeGlass,
       child: Row(
@@ -240,7 +243,7 @@ class _TopBar extends StatelessWidget {
             icon: AppIcons.arrowLeft,
             color: colors.controlFg,
             onPressed: onBack,
-            tooltip: '返回',
+            tooltip: l10n.back,
           ),
           Expanded(
             child: Text(
@@ -254,13 +257,13 @@ class _TopBar extends StatelessWidget {
             icon: AppIcons.danmaku,
             color: danmakuOn ? colors.controlFg : colors.controlFgMuted,
             onPressed: onToggleDanmaku,
-            tooltip: danmakuOn ? '关闭弹幕' : '打开弹幕',
+            tooltip: danmakuOn ? l10n.playerDanmakuOff : l10n.playerDanmakuOn,
           ),
           if (qualities.isNotEmpty)
             PopupMenuButton<StreamDto>(
-              tooltip: '清晰度',
+              tooltip: l10n.playerQuality,
               icon: Text(
-                current?.qualityLabel ?? '清晰度',
+                current?.qualityLabel ?? l10n.playerQuality,
                 style: TextStyle(color: colors.controlFg),
               ),
               onSelected: onQuality,
@@ -294,6 +297,7 @@ class _BottomChrome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final player = adapter.player;
+    final l10n = context.l10n;
     return Material(
       color: colors.chromeGlass,
       child: StreamBuilder(
@@ -334,7 +338,7 @@ class _BottomChrome extends StatelessWidget {
                               },
                               icon: playing ? AppIcons.pause : AppIcons.play,
                               color: colors.controlFg,
-                              tooltip: playing ? '暂停' : '播放',
+                              tooltip: playing ? l10n.pause : l10n.play,
                             ),
                             Text(
                               '${_fmt(pos)} / ${_fmt(dur)}',
@@ -348,7 +352,7 @@ class _BottomChrome extends StatelessWidget {
                             ),
                             const Spacer(),
                             NpIconButton(
-                              tooltip: '全屏（占位）',
+                              tooltip: l10n.playerFullscreen,
                               onPressed: () {
                                 SystemChrome.setEnabledSystemUIMode(
                                   SystemUiMode.immersiveSticky,

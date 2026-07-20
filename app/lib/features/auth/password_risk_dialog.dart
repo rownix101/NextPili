@@ -7,6 +7,7 @@ import '../../core/icons/app_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/spacing.dart';
 import '../../core/widgets/np_button.dart';
+import '../../l10n/l10n.dart';
 
 /// Safe-center phone verify dialog (PiliPlus-style) after password login risk.
 Future<AccountPublicDto?> showPasswordRiskDialog({
@@ -41,8 +42,18 @@ class _PasswordRiskDialogState extends State<_PasswordRiskDialog> {
 
   CaptchaDto? _captcha;
   String? _captchaKey;
-  String _hint = '完成人机验证后发送短信';
+  String _hint = '';
   bool _busy = false;
+  bool _hintReady = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_hintReady) {
+      _hint = context.l10n.authRiskHintInitial;
+      _hintReady = true;
+    }
+  }
 
   @override
   void dispose() {
@@ -60,7 +71,7 @@ class _PasswordRiskDialogState extends State<_PasswordRiskDialog> {
   Future<void> _prepareCaptcha() async {
     setState(() {
       _busy = true;
-      _hint = '获取安全中心人机验证…';
+      _hint = context.l10n.authRiskHintFetching;
     });
     try {
       final captcha = await CoreApi.instance.loginPasswordRiskCaptcha();
@@ -69,11 +80,11 @@ class _PasswordRiskDialogState extends State<_PasswordRiskDialog> {
         _captcha = captcha;
         _geeValidateController.clear();
         _geeSeccodeController.clear();
-        _hint = '完成极验后发送验证码';
+        _hint = context.l10n.authRiskHintCompleteGee;
       });
     } catch (e) {
-      _toast(errorMessage(e));
-      setState(() => _hint = '获取人机验证失败');
+      _toast(errorMessage(e, context.l10n));
+      setState(() => _hint = context.l10n.authRiskHintFetchFailed);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -81,26 +92,30 @@ class _PasswordRiskDialogState extends State<_PasswordRiskDialog> {
 
   Future<void> _openGee() async {
     final c = _captcha;
+    final l10n = context.l10n;
     if (c == null) {
-      _toast('请先获取人机验证参数');
+      _toast(l10n.authNeedCaptchaFirst);
       return;
     }
     final uri = Uri.parse('https://kuresaru.github.io/geetest-validator/');
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!mounted) return;
     if (!ok) {
-      _toast('无法打开验证页面');
+      _toast(l10n.authCannotOpenGeePageShort);
     } else {
       await Clipboard.setData(
         ClipboardData(
           text: 'gt=${c.gt}\nchallenge=${c.challenge}\ntoken=${c.token}',
         ),
       );
-      _toast('已复制 gt/challenge/token');
+      if (!mounted) return;
+      _toast(l10n.authCopiedGeeParamsShort);
     }
   }
 
   Future<void> _sendSms() async {
     var captcha = _captcha;
+    final l10n = context.l10n;
     if (captcha == null) {
       await _prepareCaptcha();
       captcha = _captcha;
@@ -111,7 +126,7 @@ class _PasswordRiskDialogState extends State<_PasswordRiskDialog> {
         ? (validate.isEmpty ? '' : '$validate|jordan')
         : _geeSeccodeController.text.trim();
     if (validate.isEmpty) {
-      _toast('请填入 gee_validate');
+      _toast(l10n.authNeedGeeValidate);
       return;
     }
     setState(() => _busy = true);
@@ -129,11 +144,12 @@ class _PasswordRiskDialogState extends State<_PasswordRiskDialog> {
       if (!mounted) return;
       setState(() {
         _captchaKey = res.captchaKey;
-        _hint = '短信已发送，请输入验证码';
+        _hint = context.l10n.authRiskHintSent;
       });
-      _toast('验证码已发送');
+      _toast(context.l10n.authCodeSent);
     } catch (e) {
-      _toast(errorMessage(e));
+      if (!mounted) return;
+      _toast(errorMessage(e, context.l10n));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -142,12 +158,12 @@ class _PasswordRiskDialogState extends State<_PasswordRiskDialog> {
   Future<void> _verify() async {
     final key = _captchaKey;
     if (key == null || key.isEmpty) {
-      _toast('请先发送短信验证码');
+      _toast(context.l10n.authNeedSendSmsFirst);
       return;
     }
     final code = _smsCodeController.text.trim();
     if (code.isEmpty) {
-      _toast('请输入短信验证码');
+      _toast(context.l10n.authNeedSmsCode);
       return;
     }
     setState(() => _busy = true);
@@ -165,7 +181,8 @@ class _PasswordRiskDialogState extends State<_PasswordRiskDialog> {
       if (!mounted) return;
       Navigator.of(context).pop(acc);
     } catch (e) {
-      _toast(errorMessage(e));
+      if (!mounted) return;
+      _toast(errorMessage(e, context.l10n));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -175,10 +192,11 @@ class _PasswordRiskDialogState extends State<_PasswordRiskDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
+    final l10n = context.l10n;
     final hideTel = widget.risk.hideTel;
 
     return AlertDialog(
-      title: const Text('本次登录需要验证您的手机号', textAlign: TextAlign.center),
+      title: Text(l10n.authRiskTitle, textAlign: TextAlign.center),
       content: SizedBox(
         width: 420,
         child: SingleChildScrollView(
@@ -187,7 +205,7 @@ class _PasswordRiskDialogState extends State<_PasswordRiskDialog> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                hideTel.isEmpty ? '请使用绑定手机号完成短信验证' : hideTel,
+                hideTel.isEmpty ? l10n.authRiskPhoneHint : hideTel,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.titleMedium,
               ),
@@ -217,13 +235,13 @@ class _PasswordRiskDialogState extends State<_PasswordRiskDialog> {
                 alignment: WrapAlignment.center,
                 children: [
                   NpButton(
-                    label: '获取人机验证',
+                    label: l10n.authGetCaptcha,
                     icon: AppIcons.shield,
                     variant: NpButtonVariant.secondary,
                     onPressed: _busy ? null : _prepareCaptcha,
                   ),
                   NpButton(
-                    label: '打开极验助手',
+                    label: l10n.authOpenGeeHelper,
                     icon: AppIcons.externalLink,
                     variant: NpButtonVariant.secondary,
                     onPressed: _busy || _captcha == null ? null : _openGee,
@@ -240,13 +258,13 @@ class _PasswordRiskDialogState extends State<_PasswordRiskDialog> {
               TextField(
                 controller: _geeSeccodeController,
                 enabled: !_busy,
-                decoration: const InputDecoration(
-                  labelText: 'gee_seccode（可留空）',
+                decoration: InputDecoration(
+                  labelText: l10n.authGeeSeccodeOptional,
                 ),
               ),
               const SizedBox(height: AppSpacing.md - 4),
               NpButton(
-                label: _busy ? '发送中…' : '发送验证码',
+                label: _busy ? l10n.authSending : l10n.authSendCode,
                 icon: AppIcons.sms,
                 loading: _busy,
                 onPressed: _busy ? null : _sendSms,
@@ -254,7 +272,7 @@ class _PasswordRiskDialogState extends State<_PasswordRiskDialog> {
               if (_captchaKey != null) ...[
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  'captcha_key 已就绪',
+                  l10n.authCaptchaKeyReady,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: colors.accent,
@@ -267,7 +285,7 @@ class _PasswordRiskDialogState extends State<_PasswordRiskDialog> {
                 enabled: !_busy,
                 keyboardType: TextInputType.number,
                 textAlign: TextAlign.center,
-                decoration: const InputDecoration(labelText: '短信验证码'),
+                decoration: InputDecoration(labelText: l10n.authSmsCode),
               ),
             ],
           ),
@@ -277,13 +295,13 @@ class _PasswordRiskDialogState extends State<_PasswordRiskDialog> {
         TextButton(
           onPressed: _busy ? null : () => Navigator.of(context).pop(),
           child: Text(
-            '取消',
+            l10n.cancel,
             style: TextStyle(color: colors.fgSecondary),
           ),
         ),
         TextButton(
           onPressed: _busy ? null : _verify,
-          child: const Text('确认'),
+          child: Text(l10n.authVerify),
         ),
       ],
     );

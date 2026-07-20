@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/icons/app_icons.dart';
 import '../../core/theme/app_colors.dart';
+import '../../l10n/l10n.dart';
 
 class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.child});
@@ -29,6 +30,7 @@ class AppShell extends StatelessWidget {
     final index = _indexForLocation(location);
     final wide = MediaQuery.sizeOf(context).width >= 900;
     final colors = AppColors.of(context);
+    final l10n = context.l10n;
 
     if (wide) {
       return Scaffold(
@@ -40,16 +42,16 @@ class AppShell extends StatelessWidget {
               onDestinationSelected: (i) => _onDestinationSelected(context, i),
               labelType: NavigationRailLabelType.all,
               backgroundColor: colors.elevated.withValues(alpha: 0.55),
-              destinations: const [
+              destinations: [
                 NavigationRailDestination(
-                  icon: Icon(AppIcons.home),
-                  selectedIcon: Icon(AppIcons.home),
-                  label: Text('首页'),
+                  icon: const Icon(AppIcons.home),
+                  selectedIcon: const Icon(AppIcons.home),
+                  label: Text(l10n.navHome),
                 ),
                 NavigationRailDestination(
-                  icon: Icon(AppIcons.settings),
-                  selectedIcon: Icon(AppIcons.settings),
-                  label: Text('设置'),
+                  icon: const Icon(AppIcons.settings),
+                  selectedIcon: const Icon(AppIcons.settings),
+                  label: Text(l10n.navSettings),
                 ),
               ],
             ),
@@ -66,16 +68,16 @@ class AppShell extends StatelessWidget {
       bottomNavigationBar: NavigationBar(
         selectedIndex: index,
         onDestinationSelected: (i) => _onDestinationSelected(context, i),
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(AppIcons.home),
-            selectedIcon: Icon(AppIcons.home),
-            label: '首页',
+            icon: const Icon(AppIcons.home),
+            selectedIcon: const Icon(AppIcons.home),
+            label: l10n.navHome,
           ),
           NavigationDestination(
-            icon: Icon(AppIcons.settings),
-            selectedIcon: Icon(AppIcons.settings),
-            label: '设置',
+            icon: const Icon(AppIcons.settings),
+            selectedIcon: const Icon(AppIcons.settings),
+            label: l10n.navSettings,
           ),
         ],
       ),

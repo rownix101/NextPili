@@ -7,11 +7,13 @@ import '../../core/icons/app_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/shapes.dart';
 import '../../core/theme/spacing.dart';
+import '../../core/utils/format.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/loading.dart';
 import '../../core/widgets/np_button.dart';
 import '../../core/widgets/page_header.dart';
 import '../../core/widgets/stat_chip.dart';
+import '../../l10n/l10n.dart';
 import 'reply_section.dart';
 
 final videoDetailProvider =
@@ -28,11 +30,12 @@ class VideoDetailPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(videoDetailProvider(videoId));
     final colors = AppColors.of(context);
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: colors.canvas,
       appBar: PageHeader(
-        title: '稿件详情',
+        title: l10n.videoDetailTitle,
         showBack: true,
         onBack: () {
           if (context.canPop()) {
@@ -45,7 +48,7 @@ class VideoDetailPage extends ConsumerWidget {
       body: async.when(
         loading: () => const AppLoading(),
         error: (e, _) => EmptyState.error(
-          message: errorMessage(e),
+          message: errorMessage(e, context.l10n),
           onRetry: () => ref.invalidate(videoDetailProvider(videoId)),
         ),
         data: (detail) => _DetailBody(detail: detail),
@@ -148,6 +151,8 @@ class _InfoColumn extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
+    final l10n = context.l10n;
+    final locale = Localizations.localeOf(context);
     final stat = detail.stat;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -186,30 +191,48 @@ class _InfoColumn extends StatelessWidget {
           spacing: 12,
           runSpacing: 8,
           children: [
-            StatChip(icon: AppIcons.play, label: _fmt(i64(stat.view))),
-            StatChip(icon: AppIcons.like, label: _fmt(i64(stat.like))),
-            StatChip(icon: AppIcons.comment, label: _fmt(i64(stat.reply))),
-            StatChip(icon: AppIcons.danmaku, label: _fmt(i64(stat.danmaku))),
-            StatChip(icon: AppIcons.star, label: _fmt(i64(stat.favorite))),
-            StatChip(icon: AppIcons.coin, label: _fmt(i64(stat.coin))),
+            StatChip(
+              icon: AppIcons.play,
+              label: formatCount(i64(stat.view), locale: locale),
+            ),
+            StatChip(
+              icon: AppIcons.like,
+              label: formatCount(i64(stat.like), locale: locale),
+            ),
+            StatChip(
+              icon: AppIcons.comment,
+              label: formatCount(i64(stat.reply), locale: locale),
+            ),
+            StatChip(
+              icon: AppIcons.danmaku,
+              label: formatCount(i64(stat.danmaku), locale: locale),
+            ),
+            StatChip(
+              icon: AppIcons.star,
+              label: formatCount(i64(stat.favorite), locale: locale),
+            ),
+            StatChip(
+              icon: AppIcons.coin,
+              label: formatCount(i64(stat.coin), locale: locale),
+            ),
           ],
         ),
         const SizedBox(height: AppSpacing.md),
-        Text('简介', style: theme.textTheme.titleMedium),
+        Text(l10n.videoDesc, style: theme.textTheme.titleMedium),
         const SizedBox(height: AppSpacing.xs + 2),
         SelectableText(
-          detail.desc.isEmpty ? '（无简介）' : detail.desc,
+          detail.desc.isEmpty ? l10n.videoDescEmpty : detail.desc,
           style: theme.textTheme.bodyMedium,
         ),
         const SizedBox(height: AppSpacing.lg - 4),
         Text(
-          '分 P（${detail.pages.length}）',
+          l10n.videoPartsCount(detail.pages.length),
           style: theme.textTheme.titleMedium,
         ),
         const SizedBox(height: AppSpacing.sm),
         if (detail.pages.isEmpty)
           Text(
-            '无分 P 信息',
+            l10n.videoPartsEmpty,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colors.fgSecondary,
             ),
@@ -226,9 +249,11 @@ class _InfoColumn extends StatelessWidget {
                   style: theme.textTheme.labelSmall,
                 ),
               ),
-              title: Text(p.part_.isEmpty ? 'P${p.page}' : p.part_),
+              title: Text(
+                p.part_.isEmpty ? l10n.videoPartFallback(p.page) : p.part_,
+              ),
               subtitle: Text(
-                'cid ${i64(p.cid)} · ${_formatDuration(i64(p.durationMs))}',
+                'cid ${i64(p.cid)} · ${formatDurationMs(i64(p.durationMs), emptyAsZero: true)}',
                 style: theme.textTheme.bodySmall,
               ),
               trailing: Icon(AppIcons.playCircle, color: colors.accent),
@@ -237,7 +262,7 @@ class _InfoColumn extends StatelessWidget {
           ),
         const SizedBox(height: AppSpacing.lg),
         NpButton(
-          label: '播放',
+          label: l10n.play,
           icon: AppIcons.play,
           onPressed: detail.pages.isEmpty
               ? null
@@ -256,26 +281,4 @@ void _openPlayer(BuildContext context, VideoDetailDto detail, int cid) {
     '/play/${Uri.encodeComponent(id)}'
     '?cid=$cid&aid=${i64(detail.aid)}&bvid=$bvid&title=$title',
   );
-}
-
-String _fmt(int n) {
-  if (n >= 100000000) {
-    return '${(n / 100000000).toStringAsFixed(1)}亿';
-  }
-  if (n >= 10000) {
-    return '${(n / 10000).toStringAsFixed(1)}万';
-  }
-  return '$n';
-}
-
-String _formatDuration(int ms) {
-  if (ms <= 0) return '0:00';
-  final total = ms ~/ 1000;
-  final h = total ~/ 3600;
-  final m = (total % 3600) ~/ 60;
-  final s = total % 60;
-  if (h > 0) {
-    return '$h:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
-  }
-  return '$m:${s.toString().padLeft(2, '0')}';
 }

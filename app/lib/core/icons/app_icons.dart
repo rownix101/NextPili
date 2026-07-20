@@ -53,6 +53,8 @@ abstract final class AppIcons {
   static const IconData inbox = LucideIcons.inbox;
   static const IconData wifiOff = LucideIcons.wifi_off;
   static const IconData lock = LucideIcons.lock;
+  static const IconData eye = LucideIcons.eye;
+  static const IconData eyeOff = LucideIcons.eye_off;
   static const IconData proxy = LucideIcons.shield_check;
 
   // Sizes — design-system §7.2
