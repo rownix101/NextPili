@@ -28,7 +28,7 @@ pub fn pick_quality(
     }
     sorted.sort_by_key(|q| q.get());
 
-    if sorted.iter().any(|q| *q == preferred) {
+    if sorted.contains(&preferred) {
         return Some(preferred);
     }
 
@@ -48,14 +48,14 @@ pub fn pick_audio_track<'a>(
     if tracks.is_empty() {
         return None;
     }
-    if let Some(pref) = lang_pref {
-        if let Some(t) = tracks.iter().find(|t| {
+    if let Some(pref) = lang_pref
+        && let Some(t) = tracks.iter().find(|t| {
             t.language
                 .as_deref()
                 .is_some_and(|l| l.eq_ignore_ascii_case(pref))
-        }) {
-            return Some(t);
-        }
+        })
+    {
+        return Some(t);
     }
     tracks
         .iter()

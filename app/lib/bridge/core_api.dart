@@ -3,12 +3,18 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
 import 'frb/api/auth.dart' as frb_auth;
+import 'frb/api/feed.dart' as frb_feed;
 import 'frb/api/simple.dart' as frb;
+import 'frb/api/video.dart' as frb_video;
 import 'frb/auth_service.dart';
 import 'frb/error.dart';
 import 'frb/frb_generated.dart';
 
 export 'frb/api/simple.dart' show ApiVersion, BootstrapConfig;
+export 'frb/api/feed.dart'
+    show FeedItemDto, PopularFeedDto, RecommendFeedDto;
+export 'frb/api/video.dart'
+    show VideoDetailDto, VideoPageDto, VideoStatDto;
 export 'frb/auth_service.dart'
     show
         AccountPublicDto,
@@ -93,6 +99,18 @@ class CoreApi {
       frb_auth.setAccountSlot(slot: slot, accountId: accountId);
 
   String deviceBuvid3() => frb_auth.deviceBuvid3();
+
+  Future<frb_feed.RecommendFeedDto> feedRecommend({
+    int freshIdx = 0,
+    int ps = 12,
+  }) =>
+      frb_feed.feedRecommend(freshIdx: freshIdx, ps: ps);
+
+  Future<frb_feed.PopularFeedDto> feedPopular({int pn = 1, int ps = 20}) =>
+      frb_feed.feedPopular(pn: pn, ps: ps);
+
+  Future<frb_video.VideoDetailDto> videoDetail(String id) =>
+      frb_video.videoDetail(id: id);
 }
 
 /// Map FRB [AppError] / any into a short UI message.
@@ -105,3 +123,6 @@ String errorMessage(Object error) {
   }
   return error.toString();
 }
+
+/// Convert FRB [PlatformInt64] to Dart [int].
+int i64(PlatformInt64 v) => v.toInt();

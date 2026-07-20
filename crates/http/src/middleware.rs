@@ -38,10 +38,10 @@ pub struct RequestContext<'a> {
 /// Build Cookie header from account jar + device buvid.
 pub fn compose_cookie_header(account: Option<&Account>, device_buvid3: Option<&str>) -> Option<String> {
     let mut jar = CookieJar::new();
-    if let Some(buvid) = device_buvid3 {
-        if !buvid.is_empty() {
-            jar.set("buvid3", buvid);
-        }
+    if let Some(buvid) = device_buvid3
+        && !buvid.is_empty()
+    {
+        jar.set("buvid3", buvid);
     }
     if let Some(acc) = account {
         jar.extend_from(&acc.cookie_jar);
@@ -71,10 +71,10 @@ pub fn apply_app_sign(
     signer: &AppSigner,
     access_key: Option<&str>,
 ) {
-    if let Some(ak) = access_key {
-        if !ak.is_empty() {
-            params.insert("access_key".into(), ak.to_string());
-        }
+    if let Some(ak) = access_key
+        && !ak.is_empty()
+    {
+        params.insert("access_key".into(), ak.to_string());
     }
     signer.sign(params);
 }

@@ -4,7 +4,9 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'api/auth.dart';
+import 'api/feed.dart';
 import 'api/simple.dart';
+import 'api/video.dart';
 import 'auth_service.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -61,6 +63,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ErrorKind dco_decode_error_kind(dynamic raw);
 
   @protected
+  FeedItemDto dco_decode_feed_item_dto(dynamic raw);
+
+  @protected
   int dco_decode_i_32(dynamic raw);
 
   @protected
@@ -70,7 +75,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<AccountPublicDto> dco_decode_list_account_public_dto(dynamic raw);
 
   @protected
+  List<FeedItemDto> dco_decode_list_feed_item_dto(dynamic raw);
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
+
+  @protected
+  List<VideoPageDto> dco_decode_list_video_page_dto(dynamic raw);
 
   @protected
   String? dco_decode_opt_String(dynamic raw);
@@ -82,6 +93,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int? dco_decode_opt_box_autoadd_i_32(dynamic raw);
 
   @protected
+  PopularFeedDto dco_decode_popular_feed_dto(dynamic raw);
+
+  @protected
   QrPollDto dco_decode_qr_poll_dto(dynamic raw);
 
   @protected
@@ -89,6 +103,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   QrStatusKind dco_decode_qr_status_kind(dynamic raw);
+
+  @protected
+  RecommendFeedDto dco_decode_recommend_feed_dto(dynamic raw);
 
   @protected
   SlotDto dco_decode_slot_dto(dynamic raw);
@@ -110,6 +127,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void dco_decode_unit(dynamic raw);
+
+  @protected
+  VideoDetailDto dco_decode_video_detail_dto(dynamic raw);
+
+  @protected
+  VideoPageDto dco_decode_video_page_dto(dynamic raw);
+
+  @protected
+  VideoStatDto dco_decode_video_stat_dto(dynamic raw);
 
   @protected
   String sse_decode_String(SseDeserializer deserializer);
@@ -157,6 +183,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ErrorKind sse_decode_error_kind(SseDeserializer deserializer);
 
   @protected
+  FeedItemDto sse_decode_feed_item_dto(SseDeserializer deserializer);
+
+  @protected
   int sse_decode_i_32(SseDeserializer deserializer);
 
   @protected
@@ -168,7 +197,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<FeedItemDto> sse_decode_list_feed_item_dto(SseDeserializer deserializer);
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
+
+  @protected
+  List<VideoPageDto> sse_decode_list_video_page_dto(
+    SseDeserializer deserializer,
+  );
 
   @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
@@ -182,6 +219,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int? sse_decode_opt_box_autoadd_i_32(SseDeserializer deserializer);
 
   @protected
+  PopularFeedDto sse_decode_popular_feed_dto(SseDeserializer deserializer);
+
+  @protected
   QrPollDto sse_decode_qr_poll_dto(SseDeserializer deserializer);
 
   @protected
@@ -189,6 +229,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   QrStatusKind sse_decode_qr_status_kind(SseDeserializer deserializer);
+
+  @protected
+  RecommendFeedDto sse_decode_recommend_feed_dto(SseDeserializer deserializer);
 
   @protected
   SlotDto sse_decode_slot_dto(SseDeserializer deserializer);
@@ -210,6 +253,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_decode_unit(SseDeserializer deserializer);
+
+  @protected
+  VideoDetailDto sse_decode_video_detail_dto(SseDeserializer deserializer);
+
+  @protected
+  VideoPageDto sse_decode_video_page_dto(SseDeserializer deserializer);
+
+  @protected
+  VideoStatDto sse_decode_video_stat_dto(SseDeserializer deserializer);
 
   @protected
   void sse_encode_String(String self, SseSerializer serializer);
@@ -269,6 +321,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_error_kind(ErrorKind self, SseSerializer serializer);
 
   @protected
+  void sse_encode_feed_item_dto(FeedItemDto self, SseSerializer serializer);
+
+  @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
 
   @protected
@@ -281,8 +336,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_feed_item_dto(
+    List<FeedItemDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_prim_u_8_strict(
     Uint8List self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_video_page_dto(
+    List<VideoPageDto> self,
     SseSerializer serializer,
   );
 
@@ -299,6 +366,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_box_autoadd_i_32(int? self, SseSerializer serializer);
 
   @protected
+  void sse_encode_popular_feed_dto(
+    PopularFeedDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_qr_poll_dto(QrPollDto self, SseSerializer serializer);
 
   @protected
@@ -306,6 +379,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_qr_status_kind(QrStatusKind self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_recommend_feed_dto(
+    RecommendFeedDto self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_slot_dto(SlotDto self, SseSerializer serializer);
@@ -330,6 +409,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_unit(void self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_video_detail_dto(
+    VideoDetailDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_video_page_dto(VideoPageDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_video_stat_dto(VideoStatDto self, SseSerializer serializer);
 }
 
 // Section: wire_class

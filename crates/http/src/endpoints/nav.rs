@@ -87,10 +87,10 @@ impl NavApi {
         device_buvid3: Option<&str>,
     ) -> Result<NavInfo> {
         let info = Self::fetch(client, account, device_buvid3).await?;
-        if let (Some(img), Some(sub)) = (&info.img_url, &info.sub_url) {
-            if let Err(e) = wbi.set_keys_from_urls(img, sub) {
-                tracing::warn!(error = e, "failed to parse wbi keys from nav");
-            }
+        if let (Some(img), Some(sub)) = (&info.img_url, &info.sub_url)
+            && let Err(e) = wbi.set_keys_from_urls(img, sub)
+        {
+            tracing::warn!(error = e, "failed to parse wbi keys from nav");
         }
         Ok(info)
     }

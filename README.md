@@ -110,7 +110,7 @@ flutter run -d linux
 
 ## 当前进度
 
-**P0–P1 已完成**；下一目标 **P2**（推荐/热门 feed、稿件详情）。切片与验收以 [Roadmap](docs/roadmap.md) 为准。
+**P0–P1 已完成 · P2 进行中**（推荐/热门 feed、稿件详情已接入）；下一目标 **P3**（playurl + media_kit）。切片与验收以 [Roadmap](docs/roadmap.md) 为准。
 
 已打通（摘要）：
 

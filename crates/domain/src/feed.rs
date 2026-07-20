@@ -18,7 +18,7 @@ pub fn filter_feed_item(goto: &str, blacklisted_gotos: &[&str]) -> bool {
     if goto.is_empty() {
         return false;
     }
-    !blacklisted_gotos.iter().any(|b| *b == goto)
+    !blacklisted_gotos.contains(&goto)
 }
 
 #[cfg(test)]

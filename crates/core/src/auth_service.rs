@@ -258,13 +258,13 @@ pub fn set_account_slot(
     slot: SlotDto,
     account_id: Option<String>,
 ) -> Result<(), AppError> {
-    if let Some(ref id) = account_id {
-        if accounts.get(id).is_none() {
-            return Err(AppError::new(
-                ErrorKind::InvalidArgument,
-                format!("账号不存在: {id}"),
-            ));
-        }
+    if let Some(ref id) = account_id
+        && accounts.get(id).is_none()
+    {
+        return Err(AppError::new(
+            ErrorKind::InvalidArgument,
+            format!("账号不存在: {id}"),
+        ));
     }
     accounts.set_slot(slot.into(), account_id.as_deref());
     store.save_accounts(accounts)?;

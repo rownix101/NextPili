@@ -4,6 +4,7 @@ import '../../features/auth/auth_page.dart';
 import '../../features/home/home_page.dart';
 import '../../features/settings/settings_page.dart';
 import '../../features/shell/app_shell.dart';
+import '../../features/video/video_detail_page.dart';
 
 GoRouter createAppRouter() {
   return GoRouter(
@@ -32,6 +33,16 @@ GoRouter createAppRouter() {
             pageBuilder: (context, state) => const NoTransitionPage(
               child: AuthPage(),
             ),
+          ),
+          GoRoute(
+            path: '/video/:id',
+            name: 'video',
+            pageBuilder: (context, state) {
+              final id = Uri.decodeComponent(state.pathParameters['id'] ?? '');
+              return NoTransitionPage(
+                child: VideoDetailPage(videoId: id),
+              );
+            },
           ),
         ],
       ),

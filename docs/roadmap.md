@@ -3,7 +3,7 @@
 按垂直切片交付可演示能力：鉴权 → 浏览 → 播放 → 互动 → 个人库 → 扩展业务。阶段顺序与 [architecture §12](./architecture.md#12-mvp-落地顺序) 一致；用例名以 [design/core.md](./design/core.md) 为准。
 
 > 状态：草案 v0.1  
-> 当前进度：**P1 完成** · 下一目标 **P2**  
+> 当前进度：**P2 进行中** · 下一目标 **P3**  
 > 相关：[Architecture](./architecture.md) · [API](./api/README.md) · [Design](./design/README.md) · [UX](./ux/README.md)
 
 ---
@@ -14,7 +14,7 @@
 |------|------|------|------------|
 | **P0** | 骨架 | ✅ 完成 | Workspace + Flutter 壳 + FRB `ping` / `api_version` |
 | **P1** | 鉴权 | ✅ 完成 | 短信/扫码登录、Cookie/WBI/AppSign、会话落盘 |
-| **P2** | 浏览 | ⬜ 进行中 | 推荐/热门 feed + 稿件详情页 |
+| **P2** | 浏览 | 🔶 进行中 | 推荐/热门 feed + 稿件详情页 |
 | **P3** | 播放 | ⬜ 计划 | playurl → `MediaSource` → media_kit + 清晰度 |
 | **P4** | 互动只读 | ⬜ 计划 | 评论列表 + 弹幕展示 |
 | **P5** | 个人库 | ⬜ 计划 | 搜索、历史、稍后再看、收藏只读 |

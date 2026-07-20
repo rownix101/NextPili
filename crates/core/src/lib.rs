@@ -12,10 +12,12 @@ pub mod error;
 mod frb_generated;
 
 pub use api::{
-    api_version, bootstrap, device_buvid3, list_accounts, login_captcha, login_qr_poll,
-    login_qr_start, login_sms, login_sms_send, logout, new_login_session_id, ping, set_account_slot,
-    AccountPublicDto, ApiVersion, BootstrapConfig, CaptchaDto, QrPollDto, QrStartDto, QrStatusKind,
-    SlotDto, SmsLoginDto, SmsSendDto, SmsSendDtoResult,
+    api_version, bootstrap, device_buvid3, feed_popular, feed_recommend, list_accounts,
+    login_captcha, login_qr_poll, login_qr_start, login_sms, login_sms_send, logout,
+    new_login_session_id, ping, set_account_slot, video_detail, AccountPublicDto, ApiVersion,
+    BootstrapConfig, CaptchaDto, FeedItemDto, PopularFeedDto, QrPollDto, QrStartDto, QrStatusKind,
+    RecommendFeedDto, SlotDto, SmsLoginDto, SmsSendDto, SmsSendDtoResult, VideoDetailDto,
+    VideoPageDto, VideoStatDto,
 };
 pub use app::CoreApp;
 pub use error::{AppError, ErrorKind};
@@ -25,5 +27,5 @@ pub const CORE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// FFI API compatibility version (major bumps on breaking changes).
 pub const API_MAJOR: u32 = 0;
-pub const API_MINOR: u32 = 2;
-pub const API_PATCH: u32 = 1;
+pub const API_MINOR: u32 = 3;
+pub const API_PATCH: u32 = 0;
