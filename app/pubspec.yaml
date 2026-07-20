@@ -48,6 +48,9 @@ dependencies:
   media_kit_video: ^2.0.1
   media_kit_libs_video: ^1.0.7
   liquid_glass_widgets: ^0.22.1
+  window_manager: ^0.5.2
+  # Win Mica/Acrylic · macOS VisualEffect · Linux transparent.
+  flutter_acrylic: ^1.1.4
   flutter_lucide: ^1.11.0
   google_fonts: ^6.2.1
   qr_flutter: ^4.1.0

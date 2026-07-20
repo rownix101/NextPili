@@ -11,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 
 import 'app.dart';
 import 'bridge/core_api.dart';
+import 'core/adaptive/desktop_window.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/glass_theme.dart';
@@ -22,6 +23,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
   await LiquidGlassWidgets.initialize();
+  await DesktopWindow.ensureInitialized();
   await _initGeetestWebViewEnvironment();
 
   String? bootError;

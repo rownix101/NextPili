@@ -155,7 +155,7 @@ ThemeData _build(Brightness brightness, AppColors colors) {
       shape: RoundedRectangleBorder(borderRadius: AppShapes.borderMd),
     ),
     navigationRailTheme: NavigationRailThemeData(
-      backgroundColor: colors.canvas,
+      backgroundColor: Colors.transparent,
       indicatorColor: colors.accent.withValues(alpha: 0.14),
       selectedIconTheme: IconThemeData(color: colors.accent, size: 24),
       unselectedIconTheme: IconThemeData(color: colors.fgSecondary, size: 24),
@@ -164,7 +164,7 @@ ThemeData _build(Brightness brightness, AppColors colors) {
           textTheme.labelMedium?.copyWith(color: colors.fgSecondary),
     ),
     navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: colors.elevated,
+      backgroundColor: Colors.transparent,
       indicatorColor: colors.accent.withValues(alpha: 0.14),
       surfaceTintColor: Colors.transparent,
       elevation: 0,

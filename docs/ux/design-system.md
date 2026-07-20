@@ -1,6 +1,6 @@
 # 设计规范（Design System）
 
-> 状态：草案 v0.4  
+> 状态：草案 v0.5.1  
 > 依赖：[UX 索引](./README.md) · [动效](./motion.md) · [多平台](./multi-platform.md) · [交互](./interaction.md) · [文案](./copy.md)  
 > 视觉语言：**Liquid Glass**（iOS 26 气质，桌面适配）  
 > 实现库：[liquid_glass_widgets](https://pub.dev/packages/liquid_glass_widgets) `^0.22.1`  
@@ -52,7 +52,7 @@ NextPili 采用 **Liquid Glass** 作为主导视觉语言：
 
 ```text
 ┌──────────┬────────────────────────────────────┐
-│  Glass   │  GlassAppBar / 搜索 / 账号          │  ← chrome
+│  Mica    │  搜索 / 账号（可选 Glass 控件）     │  ← chrome
 │  Rail    ├────────────────────────────────────┤
 │          │                                    │
 │          │   Opaque content（网格 / 列表）     │  ← 内容
@@ -61,6 +61,56 @@ NextPili 采用 **Liquid Glass** 作为主导视觉语言：
 │          │  可选 Glass 播放 pill / Toast       │
 └──────────┴────────────────────────────────────┘
 ```
+
+### 2.2.1 桌面穿透（Desktop pierce）
+
+桌面壳层在 **透明窗口** 上走 Mica / 系统材质：Rail 与 compact 底栏贴窗边，内容区不透明托盘铺满剩余空间。**不留**壳层 margin 透明空隙。
+
+| ✅ 穿透 / 材质 | ❌ 不穿透 |
+|----------------|----------|
+| 壳层背景（Scaffold 透明，供原生 Mica/VE） | 信息流 / 列表 / 详情页底 |
+| Rail / compact 底栏 `MicaSurface` tint | 壳层 margin 空隙（已取消） |
+| 玻璃材质自身的半透明 tint | 窗口外缘圆角（交由 WM/合成器） |
+| | 播放器全屏 / 直播间画面；模态正文 |
+
+```text
+┌─ 透明窗口（WM 负责外缘圆角）──────────────────┐
+│ Mica Rail │ 不透明内容托盘（直角、贴边）      │
+│ 导航项    │ 顶栏 · Feed / 列表               │
+│           │                                   │
+└──────────────────────────────────────────────┘
+```
+
+| 平台 | 实现要点 |
+|------|----------|
+| 共用 | `window_manager` 透明底；`DesktopWindow.desktopPierceEnabled` 门控；`flutter_acrylic` 分平台 effect；壳层 **贴边**（无 margin 空隙） |
+| Linux | 透明窗 + **合成器 real-time blur**（`desktop_compositor_blur.cc`：Wayland **`ext-background-effect-v1`** 全窗 `set_blur_region`；X11 KWin `_KDE_NET_WM_BLUR_BEHIND_REGION`）；`MicaSurface` 仅轻 tint；`DesktopWallpaper` 仅无合成器 blur 时的静态兜底 |
+| macOS | **`NSVisualEffectView`**：`WindowEffect.sidebar`；`MicaSurface` 近透明透传 |
+| Windows | **DWM**：Win11 build ≥ 22000 → `mica`；更早 → `acrylic`；失败再退 transparent + 模拟 |
+
+> **Important:** **禁止**用 Flutter `BackdropFilter` 糊桌面——引擎采不到 compositor 桌面像素，当前场景下不生效。Linux blur = **合成器** real-time blur；Win/macOS = DWM / VisualEffect。静态壁纸采样 ≠ live blur，只作兜底。
+
+**Example**
+
+```dart
+// main.dart — runApp 前
+await DesktopWindow.ensureInitialized();
+
+// app_shell.dart — 贴边：无 Rail/内容 margin
+Scaffold(
+  backgroundColor: DesktopWindow.desktopPierceEnabled
+      ? Colors.transparent
+      : colors.canvas,
+  body: Row(
+    children: [
+      MicaSurface(borderRadius: BorderRadius.zero, child: NavigationRail(...)),
+      Expanded(child: OpaqueContentPanel(child: child)),
+    ],
+  ),
+);
+```
+
+初始化失败时 `desktopPierceEnabled == false`，壳层回退不透明 canvas，功能不受影响。
 
 ### 2.3 组合规则：玻璃是托盘，不是包装纸
 
@@ -86,16 +136,83 @@ NextPili 采用 **Liquid Glass** 作为主导视觉语言：
 
 | 场景 | 说明 |
 |------|------|
-| 一级导航 chrome | 桌面 Rail、手机/折叠外屏 `GlassTabBar` / 底栏、顶栏 |
+| 桌面一级导航 chrome | **Rail 用模拟 Mica**（见下）；（可选）顶栏控件仍可 Liquid Glass |
+| 移动 compact 底栏 Tab | **悬浮** `GlassTabBar`（Liquid Glass pill） |
 | 模态与菜单 | `GlassDialog` / `GlassMenu` / `GlassModalSheet` / Popover |
 | 浮动控件 | 迷你播放条、FAB 气质按钮、搜索 pill |
 | 设置分组表面 | **可选** `GlassGroupedSection`（页内少量，非每行一片玻璃） |
 | 分段 / 滑块等控件 | 在 chrome 或设置页少量使用；自带表面，勿再包 `GlassCard` |
 
+#### 一级底栏 Tab：按平台分形态
+
+| 平台 | 形态 | 实现 |
+|------|------|------|
+| **桌面宽窗**（medium+） | **Mica 侧栏** | 贴边 `MicaSurface` + `NavigationRail`；直角；无壳层空隙 |
+| **移动**（Android / iOS） | **悬浮** Liquid Glass pill | `GlassTabBar.bottom` + 左右/底 margin + `SafeArea` |
+| **桌面窄窗**（compact） | **贴边** Mica + icon + 文字 | `FrostedNavBar` + `extendBody`；Linux blur 走合成器，不叠 Flutter blur |
+
+**Example — 桌面宽窗 Mica Rail**
+
+```dart
+// Windows: WindowEffect.mica / acrylic（DWM）
+// macOS:   WindowEffect.sidebar（NSVisualEffectView）
+// Linux:   WindowEffect.transparent + DesktopWallpaper sample plate
+// 贴边：无 Padding/margin 空隙；直角；窗缘圆角交 WM
+Scaffold(
+  backgroundColor: pierce ? Colors.transparent : colors.canvas,
+  body: Row(
+    children: [
+      MicaSurface(
+        width: expanded ? 88 : 72,
+        borderRadius: BorderRadius.zero,
+        child: NavigationRail(
+          backgroundColor: Colors.transparent,
+          // ...
+        ),
+      ),
+      Expanded(child: OpaqueContentPanel(child: child)),
+    ],
+  ),
+);
+```
+
+**Example — 移动悬浮 Liquid Glass**
+
+```dart
+if (isMobileOs) {
+  return Scaffold(
+    extendBody: true,
+    bottomNavigationBar: SafeArea(
+      top: false,
+      minimum: EdgeInsets.fromLTRB(md, 0, md, sm),
+      child: GlassTabBar.bottom(tabs: ..., selectedIndex: i, onTabSelected: ...),
+    ),
+  );
+}
+```
+
+**Example — 桌面窄窗 Mica + icon/label 贴边**
+
+```dart
+// MicaSurface 轻 tint；Linux 实时 blur 由 runner 向合成器请求，勿 BackdropFilter
+Scaffold(
+  extendBody: true,
+  bottomNavigationBar: FrostedNavBar(
+    items: [...],
+    selectedIndex: index,
+    onSelect: onSelect,
+  ),
+);
+```
+
+
+
 #### 不应该用 Liquid Glass
 
 | 场景 | 原因 |
 |------|------|
+| **桌面** wide Rail | 用 **Mica**（`MicaSurface` + Windows 原生 DWM），不用 `GlassContainer` 折射 |
+| **桌面** compact 底栏 Tab | 用 `MicaSurface` + icon/label，不用 `GlassTabBar` / frosted tray |
 | 信息流视频卡 / 封面网格 | 滚动项 × N 会打爆 GPU；内容应不透明可读 |
 | 评论楼层、动态卡片、历史行 | 同上；长列表虚拟化 + 不透明表面 |
 | 播放器画面、弹幕、字幕 | 内容层；玻璃只可出现在 **控件条** |
@@ -107,15 +224,17 @@ NextPili 采用 **Liquid Glass** 作为主导视觉语言：
 #### 形态速查
 
 ```text
-桌面 expanded+        → Rail + 顶栏玻璃；内容不透明网格
-桌面/平板 medium      → 收起 Rail 或 Drawer 玻璃；内容不透明
-手机 compact          → 底栏 + 顶栏玻璃；Feed 不透明
-Fold 外屏 compact     → 同手机；玻璃只留底/顶
+桌面 expanded+        → 透明壳 + Mica Rail + 不透明内容托盘（直角；桌面穿透）
+桌面/平板 medium      → 同上；Rail 可收起
+桌面 compact 窄窗     → 贴边 FrostedNavBar（Mica + icon/文字）；Feed 全宽；extendBody
+手机 compact          → 悬浮 GlassTabBar（Liquid Glass）；SafeArea + 外边距
+Fold 外屏 compact     → 同手机；悬浮 Liquid Glass 底栏
 Fold 内屏             → medium/expanded；竖铰链双栏；仅外壳玻璃
 Flip 封面 cover       → 无 Liquid Glass；迷你播放/状态，非完整 App
 Flip 全开 compact     → 同手机
 Flip 半开 flex        → 上半画面零玻璃；下半控件可轻玻璃；无完整 Tab 壳
 播放中（任意形态）    → 画面与弹幕零玻璃；控件条可用暗色 glass.tint.player
+全屏播放路由          → 不走壳层穿透；黑底沉浸
 ```
 
 手机 / **Fold（左右折）** / **Flip（上下翻盖）** 的铰链、封面与 Flex 见 [multi-platform.md](./multi-platform.md) §11.2–11.4。
@@ -696,8 +815,16 @@ app/lib/core/theme/
   app_theme.dart          # ThemeData 承载 token（非 M3 视觉）
 app/lib/core/icons/
   app_icons.dart          # Lucide 语义封装（play / home / search…）
+app/lib/core/adaptive/
+  desktop_window.dart     # Win Mica · macOS VisualEffect · Linux transparent
+  desktop_wallpaper.dart  # Linux 壁纸路径（GNOME/KDE/XFCE…）→ 采样 plate
+  desktop_backdrop_sync.dart  # 主题亮暗 → Win/macOS 系统材质
 app/lib/core/widgets/
+  mica_surface.dart       # Rail chrome（native 透传 / Linux 采样 / tint）
+  frosted_nav_bar.dart    # 窄窗贴边 Mica + icon/label 底栏
   glass/                  # 对库的薄封装（可选）：AppGlassScaffold 等
+app/lib/features/shell/
+  app_shell.dart          # 透明壳 + 不透明内容托盘 + Mica Rail / TabBar
 ```
 
 启动：
@@ -705,13 +832,14 @@ app/lib/core/widgets/
 ```text
 WidgetsFlutterBinding.ensureInitialized()
 await LiquidGlassWidgets.initialize()
+await DesktopWindow.ensureInitialized()   # Win Mica · macOS sidebar VE · Linux transparent
 await RustLib.init()
 await coreApi.bootstrap(...)
 runApp(
   LiquidGlassWidgets.wrap(
     adaptiveQuality: true,
     theme: nextPiliGlassTheme,
-    child: ProviderScope(child: NextPiliApp()),
+    child: ProviderScope(child: NextPiliApp()),  # builder 内 DesktopBackdropSync
   ),
 )
 ```
@@ -757,3 +885,10 @@ runApp(
 | v0.2.1 | 补充何时用/不用玻璃；手机与折叠质量策略交叉引用 multi-platform |
 | v0.3 | **锁定**配色（Sky accent，弃 B 站粉）、字体（Inter + 系统 CJK）、图标（Lucide）；明确 **不用 M3 视觉** |
 | v0.4 | 图标章：判定模型 + 何时用/不用 + 场景速查 |
+| v0.5 | 桌面穿透：透明窗口 + chrome 玻璃 + 不透明内容托盘（§2.2.1） |
+| v0.5.1 | compact 底栏：桌面 frosted 贴边；移动端恢复悬浮 Liquid Glass |
+| v0.5.2 | 桌面 compact 底栏去掉 frosted 托盘；壳层托盘/Rail 直角，窗缘圆角交 WM |
+| v0.5.3 | 桌面 chrome 保留 Mica：Rail + compact 底栏均走 `MicaSurface`（直角）；仍不用 frosted tray |
+| v0.5.4 | 壳层贴边（取消 margin 透明空隙）；Linux compact 曾误用 BackdropFilter |
+| v0.5.5 | 撤销 Flutter 桌面 blur；Linux 改合成器 real-time blur |
+| v0.5.6 | Wayland 主路径改为 `ext-background-effect-v1`（wayland-scanner）；X11 仍 KWin atom |

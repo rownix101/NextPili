@@ -4,6 +4,8 @@ library;
 
 export 'package:liquid_glass_widgets/liquid_glass_widgets.dart'
     show
+        AdaptiveLiquidGlassLayer,
+        GlassAppBar,
         GlassButton,
         GlassCard,
         GlassContainer,
@@ -14,11 +16,16 @@ export 'package:liquid_glass_widgets/liquid_glass_widgets.dart'
         GlassListTile,
         GlassMenu,
         GlassModalSheet,
+        GlassPage,
+        GlassQuality,
         GlassScaffold,
         GlassSearchBar,
+        GlassSegment,
         GlassSegmentedControl,
         GlassSlider,
+        GlassTab,
         GlassTabBar,
         GlassTextField,
+        LiquidGlassSettings,
         LiquidGlassWidgets,
-        GlassQuality;
+        LiquidRoundedSuperellipse;

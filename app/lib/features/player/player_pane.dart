@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media_kit_video/media_kit_video.dart';
@@ -5,6 +7,7 @@ import 'package:media_kit_video/media_kit_video.dart';
 import '../../bridge/core_api.dart';
 import '../../core/haptics/haptics.dart';
 import '../../core/icons/app_icons.dart';
+import '../../core/motion/app_motion.dart';
 import '../../core/theme/player_colors.dart';
 import '../../core/theme/spacing.dart';
 import '../../core/widgets/loading.dart';
@@ -60,6 +63,8 @@ class PlayerPane extends ConsumerStatefulWidget {
 
 class _PlayerPaneState extends ConsumerState<PlayerPane> {
   bool _showChrome = true;
+  bool _chromeHeld = false;
+  Timer? _chromeHideTimer;
 
   PlaybackTarget get _target => PlaybackTarget(
         videoId: widget.videoId,
@@ -80,7 +85,55 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> {
             _target,
             host: widget.host,
           );
+      _scheduleChromeHide();
     });
+  }
+
+  @override
+  void dispose() {
+    _chromeHideTimer?.cancel();
+    super.dispose();
+  }
+
+  void _scheduleChromeHide() {
+    _chromeHideTimer?.cancel();
+    if (_chromeHeld || !_showChrome) return;
+    _chromeHideTimer = Timer(AppDuration.playerChromeDelay, () {
+      if (!mounted || _chromeHeld) return;
+      setState(() => _showChrome = false);
+    });
+  }
+
+  void _setChromeVisible(bool visible) {
+    _chromeHideTimer?.cancel();
+    if (_showChrome == visible) {
+      if (visible) _scheduleChromeHide();
+      return;
+    }
+    setState(() => _showChrome = visible);
+    if (visible) _scheduleChromeHide();
+  }
+
+  void _toggleChrome() {
+    _setChromeVisible(!_showChrome);
+  }
+
+  void _holdChrome(bool held) {
+    _chromeHeld = held;
+    if (held) {
+      _chromeHideTimer?.cancel();
+      if (!_showChrome) setState(() => _showChrome = true);
+    } else {
+      _scheduleChromeHide();
+    }
+  }
+
+  void _bumpChrome() {
+    if (!_showChrome) {
+      _setChromeVisible(true);
+    } else {
+      _scheduleChromeHide();
+    }
   }
 
   @override
@@ -223,7 +276,8 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> {
             const AppLoading()
           else if (ownsSurface && adapter != null)
             GestureDetector(
-              onTap: () => setState(() => _showChrome = !_showChrome),
+              onTap: _toggleChrome,
+              onPanDown: (_) => _bumpChrome(),
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -246,47 +300,89 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> {
             )
           else
             const AppLoading(),
-          if (_showChrome) ...[
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: _TopBar(
-                title: widget.title.isEmpty ? widget.videoId : widget.title,
-                showTitle: widget.immersive || widget.showBack,
-                showBack: widget.showBack,
-                colors: player,
-                onBack: widget.onBack,
-                danmakuOn: session.danmakuOn,
-                onToggleDanmaku: () => notifier.toggleDanmaku(),
-                onFullscreen: widget.host == PlayerSurfaceHost.fullscreen
-                    ? () => notifier.exitFullscreen()
-                    : () => notifier.enterFullscreen(),
-                fullscreenExit: widget.host == PlayerSurfaceHost.fullscreen,
-                onMini: widget.host == PlayerSurfaceHost.inline
-                    ? () => notifier.enterMini()
-                    : null,
-              ),
-            ),
-            if (!loading && error == null && ownsSurface && adapter != null)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: _BottomChrome(
-                  adapter: adapter,
-                  colors: player,
-                  onFullscreen: widget.host == PlayerSurfaceHost.fullscreen
-                      ? () => notifier.exitFullscreen()
-                      : () => notifier.enterFullscreen(),
-                  fullscreenExit: widget.host == PlayerSurfaceHost.fullscreen,
-                  onQuality: _switchQuality,
-                  onAudio: _switchAudio,
-                  onSpeed: _switchSpeed,
-                  onSubtitle: _switchSubtitle,
+          Positioned.fill(
+            child: IgnorePointer(
+              ignoring: !_showChrome,
+              child: AnimatedOpacity(
+                opacity: _showChrome ? 1 : 0,
+                duration: appMotionDuration(
+                  context,
+                  AppDuration.playerChrome,
+                  reduced: AppDuration.short2,
+                ),
+                curve: AppEasing.standard,
+                child: Stack(
+                  children: [
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: _TopBar(
+                        title: widget.title.isEmpty
+                            ? widget.videoId
+                            : widget.title,
+                        showTitle: widget.immersive || widget.showBack,
+                        showBack: widget.showBack,
+                        colors: player,
+                        onBack: widget.onBack,
+                        danmakuOn: session.danmakuOn,
+                        onToggleDanmaku: () {
+                          _bumpChrome();
+                          notifier.toggleDanmaku();
+                        },
+                        onFullscreen: widget.host ==
+                                PlayerSurfaceHost.fullscreen
+                            ? () => notifier.exitFullscreen()
+                            : () => notifier.enterFullscreen(),
+                        fullscreenExit:
+                            widget.host == PlayerSurfaceHost.fullscreen,
+                        onMini: widget.host == PlayerSurfaceHost.inline
+                            ? () => notifier.enterMini()
+                            : null,
+                      ),
+                    ),
+                    if (!loading &&
+                        error == null &&
+                        ownsSurface &&
+                        adapter != null)
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: _BottomChrome(
+                          adapter: adapter,
+                          colors: player,
+                          onFullscreen: widget.host ==
+                                  PlayerSurfaceHost.fullscreen
+                              ? () => notifier.exitFullscreen()
+                              : () => notifier.enterFullscreen(),
+                          fullscreenExit:
+                              widget.host == PlayerSurfaceHost.fullscreen,
+                          onQuality: (s) {
+                            _bumpChrome();
+                            unawaited(_switchQuality(s));
+                          },
+                          onAudio: (s) {
+                            _bumpChrome();
+                            unawaited(_switchAudio(s));
+                          },
+                          onSpeed: (r) {
+                            _bumpChrome();
+                            unawaited(_switchSpeed(r));
+                          },
+                          onSubtitle: (t) {
+                            _bumpChrome();
+                            unawaited(_switchSubtitle(t));
+                          },
+                          onHoldChrome: _holdChrome,
+                          onInteract: _bumpChrome,
+                        ),
+                      ),
+                  ],
                 ),
               ),
-          ],
+            ),
+          ),
         ],
       ),
     );
@@ -383,6 +479,8 @@ class _BottomChrome extends StatelessWidget {
     required this.onSubtitle,
     this.onFullscreen,
     this.fullscreenExit = false,
+    this.onHoldChrome,
+    this.onInteract,
   });
 
   final MediaKitPlayerAdapter adapter;
@@ -393,6 +491,8 @@ class _BottomChrome extends StatelessWidget {
   final ValueChanged<SubtitleTrackDto?> onSubtitle;
   final VoidCallback? onFullscreen;
   final bool fullscreenExit;
+  final ValueChanged<bool>? onHoldChrome;
+  final VoidCallback? onInteract;
 
   @override
   Widget build(BuildContext context) {
@@ -448,9 +548,11 @@ class _BottomChrome extends StatelessWidget {
                           child: Slider(
                             value: value,
                             max: maxMs,
+                            onChangeStart: (_) => onHoldChrome?.call(true),
                             onChanged: (v) {
                               adapter.seek(Duration(milliseconds: v.round()));
                             },
+                            onChangeEnd: (_) => onHoldChrome?.call(false),
                           ),
                         ),
                         LayoutBuilder(
@@ -462,6 +564,7 @@ class _BottomChrome extends StatelessWidget {
                                       playing ? AppIcons.pause : AppIcons.play,
                                   color: colors.controlFg,
                                   onPressed: () {
+                                    onInteract?.call();
                                     if (playing) {
                                       adapter.pause();
                                     } else {
@@ -488,6 +591,8 @@ class _BottomChrome extends StatelessWidget {
                                         l10n.playerQuality,
                                     tooltip: l10n.playerQuality,
                                     colors: colors,
+                                    onOpened: () => onHoldChrome?.call(true),
+                                    onClosed: () => onHoldChrome?.call(false),
                                     items: [
                                       for (final q in qualities)
                                         PopupMenuItem(
@@ -512,6 +617,8 @@ class _BottomChrome extends StatelessWidget {
                                         l10n.playerAudio,
                                     tooltip: l10n.playerAudio,
                                     colors: colors,
+                                    onOpened: () => onHoldChrome?.call(true),
+                                    onClosed: () => onHoldChrome?.call(false),
                                     items: [
                                       for (final a in audios)
                                         PopupMenuItem(
@@ -531,6 +638,8 @@ class _BottomChrome extends StatelessWidget {
                                   label: _speedLabel(rate),
                                   tooltip: l10n.playerSpeed,
                                   colors: colors,
+                                  onOpened: () => onHoldChrome?.call(true),
+                                  onClosed: () => onHoldChrome?.call(false),
                                   items: [
                                     for (final r in MediaKitPlayerAdapter
                                         .speedOptions)
@@ -550,6 +659,8 @@ class _BottomChrome extends StatelessWidget {
                                         l10n.playerSubtitleOff,
                                     tooltip: l10n.playerSubtitle,
                                     colors: colors,
+                                    onOpened: () => onHoldChrome?.call(true),
+                                    onClosed: () => onHoldChrome?.call(false),
                                     items: [
                                       PopupMenuItem(
                                         value: '',
@@ -622,6 +733,8 @@ class _TextMenuButton extends StatelessWidget {
     required this.colors,
     required this.items,
     required this.onSelected,
+    this.onOpened,
+    this.onClosed,
   });
 
   final String label;
@@ -629,12 +742,19 @@ class _TextMenuButton extends StatelessWidget {
   final PlayerColors colors;
   final List<PopupMenuEntry<String>> items;
   final ValueChanged<String> onSelected;
+  final VoidCallback? onOpened;
+  final VoidCallback? onClosed;
 
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<String>(
       tooltip: tooltip,
-      onSelected: onSelected,
+      onOpened: onOpened,
+      onCanceled: onClosed,
+      onSelected: (v) {
+        onClosed?.call();
+        onSelected(v);
+      },
       itemBuilder: (context) => items,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),

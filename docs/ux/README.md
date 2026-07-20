@@ -41,8 +41,8 @@
 |----|------|
 | 产品形态 | 桌面端优先的 B 站第三方客户端（Linux / Windows / macOS） |
 | 核心路径 | 推荐/热门、搜索、播放（含弹幕/清晰度）、评论、历史/收藏、动态、直播、番剧 |
-| 视觉语言 | **Liquid Glass**：玻璃用于导航/控制层；内容区不透明、可读 |
-| UI 技术 | Flutter + **[liquid_glass_widgets](https://pub.dev/packages/liquid_glass_widgets)**（玻璃）+ **自有语义 Token**（**不用 M3 视觉**） |
+| 视觉语言 | **Liquid Glass**：玻璃用于导航/控制层；内容区不透明、可读；**桌面穿透**（透明窗 + chrome 透壁纸） |
+| UI 技术 | Flutter + **[liquid_glass_widgets](https://pub.dev/packages/liquid_glass_widgets)**（玻璃）+ `window_manager` + **`flutter_acrylic`（Windows 原生 Mica）** + **自有语义 Token**（**不用 M3 视觉**） |
 | 配色 / 字 / 图标 | Sky accent · Inter + 系统 CJK · Lucide（用/不用见 design-system §7） |
 | 反馈 | 视觉为主；触觉增强且可关；文案自足（不靠图标/震动单独传义） |
 | 非目标 | 不模仿官方 App 像素级；**不用 B 站粉**；不以移动端竖屏信息流为默认布局；不做插件主题市场（首期）；不做整页玻璃化 |
@@ -85,8 +85,9 @@
 
 | 决策 | 值 |
 |------|-----|
-| 视觉语言 | Liquid Glass（内容不透明 + chrome 玻璃） |
-| 实现库 | `liquid_glass_widgets` `^0.22.1` |
+| 视觉语言 | Liquid Glass（内容不透明 + chrome 玻璃 + 桌面穿透） |
+| 实现库 | `liquid_glass_widgets` `^0.22.1` · `window_manager` `^0.5.2` · `flutter_acrylic` `^1.1.4` |
+| 桌面穿透 | Win DWM Mica/Acrylic · macOS VisualEffect · Linux transparent+壁纸采样；壳透 + 内容托盘不透 |
 | 默认玻璃质量 | `GlassQuality.standard` + `adaptiveQuality: true` |
 | 玻璃用 / 不用 | chrome·浮层用；Feed/评论/画面不用（design-system §2.5） |
 | 手机 / 折叠 | P2；Fold / Flip 同断点（multi-platform） |

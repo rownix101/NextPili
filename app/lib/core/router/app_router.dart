@@ -13,6 +13,7 @@ import '../../features/settings/settings_page.dart';
 import '../../features/shell/app_shell.dart';
 import '../../features/user/user_page.dart';
 import '../../features/video/video_detail_page.dart';
+import '../motion/app_motion.dart';
 
 GoRouter createAppRouter() {
   return GoRouter(
@@ -24,22 +25,28 @@ GoRouter createAppRouter() {
           GoRoute(
             path: '/home',
             name: 'home',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: HomePage(),
+            pageBuilder: (context, state) => AppTransitions.fadeThrough(
+              key: state.pageKey,
+              name: state.name,
+              child: const HomePage(),
             ),
           ),
           GoRoute(
             path: '/live',
             name: 'live',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: LivePage(),
+            pageBuilder: (context, state) => AppTransitions.fadeThrough(
+              key: state.pageKey,
+              name: state.name,
+              child: const LivePage(),
             ),
           ),
           GoRoute(
             path: '/pgc',
             name: 'pgc',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: PgcPage(),
+            pageBuilder: (context, state) => AppTransitions.fadeThrough(
+              key: state.pageKey,
+              name: state.name,
+              child: const PgcPage(),
             ),
           ),
           GoRoute(
@@ -50,7 +57,9 @@ GoRouter createAppRouter() {
                   int.tryParse(state.pathParameters['seasonId'] ?? '') ?? 0;
               final epId =
                   int.tryParse(state.uri.queryParameters['ep'] ?? '') ?? 0;
-              return NoTransitionPage(
+              return AppTransitions.sharedAxisX(
+                key: state.pageKey,
+                name: state.name,
                 child: PgcSeasonPage(
                   seasonId: seasonId,
                   initialEpId: epId,
@@ -61,36 +70,46 @@ GoRouter createAppRouter() {
           GoRoute(
             path: '/search',
             name: 'search',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: SearchPage(),
+            pageBuilder: (context, state) => AppTransitions.fadeThrough(
+              key: state.pageKey,
+              name: state.name,
+              child: const SearchPage(),
             ),
           ),
           GoRoute(
             path: '/dynamics',
             name: 'dynamics',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: DynamicsPage(),
+            pageBuilder: (context, state) => AppTransitions.fadeThrough(
+              key: state.pageKey,
+              name: state.name,
+              child: const DynamicsPage(),
             ),
           ),
           GoRoute(
             path: '/library',
             name: 'library',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: UserPage(),
+            pageBuilder: (context, state) => AppTransitions.fadeThrough(
+              key: state.pageKey,
+              name: state.name,
+              child: const UserPage(),
             ),
           ),
           GoRoute(
             path: '/settings',
             name: 'settings',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: SettingsPage(),
+            pageBuilder: (context, state) => AppTransitions.fadeThrough(
+              key: state.pageKey,
+              name: state.name,
+              child: const SettingsPage(),
             ),
           ),
           GoRoute(
             path: '/auth',
             name: 'auth',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: AuthPage(),
+            pageBuilder: (context, state) => AppTransitions.sharedAxisX(
+              key: state.pageKey,
+              name: state.name,
+              child: const AuthPage(),
             ),
           ),
           GoRoute(
@@ -100,7 +119,10 @@ GoRouter createAppRouter() {
               final id = Uri.decodeComponent(state.pathParameters['id'] ?? '');
               final cid =
                   int.tryParse(state.uri.queryParameters['cid'] ?? '') ?? 0;
-              return NoTransitionPage(
+              // motion §4.4 / §5.1 — container transform + cover Hero.
+              return AppTransitions.containerTransform(
+                key: state.pageKey,
+                name: state.name,
                 child: VideoDetailPage(videoId: id, initialCid: cid),
               );
             },
@@ -110,17 +132,22 @@ GoRouter createAppRouter() {
       GoRoute(
         path: '/live/:roomId',
         name: 'liveRoom',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final roomId =
               int.tryParse(state.pathParameters['roomId'] ?? '') ?? 0;
           final title = state.uri.queryParameters['title'] ?? '';
-          return LiveRoomPage(roomId: roomId, title: title);
+          return AppTransitions.fade(
+            key: state.pageKey,
+            name: state.name,
+            duration: AppDuration.medium2,
+            child: LiveRoomPage(roomId: roomId, title: title),
+          );
         },
       ),
       GoRoute(
         path: '/play/:id',
         name: 'play',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final id = Uri.decodeComponent(state.pathParameters['id'] ?? '');
           final q = state.uri.queryParameters;
           final cid = int.tryParse(q['cid'] ?? '') ?? 0;
@@ -128,13 +155,18 @@ GoRouter createAppRouter() {
           final bvid = q['bvid'] ?? '';
           final title = q['title'] ?? '';
           final qn = int.tryParse(q['qn'] ?? '') ?? 0;
-          return PlayerPage(
-            videoId: id,
-            cid: cid,
-            aid: aid,
-            bvid: bvid,
-            title: title,
-            qn: qn,
+          return AppTransitions.fade(
+            key: state.pageKey,
+            name: state.name,
+            duration: AppDuration.medium2,
+            child: PlayerPage(
+              videoId: id,
+              cid: cid,
+              aid: aid,
+              bvid: bvid,
+              title: title,
+              qn: qn,
+            ),
           );
         },
       ),

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../bridge/core_api.dart';
 import '../../core/icons/app_icons.dart';
+import '../../core/motion/app_motion.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/spacing.dart';
 import '../../core/utils/format.dart';
@@ -288,16 +289,17 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   (context, index) {
                     final item = _items[index];
                     final locale = Localizations.localeOf(context);
+                    final id = item.bvid.isNotEmpty
+                        ? item.bvid
+                        : 'av${i64(item.aid)}';
                     return VideoCard(
                       title: item.title,
                       coverUrl: item.cover,
                       ownerName: item.ownerName,
                       durationLabel: formatDurationMs(i64(item.durationMs)),
                       viewLabel: formatCount(i64(item.play), locale: locale),
+                      heroTag: AppHeroTags.videoCover(id),
                       onTap: () {
-                        final id = item.bvid.isNotEmpty
-                            ? item.bvid
-                            : 'av${i64(item.aid)}';
                         context.push('/video/${Uri.encodeComponent(id)}');
                       },
                     );

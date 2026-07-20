@@ -39,7 +39,10 @@ class PageHeader extends StatelessWidget implements PreferredSizeWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      backgroundColor: colors.canvas,
+      backgroundColor: colors.canvas.withValues(alpha: 0.92),
+      surfaceTintColor: Colors.transparent,
+      scrolledUnderElevation: 0,
+      elevation: 0,
       leading: leading ??
           (showBack
               ? NpIconButton(

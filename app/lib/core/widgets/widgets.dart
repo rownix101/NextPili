@@ -3,6 +3,8 @@ library;
 
 export 'content_surface.dart';
 export 'empty_state.dart';
+export 'frosted_nav_bar.dart';
+export 'mica_surface.dart';
 export 'loading.dart';
 export 'np_button.dart';
 export 'page_header.dart';

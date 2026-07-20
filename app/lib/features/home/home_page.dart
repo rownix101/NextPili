@@ -3,14 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../bridge/core_api.dart';
-import '../../core/icons/app_icons.dart';
+import '../../core/adaptive/window_size.dart';
+import '../../core/motion/app_motion.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/spacing.dart';
 import '../../core/utils/format.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/glass/app_glass.dart';
 import '../../core/widgets/loading.dart';
-import '../../core/widgets/np_button.dart';
-import '../../core/widgets/page_header.dart';
 import '../../core/widgets/video_card.dart';
 import '../../l10n/l10n.dart';
 
@@ -21,52 +21,64 @@ class HomePage extends ConsumerStatefulWidget {
   ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends ConsumerState<HomePage>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabs;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabs = TabController(length: 3, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabs.dispose();
-    super.dispose();
-  }
+class _HomePageState extends ConsumerState<HomePage> {
+  int _tab = 0;
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final l10n = context.l10n;
+    final width = MediaQuery.sizeOf(context).width;
+    final padH = AppSpacing.pagePaddingH(width);
+
     return Scaffold(
       backgroundColor: colors.canvas,
-      appBar: PageHeader(
-        title: l10n.appTitle,
-        actions: [
-          NpIconButton(
-            tooltip: l10n.account,
-            icon: AppIcons.user,
-            onPressed: () => context.push('/auth'),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+              padH,
+              AppSpacing.sm,
+              padH,
+              AppSpacing.sm,
+            ),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: GlassSegmentedControl(
+                  segments: [
+                    GlassSegment(label: l10n.homeTabRecommend),
+                    GlassSegment(label: l10n.homeTabPopular),
+                    GlassSegment(label: l10n.homeTabRegion),
+                  ],
+                  selectedIndex: _tab,
+                  onSegmentSelected: (i) => setState(() => _tab = i),
+                  selectedTextStyle: Theme.of(context)
+                      .textTheme
+                      .labelLarge
+                      ?.copyWith(color: colors.fgPrimary),
+                  unselectedTextStyle: Theme.of(context)
+                      .textTheme
+                      .labelLarge
+                      ?.copyWith(color: colors.fgSecondary),
+                  quality: GlassQuality.standard,
+                  useOwnLayer: true,
+                ),
+              ),
+            ),
           ),
-        ],
-        bottom: TabBar(
-          controller: _tabs,
-          tabs: [
-            Tab(text: l10n.homeTabRecommend),
-            Tab(text: l10n.homeTabPopular),
-            Tab(text: l10n.homeTabRegion),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabs,
-        children: const [
-          _RecommendFeedTab(),
-          _PopularFeedTab(),
-          _RegionFeedTab(),
+          Expanded(
+            child: IndexedStack(
+              index: _tab,
+              children: const [
+                _RecommendFeedTab(),
+                _PopularFeedTab(),
+                _RegionFeedTab(),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -353,6 +365,8 @@ class _RegionFeedTabState extends State<_RegionFeedTab> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colors = AppColors.of(context);
+    final width = MediaQuery.sizeOf(context).width;
+    final padH = AppSpacing.pagePaddingH(width);
 
     if (_loadingRegions && _regions.isEmpty) {
       return const Center(child: AppLoading());
@@ -368,8 +382,8 @@ class _RegionFeedTabState extends State<_RegionFeedTab> {
           height: 48,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
+            padding: EdgeInsets.symmetric(
+              horizontal: padH,
               vertical: AppSpacing.sm,
             ),
             itemCount: _regions.length,
@@ -425,21 +439,30 @@ class _FeedBody extends StatelessWidget {
   final Future<void> Function() onRefresh;
   final String? emptyMessage;
 
+  SliverGridDelegateWithFixedCrossAxisCount _gridDelegate(int cross) {
+    return SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: cross,
+      mainAxisSpacing: AppSpacing.md - 4,
+      crossAxisSpacing: AppSpacing.md - 4,
+      childAspectRatio: 16 / 13,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final width = MediaQuery.sizeOf(context).width;
+    final padH = AppSpacing.pagePaddingH(width);
+
     if (loading && items.isEmpty) {
       return LayoutBuilder(
         builder: (context, constraints) {
-          final cross = _crossAxisCount(constraints.maxWidth);
+          final contentW = (constraints.maxWidth - padH * 2)
+              .clamp(0.0, AppSpacing.contentMaxWidth);
+          final cross = videoGridCrossAxisCount(contentW);
           return GridView.builder(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: cross,
-              mainAxisSpacing: AppSpacing.md - 4,
-              crossAxisSpacing: AppSpacing.md - 4,
-              childAspectRatio: 16 / 13,
-            ),
+            padding: EdgeInsets.fromLTRB(padH, 0, padH, AppSpacing.md),
+            gridDelegate: _gridDelegate(cross),
             itemCount: cross * 2,
             itemBuilder: (_, _) => const VideoCardSkeleton(),
           );
@@ -459,33 +482,31 @@ class _FeedBody extends StatelessWidget {
       onRefresh: onRefresh,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final cross = _crossAxisCount(constraints.maxWidth);
+          final contentW = (constraints.maxWidth - padH * 2)
+              .clamp(0.0, AppSpacing.contentMaxWidth);
+          final cross = videoGridCrossAxisCount(contentW);
           return CustomScrollView(
             controller: scrollController,
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               SliverPadding(
-                padding: const EdgeInsets.all(AppSpacing.md),
+                padding: EdgeInsets.fromLTRB(padH, 0, padH, AppSpacing.md),
                 sliver: SliverGrid(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: cross,
-                    mainAxisSpacing: AppSpacing.md - 4,
-                    crossAxisSpacing: AppSpacing.md - 4,
-                    childAspectRatio: 16 / 13,
-                  ),
+                  gridDelegate: _gridDelegate(cross),
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final item = items[index];
+                      final id = item.bvid.isNotEmpty
+                          ? item.bvid
+                          : 'av${i64(item.aid)}';
                       return VideoCard(
                         title: item.title,
                         coverUrl: item.cover,
                         ownerName: item.ownerName,
                         durationLabel:
                             formatDurationMs(i64(item.durationMs)),
+                        heroTag: AppHeroTags.videoCover(id),
                         onTap: () {
-                          final id = item.bvid.isNotEmpty
-                              ? item.bvid
-                              : 'av${i64(item.aid)}';
                           context.push('/video/${Uri.encodeComponent(id)}');
                         },
                       );
@@ -511,13 +532,5 @@ class _FeedBody extends StatelessWidget {
         },
       ),
     );
-  }
-
-  int _crossAxisCount(double width) {
-    if (width >= 1400) return 5;
-    if (width >= 1100) return 4;
-    if (width >= 800) return 3;
-    if (width >= 520) return 2;
-    return 1;
   }
 }

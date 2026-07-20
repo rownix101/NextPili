@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../bridge/core_api.dart';
 import '../../core/icons/app_icons.dart';
+import '../../core/motion/app_motion.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/spacing.dart';
 import '../../core/utils/format.dart';
@@ -74,9 +75,15 @@ class _UserPageState extends ConsumerState<UserPage>
   }
 }
 
-void _openVideo(BuildContext context, {required String bvid, required int aid}) {
+String _videoRouteId({required String bvid, required int aid}) {
   final id = bvid.isNotEmpty ? bvid : 'av$aid';
-  if (id == 'av0' || id.isEmpty) return;
+  if (id == 'av0' || id.isEmpty) return '';
+  return id;
+}
+
+void _openVideo(BuildContext context, {required String bvid, required int aid}) {
+  final id = _videoRouteId(bvid: bvid, aid: aid);
+  if (id.isEmpty) return;
   context.push('/video/${Uri.encodeComponent(id)}');
 }
 
@@ -199,12 +206,14 @@ class _HistoryTabState extends State<_HistoryTab> {
         loadingMore: _loadingMore,
         builder: (context, index) {
           final it = _items[index];
+          final id = _videoRouteId(bvid: it.bvid, aid: i64(it.aid));
           return VideoCard(
             title: it.title,
             coverUrl: it.cover,
             ownerName: it.ownerName,
             durationLabel: formatDurationMs(i64(it.durationMs)),
             viewLabel: it.showTitle.isNotEmpty ? it.showTitle : it.ownerName,
+            heroTag: id.isEmpty ? null : AppHeroTags.videoCover(id),
             onTap: () => _openVideo(
               context,
               bvid: it.bvid,
@@ -325,11 +334,13 @@ class _ToViewTabState extends State<_ToViewTab> {
         loadingMore: _loadingMore,
         builder: (context, index) {
           final it = _items[index];
+          final id = _videoRouteId(bvid: it.bvid, aid: i64(it.aid));
           return VideoCard(
             title: it.title,
             coverUrl: it.cover,
             ownerName: it.ownerName,
             durationLabel: formatDurationMs(i64(it.durationMs)),
+            heroTag: id.isEmpty ? null : AppHeroTags.videoCover(id),
             onTap: () => _openVideo(
               context,
               bvid: it.bvid,
@@ -532,12 +543,16 @@ class _FavTabState extends State<_FavTab> {
                             loadingMore: _loadingMore,
                             builder: (context, index) {
                               final it = _items[index];
+                              final id =
+                                  _videoRouteId(bvid: it.bvid, aid: i64(it.aid));
                               return VideoCard(
                                 title: it.title,
                                 coverUrl: it.cover,
                                 ownerName: it.ownerName,
                                 durationLabel:
                                     formatDurationMs(i64(it.durationMs)),
+                                heroTag:
+                                    id.isEmpty ? null : AppHeroTags.videoCover(id),
                                 onTap: () => _openVideo(
                                   context,
                                   bvid: it.bvid,

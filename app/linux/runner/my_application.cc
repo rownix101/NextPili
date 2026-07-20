@@ -5,6 +5,7 @@
 #include <gdk/gdkx.h>
 #endif
 
+#include "desktop_compositor_blur.h"
 #include "flutter/generated_plugin_registrant.h"
 
 struct _MyApplication {
@@ -16,7 +17,29 @@ G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 
 // Called when first Flutter frame received.
 static void first_frame_cb(MyApplication* self, FlView* view) {
-  gtk_widget_show(gtk_widget_get_toplevel(GTK_WIDGET(view)));
+  GtkWidget* top = gtk_widget_get_toplevel(GTK_WIDGET(view));
+  gtk_widget_show(top);
+  // Compositor real-time blur — not Flutter BackdropFilter.
+  // Wayland: ext-background-effect-v1 · X11: KWin blur atom.
+  if (GTK_IS_WINDOW(top)) {
+    nextpili_request_compositor_blur(GTK_WINDOW(top));
+  }
+}
+
+// Re-assert blur after map (X11 atom / Wayland surface ready).
+static void on_window_map(GtkWidget* widget, gpointer /*user_data*/) {
+  if (GTK_IS_WINDOW(widget)) {
+    nextpili_request_compositor_blur(GTK_WINDOW(widget));
+  }
+}
+
+// Wayland blur region is surface-local; refresh on resize.
+static void on_window_size_allocate(GtkWidget* widget,
+                                    GdkRectangle* /*allocation*/,
+                                    gpointer /*user_data*/) {
+  if (GTK_IS_WINDOW(widget)) {
+    nextpili_request_compositor_blur(GTK_WINDOW(widget));
+  }
 }
 
 // Implements GApplication::activate.
@@ -54,15 +77,30 @@ static void my_application_activate(GApplication* application) {
 
   gtk_window_set_default_size(window, 1280, 720);
 
+  // Desktop pierce: transparent window; blur is compositor-side (see
+  // desktop_compositor_blur.cc). Requires a compositing WM + RGBA visual.
+  gtk_widget_set_app_paintable(GTK_WIDGET(window), TRUE);
+  {
+    GdkScreen* screen = gtk_window_get_screen(window);
+    if (screen != nullptr && gdk_screen_is_composited(screen)) {
+      GdkVisual* visual = gdk_screen_get_rgba_visual(screen);
+      if (visual != nullptr) {
+        gtk_widget_set_visual(GTK_WIDGET(window), visual);
+      }
+    }
+  }
+  g_signal_connect(window, "map", G_CALLBACK(on_window_map), nullptr);
+  g_signal_connect(window, "size-allocate", G_CALLBACK(on_window_size_allocate),
+                   nullptr);
+
   g_autoptr(FlDartProject) project = fl_dart_project_new();
   fl_dart_project_set_dart_entrypoint_arguments(
       project, self->dart_entrypoint_arguments);
 
   FlView* view = fl_view_new(project);
   GdkRGBA background_color;
-  // Background defaults to black, override it here if necessary, e.g. #00000000
-  // for transparent.
-  gdk_rgba_parse(&background_color, "#000000");
+  // Transparent for desktop pierce (Liquid Glass chrome).
+  gdk_rgba_parse(&background_color, "#00000000");
   fl_view_set_background_color(view, &background_color);
   gtk_widget_show(GTK_WIDGET(view));
   gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(view));

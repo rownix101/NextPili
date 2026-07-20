@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../bridge/core_api.dart';
 import '../../core/icons/app_icons.dart';
+import '../../core/motion/app_motion.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/shapes.dart';
 import '../../core/theme/spacing.dart';
@@ -71,7 +72,8 @@ class _VideoDetailPageState extends ConsumerState<VideoDetailPage> {
       ),
       body: async.when(
         // design-system §8.7 — skeleton preferred over bare spinner.
-        loading: () => const _WatchSkeleton(),
+        // Hero destination must exist while loading so cover flight lands cleanly.
+        loading: () => _WatchSkeleton(videoId: widget.videoId),
         error: (e, _) => EmptyState.error(
           message: errorMessage(e, context.l10n),
           onRetry: () => ref.invalidate(videoDetailProvider(widget.videoId)),
@@ -261,9 +263,11 @@ class _PlayerBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final reduceMotion = appReduceMotion(context);
 
+    late final Widget surface;
     if (cid <= 0) {
-      return AspectRatio(
+      surface = AspectRatio(
         aspectRatio: 16 / 9,
         child: ClipRRect(
           borderRadius: AppShapes.borderMd,
@@ -275,25 +279,36 @@ class _PlayerBlock extends StatelessWidget {
           ),
         ),
       );
-    }
-
-    // Align letterboxes when height is capped by [_StickyPlayerColumn].
-    return ClipRRect(
-      borderRadius: AppShapes.borderMd,
-      child: ColoredBox(
-        color: colors.sunken,
-        child: AspectRatio(
-          aspectRatio: 16 / 9,
-          child: PlayerPane(
-            key: ValueKey('pane-$videoId-$cid'),
-            videoId: videoId,
-            cid: cid,
-            aid: i64(detail.aid),
-            bvid: detail.bvid,
-            title: detail.title,
-            immersive: false,
+    } else {
+      // Align letterboxes when height is capped by [_StickyPlayerColumn].
+      surface = ClipRRect(
+        borderRadius: AppShapes.borderMd,
+        child: ColoredBox(
+          color: colors.sunken,
+          child: AspectRatio(
+            aspectRatio: 16 / 9,
+            child: PlayerPane(
+              key: ValueKey('pane-$videoId-$cid'),
+              videoId: videoId,
+              cid: cid,
+              aid: i64(detail.aid),
+              bvid: detail.bvid,
+              title: detail.title,
+              immersive: false,
+            ),
           ),
         ),
+      );
+    }
+
+    if (reduceMotion || videoId.isEmpty) return surface;
+    return Hero(
+      tag: AppHeroTags.videoCover(videoId),
+      createRectTween: (begin, end) =>
+          MaterialRectArcTween(begin: begin, end: end),
+      child: Material(
+        type: MaterialType.transparency,
+        child: surface,
       ),
     );
   }
@@ -555,22 +570,36 @@ class _ExpandableDescState extends State<_ExpandableDesc> {
 
 /// First-paint skeleton matching dual-column watch layout.
 class _WatchSkeleton extends StatelessWidget {
-  const _WatchSkeleton();
+  const _WatchSkeleton({required this.videoId});
+
+  final String videoId;
 
   @override
   Widget build(BuildContext context) {
     final padH = AppSpacing.pagePaddingH(MediaQuery.sizeOf(context).width);
+    final reduceMotion = appReduceMotion(context);
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final wide = constraints.maxWidth >= 960;
-        final player = AspectRatio(
+        Widget player = AspectRatio(
           aspectRatio: 16 / 9,
           child: SkeletonBox(
             height: double.infinity,
             borderRadius: AppShapes.borderMd,
           ),
         );
+        if (!reduceMotion && videoId.isNotEmpty) {
+          player = Hero(
+            tag: AppHeroTags.videoCover(videoId),
+            createRectTween: (begin, end) =>
+                MaterialRectArcTween(begin: begin, end: end),
+            child: Material(
+              type: MaterialType.transparency,
+              child: player,
+            ),
+          );
+        }
         final leftMeta = <Widget>[
           const SkeletonBox(height: 40, width: double.infinity),
           const SizedBox(height: AppSpacing.md),

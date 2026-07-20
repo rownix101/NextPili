@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/l10n.dart';
 import '../icons/app_icons.dart';
+import '../motion/app_motion.dart';
 import '../theme/app_colors.dart';
 import '../theme/shapes.dart';
 import '../theme/spacing.dart';
@@ -9,6 +10,9 @@ import '../theme/text_themes.dart';
 import 'content_surface.dart';
 
 /// Opaque feed video card — design-system §8.2 (no GlassCard).
+///
+/// Pass [heroTag] (via [AppHeroTags.videoCover]) when opening `/video/:id`
+/// so the cover can container-transform into the watch page (motion §4.4).
 class VideoCard extends StatefulWidget {
   const VideoCard({
     super.key,
@@ -20,6 +24,7 @@ class VideoCard extends StatefulWidget {
     this.viewLabel = '',
     this.live = false,
     this.qualityBadge,
+    this.heroTag,
   });
 
   final String title;
@@ -29,6 +34,9 @@ class VideoCard extends StatefulWidget {
   final String viewLabel;
   final bool live;
   final String? qualityBadge;
+
+  /// Stable cover [Hero] tag; null disables morph (live / non-video targets).
+  final Object? heroTag;
   final VoidCallback onTap;
 
   @override
@@ -37,104 +45,134 @@ class VideoCard extends StatefulWidget {
 
 class _VideoCardState extends State<VideoCard> {
   bool _hover = false;
+  bool _pressed = false;
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final theme = Theme.of(context);
+    final reduceMotion = appReduceMotion(context);
+
+    final scale = reduceMotion
+        ? 1.0
+        : (_pressed
+            ? 0.98
+            : (_hover ? 1.02 : 1.0));
+
+    Widget cover = Stack(
+      fit: StackFit.expand,
+      children: [
+        _Cover(url: widget.coverUrl),
+        if (widget.live)
+          Positioned(
+            left: AppSpacing.sm,
+            top: AppSpacing.sm,
+            child: _Badge(
+              label: context.l10n.live,
+              color: colors.live,
+            ),
+          ),
+        if (widget.qualityBadge != null)
+          Positioned(
+            left: AppSpacing.sm,
+            bottom: AppSpacing.sm,
+            child: _Badge(
+              label: widget.qualityBadge!,
+              color: colors.fgPrimary.withValues(alpha: 0.72),
+            ),
+          ),
+        if (widget.durationLabel.isNotEmpty)
+          Positioned(
+            right: AppSpacing.sm,
+            bottom: AppSpacing.sm,
+            child: _Badge(
+              label: widget.durationLabel,
+              color: colors.fgPrimary.withValues(alpha: 0.72),
+            ),
+          ),
+        if (_hover)
+          ColoredBox(
+            color: colors.fgPrimary.withValues(alpha: 0.18),
+            child: Center(
+              child: Icon(
+                AppIcons.playCircle,
+                size: AppIcons.xl,
+                color: colors.onAccent,
+              ),
+            ),
+          ),
+      ],
+    );
+
+    if (widget.heroTag != null && !reduceMotion) {
+      cover = Hero(
+        tag: widget.heroTag!,
+        createRectTween: (begin, end) =>
+            MaterialRectArcTween(begin: begin, end: end),
+        child: Material(
+          type: MaterialType.transparency,
+          child: cover,
+        ),
+      );
+    }
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hover = true),
-      onExit: (_) => setState(() => _hover = false),
-      child: AnimatedScale(
-        scale: _hover ? 1.02 : 1.0,
-        duration: const Duration(milliseconds: 150),
-        curve: Curves.easeOutCubic,
-        child: ContentSurface(
-          onTap: widget.onTap,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                flex: 7,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    _Cover(url: widget.coverUrl),
-                    if (widget.live)
-                      Positioned(
-                        left: AppSpacing.sm,
-                        top: AppSpacing.sm,
-                        child: _Badge(
-                          label: context.l10n.live,
-                          color: colors.live,
-                        ),
-                      ),
-                    if (widget.qualityBadge != null)
-                      Positioned(
-                        left: AppSpacing.sm,
-                        bottom: AppSpacing.sm,
-                        child: _Badge(
-                          label: widget.qualityBadge!,
-                          color: Colors.black.withValues(alpha: 0.72),
-                        ),
-                      ),
-                    if (widget.durationLabel.isNotEmpty)
-                      Positioned(
-                        right: AppSpacing.sm,
-                        bottom: AppSpacing.sm,
-                        child: _Badge(
-                          label: widget.durationLabel,
-                          color: Colors.black.withValues(alpha: 0.72),
-                        ),
-                      ),
-                    if (_hover)
-                      ColoredBox(
-                        color: Colors.black.withValues(alpha: 0.18),
-                        child: Center(
-                          child: Icon(
-                            AppIcons.playCircle,
-                            size: AppIcons.xl,
-                            color: colors.onAccent,
-                          ),
-                        ),
-                      ),
-                  ],
+      onExit: (_) => setState(() {
+        _hover = false;
+        _pressed = false;
+      }),
+      child: Listener(
+        onPointerDown: (_) => setState(() => _pressed = true),
+        onPointerUp: (_) => setState(() => _pressed = false),
+        onPointerCancel: (_) => setState(() => _pressed = false),
+        child: AnimatedScale(
+          scale: scale,
+          duration: reduceMotion ? Duration.zero : AppDuration.short2,
+          curve: AppEasing.standard,
+          child: ContentSurface(
+            onTap: widget.onTap,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  flex: 7,
+                  child: cover,
                 ),
-              ),
-              Expanded(
-                flex: 4,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.sm + 2,
-                    AppSpacing.sm,
-                    AppSpacing.sm + 2,
-                    AppSpacing.sm,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleSmall,
-                      ),
-                      const Spacer(),
-                      Text(
-                        [
-                          if (widget.ownerName.isNotEmpty) widget.ownerName,
-                          if (widget.viewLabel.isNotEmpty) widget.viewLabel,
-                        ].join(' · '),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextThemes.meta(context),
-                      ),
-                    ],
+                Expanded(
+                  flex: 4,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.sm + 2,
+                      AppSpacing.sm,
+                      AppSpacing.sm + 2,
+                      AppSpacing.sm,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall,
+                        ),
+                        const Spacer(),
+                        Text(
+                          [
+                            if (widget.ownerName.isNotEmpty) widget.ownerName,
+                            if (widget.viewLabel.isNotEmpty) widget.viewLabel,
+                          ].join(' · '),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextThemes.meta(context),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -159,7 +197,7 @@ class _Badge extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: Colors.white,
+              color: AppColors.of(context).onAccent,
             ),
       ),
     );
