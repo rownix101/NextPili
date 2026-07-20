@@ -5,6 +5,7 @@
 
 import 'api/auth.dart';
 import 'api/feed.dart';
+import 'api/search.dart';
 import 'api/settings.dart';
 import 'api/simple.dart';
 import 'api/social.dart';
@@ -123,6 +124,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<ReplyDto> dco_decode_list_reply_dto(dynamic raw);
 
   @protected
+  List<SearchVideoItemDto> dco_decode_list_search_video_item_dto(dynamic raw);
+
+  @protected
   List<StreamDto> dco_decode_list_stream_dto(dynamic raw);
 
   @protected
@@ -195,6 +199,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ReplyListDto dco_decode_reply_list_dto(dynamic raw);
+
+  @protected
+  SearchSuggestDto dco_decode_search_suggest_dto(dynamic raw);
+
+  @protected
+  SearchVideoItemDto dco_decode_search_video_item_dto(dynamic raw);
+
+  @protected
+  SearchVideoPageDto dco_decode_search_video_page_dto(dynamic raw);
 
   @protected
   SettingsDto dco_decode_settings_dto(dynamic raw);
@@ -349,6 +362,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<ReplyDto> sse_decode_list_reply_dto(SseDeserializer deserializer);
 
   @protected
+  List<SearchVideoItemDto> sse_decode_list_search_video_item_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<StreamDto> sse_decode_list_stream_dto(SseDeserializer deserializer);
 
   @protected
@@ -437,6 +455,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   ReplyListDto sse_decode_reply_list_dto(SseDeserializer deserializer);
+
+  @protected
+  SearchSuggestDto sse_decode_search_suggest_dto(SseDeserializer deserializer);
+
+  @protected
+  SearchVideoItemDto sse_decode_search_video_item_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  SearchVideoPageDto sse_decode_search_video_page_dto(
+    SseDeserializer deserializer,
+  );
 
   @protected
   SettingsDto sse_decode_settings_dto(SseDeserializer deserializer);
@@ -622,6 +653,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_list_reply_dto(List<ReplyDto> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_search_video_item_dto(
+    List<SearchVideoItemDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_stream_dto(
     List<StreamDto> self,
     SseSerializer serializer,
@@ -740,6 +777,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_reply_list_dto(ReplyListDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_search_suggest_dto(
+    SearchSuggestDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_search_video_item_dto(
+    SearchVideoItemDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_search_video_page_dto(
+    SearchVideoPageDto self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_settings_dto(SettingsDto self, SseSerializer serializer);

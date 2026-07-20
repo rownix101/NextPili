@@ -11,8 +11,9 @@ pub use endpoints::{
     now_unix, CaptchaParams, DanmakuApi, FeedApi, HeartbeatParams, LoginApi, LoginSuccess, NavApi,
     NavInfo, PasswordKey, PasswordLoginOutcome, PasswordLoginRequest, PlayUrlParams, PopularFeed,
     QrPollStatus, QrStart, RecommendFeed, ReplyApi, SafeCenterCaptcha, SafeCenterInfo,
-    SafeCenterSmsSendRequest, SafeCenterSmsVerifyRequest, SmsLoginRequest, SmsSendRequest,
-    SmsSendResult, VideoApi, PLAYURL_FNVAL_DASH, REPLY_MODE_HOT, REPLY_MODE_TIME, REPLY_TYPE_VIDEO,
+    SafeCenterSmsSendRequest, SafeCenterSmsVerifyRequest, SearchApi, SearchSuggest, SearchVideoPage,
+    SmsLoginRequest, SmsSendRequest, SmsSendResult, VideoApi, PLAYURL_FNVAL_DASH, REPLY_MODE_HOT,
+    REPLY_MODE_TIME, REPLY_TYPE_VIDEO,
 };
 pub use error::{Error, Result};
 pub use middleware::{AuthMode, SignMode};

@@ -150,6 +150,7 @@ domain/
     video.rs
     feed.rs
     reply.rs
+    search.rs
     danmaku.rs
     quality.rs
 ```

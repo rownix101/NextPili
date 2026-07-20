@@ -100,6 +100,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navHome => 'Home';
 
   @override
+  String get navSearch => 'Search';
+
+  @override
   String get navSettings => 'Settings';
 
   @override
@@ -107,6 +110,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeTabPopular => 'Popular';
+
+  @override
+  String get searchTitle => 'Search';
+
+  @override
+  String get searchHint => 'Search videos';
+
+  @override
+  String get searchIdle => 'Type a keyword to search';
+
+  @override
+  String get searchEmpty => 'No videos found';
+
+  @override
+  String searchResultHint(String keyword) {
+    return 'Results for “$keyword”';
+  }
 
   @override
   String get settingsTitle => 'Settings';
@@ -475,6 +495,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authOpenExternalForgot => 'Open password recovery in browser';
+
+  @override
+  String get statLike => 'Like';
+
+  @override
+  String get statCoin => 'Coins';
+
+  @override
+  String get statFavorite => 'Favorites';
+
+  @override
+  String get statShare => 'Shares';
+
+  @override
+  String get statReply => 'Comments';
+
+  @override
+  String get statView => 'Views';
+
+  @override
+  String get statDanmaku => 'Danmaku';
+
+  @override
+  String get follow => 'Follow';
+
+  @override
+  String get actionComingSoon => 'Coming soon';
+
+  @override
+  String get videoRelated => 'Related';
+
+  @override
+  String get videoWatchTitle => 'Watch';
 
   @override
   String bootCoreFailed(String message) {

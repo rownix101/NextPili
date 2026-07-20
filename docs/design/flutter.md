@@ -166,8 +166,8 @@ feedProvider = AsyncNotifier
 | home | P2 | feed_recommend, feed_popular |
 | video | P2 | video_detail |
 | player | P3 | play_url, playback_start/stop, danmaku |
-| search | P5 | search_* |
-| user | P5 | history, fav... |
+| search | P5 | search_suggest, search_video |
+| user | P5 | history, toview, fav… |
 | settings | P1 起 | proxy, qn, slots |
 
 ---

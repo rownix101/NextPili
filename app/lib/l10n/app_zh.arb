@@ -38,10 +38,22 @@
   "playUrlFetching": "正在获取播放地址…",
 
   "navHome": "首页",
+  "navSearch": "搜索",
   "navSettings": "设置",
 
   "homeTabRecommend": "推荐",
   "homeTabPopular": "热门",
+
+  "searchTitle": "搜索",
+  "searchHint": "搜索视频",
+  "searchIdle": "输入关键词开始搜索",
+  "searchEmpty": "没有找到相关视频",
+  "searchResultHint": "「{keyword}」的结果",
+  "@searchResultHint": {
+    "placeholders": {
+      "keyword": { "type": "String" }
+    }
+  },
 
   "settingsTitle": "设置",
   "settingsAccountTitle": "账号与登录",
@@ -216,6 +228,17 @@
   "authOpenExternalRegister": "在浏览器打开 bilibili 注册页",
   "authOpenExternalForgot": "在浏览器打开找回密码页",
 
+  "statLike": "点赞",
+  "statCoin": "投币",
+  "statFavorite": "收藏",
+  "statShare": "分享",
+  "statReply": "评论",
+  "statView": "播放",
+  "statDanmaku": "弹幕",
+  "follow": "关注",
+  "actionComingSoon": "即将支持",
+  "videoRelated": "相关推荐",
+  "videoWatchTitle": "观看",
   "bootCoreFailed": "无法启动 Core：\n{message}",
   "@bootCoreFailed": {
     "placeholders": {

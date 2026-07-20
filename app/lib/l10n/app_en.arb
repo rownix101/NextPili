@@ -34,10 +34,22 @@
   "playUrlFetching": "Getting stream…",
 
   "navHome": "Home",
+  "navSearch": "Search",
   "navSettings": "Settings",
 
   "homeTabRecommend": "For you",
   "homeTabPopular": "Popular",
+
+  "searchTitle": "Search",
+  "searchHint": "Search videos",
+  "searchIdle": "Type a keyword to search",
+  "searchEmpty": "No videos found",
+  "searchResultHint": "Results for “{keyword}”",
+  "@searchResultHint": {
+    "placeholders": {
+      "keyword": { "type": "String" }
+    }
+  },
 
   "settingsTitle": "Settings",
   "settingsAccountTitle": "Account & sign-in",
@@ -163,5 +175,16 @@
   "authOpenExternalRegister": "Open bilibili registration in browser",
   "authOpenExternalForgot": "Open password recovery in browser",
 
+  "statLike": "Like",
+  "statCoin": "Coins",
+  "statFavorite": "Favorites",
+  "statShare": "Shares",
+  "statReply": "Comments",
+  "statView": "Views",
+  "statDanmaku": "Danmaku",
+  "follow": "Follow",
+  "actionComingSoon": "Coming soon",
+  "videoRelated": "Related",
+  "videoWatchTitle": "Watch",
   "bootCoreFailed": "Could not start Core:\n{message}"
 }

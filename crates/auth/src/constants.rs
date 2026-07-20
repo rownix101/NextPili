@@ -22,6 +22,8 @@ pub const API_BASE: &str = "https://api.bilibili.com";
 pub const APP_BASE: &str = "https://app.bilibili.com";
 pub const PASS_BASE: &str = "https://passport.bilibili.com";
 pub const WWW_BASE: &str = "https://www.bilibili.com";
+/// Search site host (hotword / suggest).
+pub const SEARCH_BASE: &str = "https://s.search.bilibili.com";
 
 /// Web browser-like user agent.
 pub const UA_WEB: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 NextPili/0.1";

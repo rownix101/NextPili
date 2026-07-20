@@ -2,6 +2,7 @@
 
 pub mod auth;
 pub mod feed;
+pub mod search;
 pub mod settings;
 pub mod simple;
 pub mod social;
@@ -17,6 +18,9 @@ pub use auth::{
 };
 pub use feed::{
     feed_popular, feed_recommend, FeedItemDto, PopularFeedDto, RecommendFeedDto,
+};
+pub use search::{
+    search_suggest, search_video, SearchSuggestDto, SearchVideoItemDto, SearchVideoPageDto,
 };
 pub use settings::{get_settings, update_settings, SettingsDto};
 pub use simple::{api_version, bootstrap, ping, ApiVersion, BootstrapConfig};

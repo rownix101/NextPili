@@ -118,6 +118,7 @@ DanmakuItem {
 ### 4.2 渲染（MVP）
 
 - Flutter `Stack` + Overlay，按 `progress_ms` 与播放器 position 同步。
+- 在屏运动用 **播放时钟**（仅 `playing == true` 时累计 elapsed），禁止纯墙钟驱动；暂停时冻结，恢复后连续。
 - 限流：同屏上限、密度设置；过高时丢弃低优先级（颜色/模式可配置）。
 - 后期：评估 canvas / GPU / 播放器层弹幕。
 
@@ -147,7 +148,7 @@ class MediaKitPlayerAdapter implements PlayerAdapter { ... }
 
 - DASH：视频轨 + 音频轨 URL 组合（按插件 API 传双轨或 master）。
 - 自定义 header：打开时传入 `MediaSource.headers`。
-- 硬解：桌面默认尝试，失败回落软解。
+- 硬解：非 Linux 默认开启；**Linux 默认关闭**（Flutter 3.38+ EGL 与 media_kit 纹理共享易导致「有声无画 / 纯色画面」）。依赖建议：`media_kit_video` ≥ 2.0.1。
 - 生命周期：页面 dispose 必须 `dispose` 播放器并 `core.playback_stop()`。
 
 ### 5.2 清晰度切换

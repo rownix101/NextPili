@@ -5,6 +5,7 @@ import 'package:path/path.dart' as p;
 import '../l10n/app_localizations.dart';
 import 'frb/api/auth.dart' as frb_auth;
 import 'frb/api/feed.dart' as frb_feed;
+import 'frb/api/search.dart' as frb_search;
 import 'frb/api/settings.dart' as frb_settings;
 import 'frb/api/simple.dart' as frb;
 import 'frb/api/social.dart' as frb_social;
@@ -16,6 +17,8 @@ import 'frb/frb_generated.dart';
 export 'frb/api/simple.dart' show ApiVersion, BootstrapConfig;
 export 'frb/api/feed.dart'
     show FeedItemDto, PopularFeedDto, RecommendFeedDto;
+export 'frb/api/search.dart'
+    show SearchSuggestDto, SearchVideoItemDto, SearchVideoPageDto;
 export 'frb/api/settings.dart' show SettingsDto;
 export 'frb/api/social.dart'
     show DanmakuItemDto, DanmakuSegmentDto, ReplyDto, ReplyListDto;
@@ -145,6 +148,15 @@ class CoreApi {
 
   Future<frb_feed.PopularFeedDto> feedPopular({int pn = 1, int ps = 20}) =>
       frb_feed.feedPopular(pn: pn, ps: ps);
+
+  Future<frb_search.SearchSuggestDto> searchSuggest({required String term}) =>
+      frb_search.searchSuggest(term: term);
+
+  Future<frb_search.SearchVideoPageDto> searchVideo({
+    required String keyword,
+    int page = 1,
+  }) =>
+      frb_search.searchVideo(keyword: keyword, page: page);
 
   Future<frb_video.VideoDetailDto> videoDetail(String id) =>
       frb_video.videoDetail(id: id);

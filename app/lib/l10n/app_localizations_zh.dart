@@ -99,6 +99,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get navHome => '首页';
 
   @override
+  String get navSearch => '搜索';
+
+  @override
   String get navSettings => '设置';
 
   @override
@@ -106,6 +109,23 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get homeTabPopular => '热门';
+
+  @override
+  String get searchTitle => '搜索';
+
+  @override
+  String get searchHint => '搜索视频';
+
+  @override
+  String get searchIdle => '输入关键词开始搜索';
+
+  @override
+  String get searchEmpty => '没有找到相关视频';
+
+  @override
+  String searchResultHint(String keyword) {
+    return '「$keyword」的结果';
+  }
 
   @override
   String get settingsTitle => '设置';
@@ -464,6 +484,39 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get authOpenExternalForgot => '在浏览器打开找回密码页';
+
+  @override
+  String get statLike => '点赞';
+
+  @override
+  String get statCoin => '投币';
+
+  @override
+  String get statFavorite => '收藏';
+
+  @override
+  String get statShare => '分享';
+
+  @override
+  String get statReply => '评论';
+
+  @override
+  String get statView => '播放';
+
+  @override
+  String get statDanmaku => '弹幕';
+
+  @override
+  String get follow => '关注';
+
+  @override
+  String get actionComingSoon => '即将支持';
+
+  @override
+  String get videoRelated => '相关推荐';
+
+  @override
+  String get videoWatchTitle => '观看';
 
   @override
   String bootCoreFailed(String message) {

@@ -92,9 +92,15 @@ shutdown()
 | `reply_list` | 分页评论 |
 | `danmaku_segments` | 分段弹幕 → 结构化条目列表 |
 
-### P5+
+### P5 个人库（进行中）
 
-搜索、历史、稍后再看、收藏、动态、直播、番剧、写操作……按 `docs/api/endpoints` 逐项加，**先写用例名与 DTO 再实现 HTTP**。
+| 用例 | 行为摘要 |
+|------|----------|
+| `search_suggest` | 搜索建议（recommend 槽） |
+| `search_video` | 分类搜索 `type=video` + WBI |
+| `history_*` / `toview_*` / `fav_*` | ⬜ 待实现 |
+
+其余：动态、直播、番剧、写操作 → P6。按 `docs/api/endpoints` 逐项加，**先写用例名与 DTO 再实现 HTTP**。
 
 ---
 

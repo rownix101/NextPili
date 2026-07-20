@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/auth_page.dart';
 import '../../features/home/home_page.dart';
 import '../../features/player/player_page.dart';
+import '../../features/search/search_page.dart';
 import '../../features/settings/settings_page.dart';
 import '../../features/shell/app_shell.dart';
 import '../../features/video/video_detail_page.dart';
@@ -19,6 +20,13 @@ GoRouter createAppRouter() {
             name: 'home',
             pageBuilder: (context, state) => const NoTransitionPage(
               child: HomePage(),
+            ),
+          ),
+          GoRoute(
+            path: '/search',
+            name: 'search',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: SearchPage(),
             ),
           ),
           GoRoute(
@@ -40,8 +48,9 @@ GoRouter createAppRouter() {
             name: 'video',
             pageBuilder: (context, state) {
               final id = Uri.decodeComponent(state.pathParameters['id'] ?? '');
+              final cid = int.tryParse(state.uri.queryParameters['cid'] ?? '') ?? 0;
               return NoTransitionPage(
-                child: VideoDetailPage(videoId: id),
+                child: VideoDetailPage(videoId: id, initialCid: cid),
               );
             },
           ),

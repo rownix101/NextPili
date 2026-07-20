@@ -278,6 +278,12 @@ abstract class AppLocalizations {
   /// **'首页'**
   String get navHome;
 
+  /// No description provided for @navSearch.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索'**
+  String get navSearch;
+
   /// No description provided for @navSettings.
   ///
   /// In zh, this message translates to:
@@ -295,6 +301,36 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'热门'**
   String get homeTabPopular;
+
+  /// No description provided for @searchTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索'**
+  String get searchTitle;
+
+  /// No description provided for @searchHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索视频'**
+  String get searchHint;
+
+  /// No description provided for @searchIdle.
+  ///
+  /// In zh, this message translates to:
+  /// **'输入关键词开始搜索'**
+  String get searchIdle;
+
+  /// No description provided for @searchEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'没有找到相关视频'**
+  String get searchEmpty;
+
+  /// No description provided for @searchResultHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'「{keyword}」的结果'**
+  String searchResultHint(String keyword);
 
   /// No description provided for @settingsTitle.
   ///
@@ -973,6 +1009,72 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'在浏览器打开找回密码页'**
   String get authOpenExternalForgot;
+
+  /// No description provided for @statLike.
+  ///
+  /// In zh, this message translates to:
+  /// **'点赞'**
+  String get statLike;
+
+  /// No description provided for @statCoin.
+  ///
+  /// In zh, this message translates to:
+  /// **'投币'**
+  String get statCoin;
+
+  /// No description provided for @statFavorite.
+  ///
+  /// In zh, this message translates to:
+  /// **'收藏'**
+  String get statFavorite;
+
+  /// No description provided for @statShare.
+  ///
+  /// In zh, this message translates to:
+  /// **'分享'**
+  String get statShare;
+
+  /// No description provided for @statReply.
+  ///
+  /// In zh, this message translates to:
+  /// **'评论'**
+  String get statReply;
+
+  /// No description provided for @statView.
+  ///
+  /// In zh, this message translates to:
+  /// **'播放'**
+  String get statView;
+
+  /// No description provided for @statDanmaku.
+  ///
+  /// In zh, this message translates to:
+  /// **'弹幕'**
+  String get statDanmaku;
+
+  /// No description provided for @follow.
+  ///
+  /// In zh, this message translates to:
+  /// **'关注'**
+  String get follow;
+
+  /// No description provided for @actionComingSoon.
+  ///
+  /// In zh, this message translates to:
+  /// **'即将支持'**
+  String get actionComingSoon;
+
+  /// No description provided for @videoRelated.
+  ///
+  /// In zh, this message translates to:
+  /// **'相关推荐'**
+  String get videoRelated;
+
+  /// No description provided for @videoWatchTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'观看'**
+  String get videoWatchTitle;
 
   /// No description provided for @bootCoreFailed.
   ///

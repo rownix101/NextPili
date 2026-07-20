@@ -3,7 +3,7 @@
 按垂直切片交付可演示能力：鉴权 → 浏览 → 播放 → 互动 → 个人库 → 扩展业务。阶段顺序与 [architecture §12](./architecture.md#12-mvp-落地顺序) 一致；用例名以 [design/core.md](./design/core.md) 为准。
 
 > 状态：草案 v0.1  
-> 当前进度：**P4 进行中** · 下一目标 **P5**  
+> 当前进度：**P5 进行中**（搜索已通） · 下一目标 历史 / 稍后再看 / 收藏  
 > 相关：[Architecture](./architecture.md) · [API](./api/README.md) · [Design](./design/README.md) · [UX](./ux/README.md)
 
 ---
@@ -16,8 +16,8 @@
 | **P1** | 鉴权 | ✅ 完成 | 短信/扫码登录、Cookie/WBI/AppSign、会话落盘 |
 | **P2** | 浏览 | ✅ 完成 | 推荐/热门 feed + 稿件详情页 |
 | **P3** | 播放 | ✅ 完成 | playurl → media_kit + 清晰度 + 心跳 + 设置 qn/代理 |
-| **P4** | 互动只读 | 🔶 进行中 | 评论列表 + 弹幕展示（REST） |
-| **P5** | 个人库 | ⬜ 计划 | 搜索、历史、稍后再看、收藏只读 |
+| **P4** | 互动只读 | ✅ 完成 | 评论列表 + 弹幕展示（REST） |
+| **P5** | 个人库 | 🔶 进行中 | 搜索 ✅ · 历史/稍后再看/收藏 ⬜ |
 | **P6** | 扩展 | ⬜ 计划 | 动态、直播、番剧、多账号槽、写操作 |
 
 **每阶段结束标准（通用）**
@@ -109,7 +109,7 @@
 
 ---
 
-### P4 · 互动只读 🔶
+### P4 · 互动只读 ✅
 
 观看路径补全评论与弹幕（默认 REST；gRPC 随后）。
 
@@ -118,7 +118,7 @@
 | 评论分页 | `reply_list` | 详情 `ReplySection` | ✅ |
 | 弹幕分段 → 时间轴条目 | `danmaku_segments` + `media` 规范化 | 播放器 `DanmakuOverlay` | ✅ |
 | 弹幕性能基线 | 段内 cap 4000 · UI 同屏 48 | 开关按钮 | ✅ MVP |
-| 楼中楼 / 发评论 / gRPC | — | — | ⬜ 后置 |
+| 楼中楼 / 发评论 / gRPC | — | — | ⬜ 后置（P4.1 / P6） |
 
 **验收**
 
@@ -131,16 +131,16 @@
 
 ---
 
-### P5 · 个人库 ⬜
+### P5 · 个人库 🔶
 
 可找片、回看、管理稍后再看与收藏（只读为主）。
 
-| 交付 | 用例方向 | Flutter |
-|------|----------|---------|
-| 搜索（suggest + type=video，预留 Gaia） | `search_*` | feature `search` |
-| 观看历史 | `history_*` | feature `user` |
-| 稍后再看 | `toview_*` | feature `user` |
-| 收藏夹列表与内容（只读） | `fav_*` | feature `user` |
+| 交付 | 用例方向 | Flutter | 状态 |
+|------|----------|---------|------|
+| 搜索（suggest + type=video，Gaia 后置） | `search_suggest` · `search_video` | feature `search` | ✅ |
+| 观看历史 | `history_*` | feature `user` | ⬜ |
+| 稍后再看 | `toview_*` | feature `user` | ⬜ |
+| 收藏夹列表与内容（只读） | `fav_*` | feature `user` | ⬜ |
 
 **验收**
 

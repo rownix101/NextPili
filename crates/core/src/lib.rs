@@ -17,13 +17,14 @@ pub use api::{
     get_settings, list_accounts, login_captcha, login_password, login_password_risk_captcha,
     login_password_risk_send_sms, login_password_risk_verify, login_qr_poll, login_qr_start,
     login_sms, login_sms_send, logout, new_login_session_id, ping, play_url, playback_start,
-    playback_stop, reply_list, set_account_slot, update_settings, video_detail, AccountPublicDto,
-    ApiVersion, BootstrapConfig, CaptchaDto, DanmakuItemDto, DanmakuSegmentDto, FeedItemDto,
-    HeaderDto, MediaFormatDto, MediaSourceDto, PasswordLoginDto, PasswordLoginResultDto,
-    PasswordLoginResultKind, PasswordRiskDto, PasswordRiskSendSmsDto, PasswordRiskSendSmsResultDto,
-    PasswordRiskVerifyDto, PopularFeedDto, QrPollDto, QrStartDto, QrStatusKind, RecommendFeedDto,
-    ReplyDto, ReplyListDto, SettingsDto, SlotDto, SmsLoginDto, SmsSendDto, SmsSendDtoResult,
-    StreamDto, SubtitleTrackDto, VideoDetailDto, VideoPageDto, VideoStatDto,
+    playback_stop, reply_list, search_suggest, search_video, set_account_slot, update_settings,
+    video_detail, AccountPublicDto, ApiVersion, BootstrapConfig, CaptchaDto, DanmakuItemDto,
+    DanmakuSegmentDto, FeedItemDto, HeaderDto, MediaFormatDto, MediaSourceDto, PasswordLoginDto,
+    PasswordLoginResultDto, PasswordLoginResultKind, PasswordRiskDto, PasswordRiskSendSmsDto,
+    PasswordRiskSendSmsResultDto, PasswordRiskVerifyDto, PopularFeedDto, QrPollDto, QrStartDto,
+    QrStatusKind, RecommendFeedDto, ReplyDto, ReplyListDto, SearchSuggestDto, SearchVideoItemDto,
+    SearchVideoPageDto, SettingsDto, SlotDto, SmsLoginDto, SmsSendDto, SmsSendDtoResult, StreamDto,
+    SubtitleTrackDto, VideoDetailDto, VideoPageDto, VideoStatDto,
 };
 pub use app::CoreApp;
 pub use error::{AppError, ErrorKind};
@@ -33,6 +34,6 @@ pub const CORE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// FFI API compatibility version (major bumps on breaking changes).
 pub const API_MAJOR: u32 = 0;
-/// minor 6: password · 7: social · 8: password risk (safe-center)
-pub const API_MINOR: u32 = 8;
+/// minor 6: password · 7: social · 8: password risk · 9: search
+pub const API_MINOR: u32 = 9;
 pub const API_PATCH: u32 = 0;

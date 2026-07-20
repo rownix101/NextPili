@@ -15,19 +15,40 @@ const int kDanmakuMaxOnScreen = 48;
 /// Display duration for a scrolling item.
 const Duration kDanmakuTtl = Duration(milliseconds: 7500);
 
+/// Advances on-screen elapsed only while playback is running.
+///
+/// Pure helper so pause freeze behavior can be unit-tested without media_kit.
+Duration advanceDanmakuElapsed(
+  Duration current,
+  Duration delta, {
+  required bool playing,
+}) {
+  if (!playing || delta <= Duration.zero) return current;
+  return current + delta;
+}
+
 /// Lightweight overlay: loads segments by position, paints scrolling / top / bottom.
+///
+/// Motion is driven by **playback time**, not wall clock: pause freezes on-screen
+/// items; resume continues from the same progress.
 class DanmakuOverlay extends StatefulWidget {
   const DanmakuOverlay({
     super.key,
     required this.aid,
     required this.cid,
     required this.position,
+    required this.playing,
+    this.initialPlaying = true,
     this.enabled = true,
   });
 
   final int aid;
   final int cid;
   final Stream<Duration> position;
+  /// When false, active danmaku freeze (no scroll / fade advance).
+  final Stream<bool> playing;
+  /// Seed before the first [playing] event (streams may not re-emit current).
+  final bool initialPlaying;
   final bool enabled;
 
   @override
@@ -42,19 +63,26 @@ class _DanmakuOverlayState extends State<DanmakuOverlay>
   final Set<int> _spawnedIds = {};
   final List<_ActiveDanmaku> _active = [];
 
-  StreamSubscription<Duration>? _sub;
+  StreamSubscription<Duration>? _posSub;
+  StreamSubscription<bool>? _playingSub;
   late final AnimationController _tick;
   int _lastSeg = 0;
+  late bool _playing;
+  DateTime? _lastTickAt;
 
   @override
   void initState() {
     super.initState();
+    _playing = widget.initialPlaying;
     _tick = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 16),
     )..addListener(_onTick);
-    _tick.repeat();
-    _sub = widget.position.listen(_onPosition);
+    if (_playing) {
+      _tick.repeat();
+    }
+    _posSub = widget.position.listen(_onPosition);
+    _playingSub = widget.playing.listen(_onPlaying);
     _ensureSegment(1);
   }
 
@@ -68,19 +96,37 @@ class _DanmakuOverlayState extends State<DanmakuOverlay>
       _spawnedIds.clear();
       _active.clear();
       _lastSeg = 0;
+      _lastTickAt = null;
       _ensureSegment(1);
     }
     if (oldWidget.position != widget.position) {
-      _sub?.cancel();
-      _sub = widget.position.listen(_onPosition);
+      _posSub?.cancel();
+      _posSub = widget.position.listen(_onPosition);
+    }
+    if (oldWidget.playing != widget.playing) {
+      _playingSub?.cancel();
+      _playingSub = widget.playing.listen(_onPlaying);
     }
   }
 
   @override
   void dispose() {
-    _sub?.cancel();
+    _posSub?.cancel();
+    _playingSub?.cancel();
     _tick.dispose();
     super.dispose();
+  }
+
+  void _onPlaying(bool playing) {
+    if (playing == _playing) return;
+    _playing = playing;
+    // Drop frame delta so resume does not swallow pause duration in one step.
+    _lastTickAt = null;
+    if (!playing) {
+      _tick.stop();
+    } else if (!_tick.isAnimating) {
+      _tick.repeat();
+    }
   }
 
   void _onPosition(Duration d) {
@@ -91,14 +137,21 @@ class _DanmakuOverlayState extends State<DanmakuOverlay>
       // Prefetch next
       _ensureSegment(seg + 1);
     }
-    if (!widget.enabled) return;
+    if (!widget.enabled || !_playing) return;
     _spawnForPosition(d);
   }
 
   void _onTick() {
-    if (!mounted || _active.isEmpty) return;
+    if (!mounted || !_playing || _active.isEmpty) return;
     final now = DateTime.now();
-    _active.removeWhere((a) => now.difference(a.born) > kDanmakuTtl);
+    final last = _lastTickAt ?? now;
+    final delta = now.difference(last);
+    _lastTickAt = now;
+    if (delta <= Duration.zero) return;
+    for (final a in _active) {
+      a.elapsed = advanceDanmakuElapsed(a.elapsed, delta, playing: _playing);
+    }
+    _active.removeWhere((a) => a.elapsed >= kDanmakuTtl);
     setState(() {});
   }
 
@@ -148,7 +201,6 @@ class _DanmakuOverlayState extends State<DanmakuOverlay>
       _active.add(
         _ActiveDanmaku(
           item: item,
-          born: DateTime.now(),
           lane: _pickLane(item.mode),
         ),
       );
@@ -173,7 +225,6 @@ class _DanmakuOverlayState extends State<DanmakuOverlay>
         final h = constraints.maxHeight;
         if (w <= 0 || h <= 0) return const SizedBox.shrink();
 
-        final now = DateTime.now();
         return IgnorePointer(
           child: Stack(
             clipBehavior: Clip.hardEdge,
@@ -183,7 +234,6 @@ class _DanmakuOverlayState extends State<DanmakuOverlay>
                   active: a,
                   width: w,
                   height: h,
-                  now: now,
                   defaultColor: colors.danmakuDefault,
                 ),
             ],
@@ -197,12 +247,12 @@ class _DanmakuOverlayState extends State<DanmakuOverlay>
 class _ActiveDanmaku {
   _ActiveDanmaku({
     required this.item,
-    required this.born,
     required this.lane,
   });
 
   final DanmakuItemDto item;
-  final DateTime born;
+  /// Time advanced only while playback is running.
+  Duration elapsed = Duration.zero;
   /// >=0 scroll lane; -1 top; -2 bottom.
   final int lane;
 }
@@ -212,20 +262,18 @@ class _DanmakuLabel extends StatelessWidget {
     required this.active,
     required this.width,
     required this.height,
-    required this.now,
     required this.defaultColor,
   });
 
   final _ActiveDanmaku active;
   final double width;
   final double height;
-  final DateTime now;
   final Color defaultColor;
 
   @override
   Widget build(BuildContext context) {
     final t =
-        now.difference(active.born).inMilliseconds / kDanmakuTtl.inMilliseconds;
+        active.elapsed.inMilliseconds / kDanmakuTtl.inMilliseconds;
     final progress = t.clamp(0.0, 1.0);
     final color = _colorOf(active.item.color, defaultColor);
     final fontSize = (active.item.fontsize > 0 ? active.item.fontsize : 25)

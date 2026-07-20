@@ -67,7 +67,7 @@ feed:    feed_recommend, feed_popular
 video:   video_detail, play_url, video_related
 social:  reply_list, danmaku_view, ...
 user:    history, watch_later, favorites_...
-search:  search_type, search_suggest
+search:  search_video, search_suggest
 ```
 
 P0 仅需 `sys` + 占位；P1 起按 MVP 表增加。
