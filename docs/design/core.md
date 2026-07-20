@@ -103,7 +103,7 @@ shutdown()
 | `fav_folders` | 当前用户创建的收藏夹列表 |
 | `fav_resources` | 收藏夹内容分页（只读） |
 
-### P6 写操作（部分）
+### P6 写操作（部分）+ 动态只读
 
 | 用例 | 行为摘要 |
 |------|----------|
@@ -111,9 +111,12 @@ shutdown()
 | `video_like` | 点赞 / 取消 |
 | `video_coin` | 投币（1–2）+ 可选同时点赞 |
 | `video_favorite` | 默认收藏夹收藏 / 取消全部 |
+| `video_favorite_deal` | 指定收藏夹批量加入 / 移出（长按选夹） |
+| `fav_folders(rid)` | 可选 `rid=aid` 填充 `in_folder` |
 | `relation_follow` | 关注 / 取关 UP |
+| `dynamics_feed` | 关注动态时间线（offset 游标 · main 槽 · Cookie） |
 
-其余：动态、直播、番剧、楼中楼发评、发弹幕 → 继续按 `docs/api/endpoints` 逐项加，**先写用例名与 DTO 再实现 HTTP**。
+其余：直播、番剧、楼中楼发评、发弹幕 → 继续按 `docs/api/endpoints` 逐项加，**先写用例名与 DTO 再实现 HTTP**。
 
 ---
 

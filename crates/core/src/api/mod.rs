@@ -1,6 +1,7 @@
 //! Public FFI API surface (hand-written; FRB generates bindings from these).
 
 pub mod auth;
+pub mod dynamics;
 pub mod engagement;
 pub mod feed;
 pub mod search;
@@ -18,8 +19,10 @@ pub use auth::{
     PasswordRiskSendSmsDto, PasswordRiskSendSmsResultDto, PasswordRiskVerifyDto, QrPollDto,
     QrStartDto, QrStatusKind, SlotDto, SmsLoginDto, SmsSendDto, SmsSendDtoResult,
 };
+pub use dynamics::{dynamics_feed, DynamicItemDto, DynamicPageDto};
 pub use engagement::{
-    relation_follow, video_coin, video_favorite, video_like, video_relation, ArchiveRelationDto,
+    relation_follow, video_coin, video_favorite, video_favorite_deal, video_like, video_relation,
+    ArchiveRelationDto,
 };
 pub use feed::{
     feed_popular, feed_recommend, FeedItemDto, PopularFeedDto, RecommendFeedDto,

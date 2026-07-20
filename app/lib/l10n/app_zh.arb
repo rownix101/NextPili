@@ -8,6 +8,7 @@
   "@retry": { "description": "通用重试按钮" },
   "cancel": "取消",
   "confirm": "确认",
+  "done": "完成",
   "back": "返回",
   "play": "播放",
   "pause": "暂停",
@@ -39,8 +40,13 @@
 
   "navHome": "首页",
   "navSearch": "搜索",
+  "navDynamics": "动态",
   "navLibrary": "我的",
   "navSettings": "设置",
+
+  "dynamicsTitle": "动态",
+  "dynamicsEmpty": "暂无关注动态",
+  "dynamicsNeedLogin": "登录后查看关注动态",
 
   "libraryTabHistory": "历史",
   "libraryTabToview": "稍后再看",
@@ -257,6 +263,17 @@
   "coinAlreadyMax": "已投满 2 枚硬币",
   "favoriteAdded": "已收藏",
   "favoriteRemoved": "已取消收藏",
+  "undo": "撤销",
+  "favFolderPickerTitle": "选择收藏夹",
+  "favFolderPickerHint": "勾选要加入的收藏夹；取消勾选将移出",
+  "favFolderPickerEmpty": "暂无收藏夹",
+  "favFolderMediaCount": "{count} 个内容",
+  "@favFolderMediaCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "statFavoriteLongPress": "长按选择收藏夹",
   "linkCopied": "链接已复制",
   "videoRelated": "相关推荐",
   "videoWatchTitle": "观看",

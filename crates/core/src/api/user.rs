@@ -63,6 +63,8 @@ pub struct FavFolderDto {
     pub media_count: i32,
     pub cover: String,
     pub attr: i32,
+    /// True when listed with a resource `rid` and that resource is in this folder.
+    pub in_folder: bool,
 }
 
 /// Created folders list.
@@ -185,7 +187,9 @@ pub async fn toview_list(pn: i32, ps: u32) -> Result<ToViewPageDto, AppError> {
 }
 
 /// Favorite folders created by the signed-in user.
-pub async fn fav_folders() -> Result<FavFolderListDto, AppError> {
+///
+/// Pass `rid` (aid) > 0 to mark each folder's `in_folder` for that archive.
+pub async fn fav_folders(rid: i64) -> Result<FavFolderListDto, AppError> {
     let app = CoreApp::global()?;
     let account = require_main(&app)?;
     let mid = account.mid.get();
@@ -197,8 +201,10 @@ pub async fn fav_folders() -> Result<FavFolderListDto, AppError> {
     }
     let buvid = app.store.buvid3();
     let http = app.http();
+    let rid_opt = if rid > 0 { Some(rid) } else { None };
 
-    let list = UserApi::fav_folders(&http, &account, Some(buvid.as_str()), mid).await?;
+    let list =
+        UserApi::fav_folders(&http, &account, Some(buvid.as_str()), mid, rid_opt).await?;
 
     Ok(FavFolderListDto {
         folders: list
@@ -210,6 +216,7 @@ pub async fn fav_folders() -> Result<FavFolderListDto, AppError> {
                 media_count: f.media_count,
                 cover: f.cover,
                 attr: f.attr,
+                in_folder: f.in_folder,
             })
             .collect(),
         count: list.count,

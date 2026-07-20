@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/auth_page.dart';
+import '../../features/dynamics/dynamics_page.dart';
 import '../../features/home/home_page.dart';
 import '../../features/player/player_page.dart';
 import '../../features/search/search_page.dart';
@@ -28,6 +29,13 @@ GoRouter createAppRouter() {
             name: 'search',
             pageBuilder: (context, state) => const NoTransitionPage(
               child: SearchPage(),
+            ),
+          ),
+          GoRoute(
+            path: '/dynamics',
+            name: 'dynamics',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: DynamicsPage(),
             ),
           ),
           GoRoute(

@@ -10,6 +10,7 @@ abstract final class AppIcons {
   static const IconData search = LucideIcons.search;
   static const IconData user = LucideIcons.user;
   static const IconData users = LucideIcons.users;
+  static const IconData dynamics = LucideIcons.radio;
 
   // Media
   static const IconData play = LucideIcons.play;

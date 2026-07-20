@@ -1,6 +1,7 @@
 //! Endpoint modules (login, video, feed, …).
 
 pub mod danmaku;
+pub mod dynamics;
 pub mod engagement;
 pub mod feed;
 pub mod login;
@@ -11,6 +12,7 @@ pub mod user;
 pub mod video;
 
 pub use danmaku::DanmakuApi;
+pub use dynamics::DynamicsApi;
 pub use engagement::EngagementApi;
 pub use feed::{FeedApi, PopularFeed, RecommendFeed};
 pub use login::{

@@ -61,6 +61,9 @@ VideoPage
 FeedItem
   aid, bvid, title, cover, owner_name, duration_ms, goto
 
+DynamicItem / DynamicPage
+  关注动态只读（polymer feed · offset 游标）
+
 HistoryItem / ToViewItem / FavFolder / FavResourceItem
   个人库只读模型（history cursor · 稍后再看 · 收藏夹）
 

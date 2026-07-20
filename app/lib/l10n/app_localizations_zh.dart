@@ -21,6 +21,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get confirm => '确认';
 
   @override
+  String get done => '完成';
+
+  @override
   String get back => '返回';
 
   @override
@@ -102,10 +105,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get navSearch => '搜索';
 
   @override
+  String get navDynamics => '动态';
+
+  @override
   String get navLibrary => '我的';
 
   @override
   String get navSettings => '设置';
+
+  @override
+  String get dynamicsTitle => '动态';
+
+  @override
+  String get dynamicsEmpty => '暂无关注动态';
+
+  @override
+  String get dynamicsNeedLogin => '登录后查看关注动态';
 
   @override
   String get libraryTabHistory => '历史';
@@ -568,6 +583,26 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get favoriteRemoved => '已取消收藏';
+
+  @override
+  String get undo => '撤销';
+
+  @override
+  String get favFolderPickerTitle => '选择收藏夹';
+
+  @override
+  String get favFolderPickerHint => '勾选要加入的收藏夹；取消勾选将移出';
+
+  @override
+  String get favFolderPickerEmpty => '暂无收藏夹';
+
+  @override
+  String favFolderMediaCount(int count) {
+    return '$count 个内容';
+  }
+
+  @override
+  String get statFavoriteLongPress => '长按选择收藏夹';
 
   @override
   String get linkCopied => '链接已复制';

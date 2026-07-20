@@ -8,6 +8,7 @@ export 'package:liquid_glass_widgets/liquid_glass_widgets.dart'
         GlassCard,
         GlassContainer,
         GlassDialog,
+        GlassDialogAction,
         GlassGroupedSection,
         GlassIconButton,
         GlassListTile,

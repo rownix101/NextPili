@@ -4,6 +4,7 @@ import 'package:path/path.dart' as p;
 
 import '../l10n/app_localizations.dart';
 import 'frb/api/auth.dart' as frb_auth;
+import 'frb/api/dynamics.dart' as frb_dynamics;
 import 'frb/api/engagement.dart' as frb_engagement;
 import 'frb/api/feed.dart' as frb_feed;
 import 'frb/api/search.dart' as frb_search;
@@ -17,6 +18,7 @@ import 'frb/error.dart';
 import 'frb/frb_generated.dart';
 
 export 'frb/api/simple.dart' show ApiVersion, BootstrapConfig;
+export 'frb/api/dynamics.dart' show DynamicItemDto, DynamicPageDto;
 export 'frb/api/feed.dart'
     show FeedItemDto, PopularFeedDto, RecommendFeedDto;
 export 'frb/api/search.dart'
@@ -162,6 +164,19 @@ class CoreApi {
   Future<frb_feed.PopularFeedDto> feedPopular({int pn = 1, int ps = 20}) =>
       frb_feed.feedPopular(pn: pn, ps: ps);
 
+  /// Follow dynamics. First page: `offset = ''`.
+  /// `typeFilter`: `all` / `video` / `pgc` / `article`.
+  Future<frb_dynamics.DynamicPageDto> dynamicsFeed({
+    String offset = '',
+    String typeFilter = 'all',
+    int page = 1,
+  }) =>
+      frb_dynamics.dynamicsFeed(
+        offset: offset,
+        typeFilter: typeFilter,
+        page: page,
+      );
+
   Future<frb_search.SearchSuggestDto> searchSuggest({required String term}) =>
       frb_search.searchSuggest(term: term);
 
@@ -188,7 +203,9 @@ class CoreApi {
   Future<frb_user.ToViewPageDto> toviewList({int pn = 1, int ps = 20}) =>
       frb_user.toviewList(pn: pn, ps: ps);
 
-  Future<frb_user.FavFolderListDto> favFolders() => frb_user.favFolders();
+  /// Pass [rid] (aid) > 0 to fill each folder's `inFolder` for that archive.
+  Future<frb_user.FavFolderListDto> favFolders({int rid = 0}) =>
+      frb_user.favFolders(rid: PlatformInt64Util.from(rid));
 
   Future<frb_user.FavResourcePageDto> favResources({
     required int mediaId,
@@ -299,6 +316,20 @@ class CoreApi {
         aid: PlatformInt64Util.from(aid),
         bvid: bvid,
         favorite: favorite,
+      );
+
+  /// Add / remove [aid] from specific favorite folders.
+  Future<frb_engagement.ArchiveRelationDto> videoFavoriteDeal({
+    required int aid,
+    required String bvid,
+    required List<int> addMediaIds,
+    required List<int> delMediaIds,
+  }) =>
+      frb_engagement.videoFavoriteDeal(
+        aid: PlatformInt64Util.from(aid),
+        bvid: bvid,
+        addMediaIds: Int64List.fromList(addMediaIds),
+        delMediaIds: Int64List.fromList(delMediaIds),
       );
 
   Future<void> relationFollow({

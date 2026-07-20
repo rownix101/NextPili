@@ -6,6 +6,7 @@
   "retry": "Retry",
   "cancel": "Cancel",
   "confirm": "Confirm",
+  "done": "Done",
   "back": "Back",
   "play": "Play",
   "pause": "Pause",
@@ -35,8 +36,13 @@
 
   "navHome": "Home",
   "navSearch": "Search",
+  "navDynamics": "Feed",
   "navLibrary": "Library",
   "navSettings": "Settings",
+
+  "dynamicsTitle": "Following",
+  "dynamicsEmpty": "No posts from people you follow",
+  "dynamicsNeedLogin": "Sign in to see following updates",
 
   "libraryTabHistory": "History",
   "libraryTabToview": "Watch later",
@@ -204,6 +210,17 @@
   "coinAlreadyMax": "Already cast 2 coins",
   "favoriteAdded": "Added to favorites",
   "favoriteRemoved": "Removed from favorites",
+  "undo": "Undo",
+  "favFolderPickerTitle": "Choose folders",
+  "favFolderPickerHint": "Check folders to add; uncheck to remove",
+  "favFolderPickerEmpty": "No favorite folders yet",
+  "favFolderMediaCount": "{count} items",
+  "@favFolderMediaCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "statFavoriteLongPress": "Long-press to choose folders",
   "linkCopied": "Link copied",
   "videoRelated": "Related",
   "videoWatchTitle": "Watch",

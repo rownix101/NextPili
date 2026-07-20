@@ -64,6 +64,9 @@ pub struct FavFolder {
     pub cover: String,
     /// Bit0 = 0 default folder, 1 custom; bit1 private, …
     pub attr: i32,
+    /// When listed with `rid` (aid), whether that resource is already in this folder.
+    #[serde(default)]
+    pub in_folder: bool,
 }
 
 /// Created folders for a user.

@@ -25,11 +25,66 @@ GET /x/polymer/web-dynamic/v1/feed/all
 | 参数 | 说明 |
 |------|------|
 | `type` | `all`/`video`/`pgc`/`article`… |
-| `page` | |
-| `offset` | 分页游标 |
+| `page` | 1-based；游标以 `offset` 为准 |
+| `offset` | 分页游标（首页空；下一页用 `data.offset`） |
 | `host_mid` | 可选，某 UP |
 | `timezone_offset` | `-480` |
 | `features` | 见上 |
+| `platform` | `web` |
+| `web_location` | `333.1365` |
+
+鉴权：Cookie（`SESSDATA`）· main 槽。Referer：`https://t.bilibili.com/`。
+
+NextPili 用例：`dynamics_feed(offset, type_filter, page)` → `DynamicPageDto`。
+
+#### Example（最小成功形状）
+
+```json
+{
+  "code": 0,
+  "message": "0",
+  "ttl": 1,
+  "data": {
+    "has_more": true,
+    "offset": "987654321012345678",
+    "update_baseline": "987654321012345679",
+    "update_num": 0,
+    "items": [
+      {
+        "id_str": "987654321012345679",
+        "type": "DYNAMIC_TYPE_AV",
+        "visible": true,
+        "modules": {
+          "module_author": {
+            "mid": 1,
+            "name": "UP",
+            "face": "https://i0.hdslb.com/bfs/face/a.jpg",
+            "pub_ts": 1700000000
+          },
+          "module_dynamic": {
+            "desc": { "text": "今天投稿" },
+            "major": {
+              "type": "MAJOR_TYPE_ARCHIVE",
+              "archive": {
+                "aid": "170001",
+                "bvid": "BV1xx411c7mD",
+                "title": "hello",
+                "cover": "https://i0.hdslb.com/bfs/archive/a.jpg",
+                "duration_text": "3:21"
+              }
+            }
+          },
+          "module_stat": {
+            "like": { "count": 10 },
+            "comment": { "count": 2 },
+            "forward": { "count": 1 }
+          }
+        }
+      }
+    ]
+  }
+}
+```
 
 ### 动态入口 / UP 列表
 

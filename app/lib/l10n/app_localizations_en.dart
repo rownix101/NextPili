@@ -21,6 +21,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confirm => 'Confirm';
 
   @override
+  String get done => 'Done';
+
+  @override
   String get back => 'Back';
 
   @override
@@ -103,10 +106,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navSearch => 'Search';
 
   @override
+  String get navDynamics => 'Feed';
+
+  @override
   String get navLibrary => 'Library';
 
   @override
   String get navSettings => 'Settings';
+
+  @override
+  String get dynamicsTitle => 'Following';
+
+  @override
+  String get dynamicsEmpty => 'No posts from people you follow';
+
+  @override
+  String get dynamicsNeedLogin => 'Sign in to see following updates';
 
   @override
   String get libraryTabHistory => 'History';
@@ -580,6 +595,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get favoriteRemoved => 'Removed from favorites';
+
+  @override
+  String get undo => 'Undo';
+
+  @override
+  String get favFolderPickerTitle => 'Choose folders';
+
+  @override
+  String get favFolderPickerHint => 'Check folders to add; uncheck to remove';
+
+  @override
+  String get favFolderPickerEmpty => 'No favorite folders yet';
+
+  @override
+  String favFolderMediaCount(int count) {
+    return '$count items';
+  }
+
+  @override
+  String get statFavoriteLongPress => 'Long-press to choose folders';
 
   @override
   String get linkCopied => 'Link copied';

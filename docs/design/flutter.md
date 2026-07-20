@@ -40,6 +40,7 @@ app/lib/
     shell/                  # 导航脚手架（玻璃 Rail / 顶栏）
     auth/                   # 登录、账号
     home/                   # 推荐、热门
+    dynamics/               # 关注动态（只读）
     video/                  # 详情
     player/                 # 播放页 + PlayerAdapter
     search/
@@ -164,7 +165,8 @@ feedProvider = AsyncNotifier
 | shell | P0 | — |
 | auth | P1 | login_sms_*, login_password, login_qr_* (desktop/tablet), auth_state |
 | home | P2 | feed_recommend, feed_popular |
-| video | P2 | video_detail |
+| dynamics | P6 | dynamics_feed |
+| video | P2 | video_detail · engagement |
 | player | P3 | play_url, playback_start/stop, danmaku |
 | search | P5 | search_suggest, search_video |
 | user | P5 | history_list, toview_list, fav_folders, fav_resources |

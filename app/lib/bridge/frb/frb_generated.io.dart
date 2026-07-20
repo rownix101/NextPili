@@ -4,6 +4,7 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'api/auth.dart';
+import 'api/dynamics.dart';
 import 'api/engagement.dart';
 import 'api/feed.dart';
 import 'api/search.dart';
@@ -93,6 +94,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   DanmakuSegmentDto dco_decode_danmaku_segment_dto(dynamic raw);
 
   @protected
+  DynamicItemDto dco_decode_dynamic_item_dto(dynamic raw);
+
+  @protected
+  DynamicPageDto dco_decode_dynamic_page_dto(dynamic raw);
+
+  @protected
   ErrorKind dco_decode_error_kind(dynamic raw);
 
   @protected
@@ -135,6 +142,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<DanmakuItemDto> dco_decode_list_danmaku_item_dto(dynamic raw);
 
   @protected
+  List<DynamicItemDto> dco_decode_list_dynamic_item_dto(dynamic raw);
+
+  @protected
   List<FavFolderDto> dco_decode_list_fav_folder_dto(dynamic raw);
 
   @protected
@@ -148,6 +158,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<HistoryItemDto> dco_decode_list_history_item_dto(dynamic raw);
+
+  @protected
+  Int64List dco_decode_list_prim_i_64_strict(dynamic raw);
 
   @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
@@ -368,6 +381,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  DynamicItemDto sse_decode_dynamic_item_dto(SseDeserializer deserializer);
+
+  @protected
+  DynamicPageDto sse_decode_dynamic_page_dto(SseDeserializer deserializer);
+
+  @protected
   ErrorKind sse_decode_error_kind(SseDeserializer deserializer);
 
   @protected
@@ -418,6 +437,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<DynamicItemDto> sse_decode_list_dynamic_item_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<FavFolderDto> sse_decode_list_fav_folder_dto(
     SseDeserializer deserializer,
   );
@@ -437,6 +461,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<HistoryItemDto> sse_decode_list_history_item_dto(
     SseDeserializer deserializer,
   );
+
+  @protected
+  Int64List sse_decode_list_prim_i_64_strict(SseDeserializer deserializer);
 
   @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
@@ -702,6 +729,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_dynamic_item_dto(
+    DynamicItemDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_dynamic_page_dto(
+    DynamicPageDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_error_kind(ErrorKind self, SseSerializer serializer);
 
   @protected
@@ -765,6 +804,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_dynamic_item_dto(
+    List<DynamicItemDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_fav_folder_dto(
     List<FavFolderDto> self,
     SseSerializer serializer,
@@ -791,6 +836,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_history_item_dto(
     List<HistoryItemDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_prim_i_64_strict(
+    Int64List self,
     SseSerializer serializer,
   );
 

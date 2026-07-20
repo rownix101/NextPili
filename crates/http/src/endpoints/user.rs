@@ -114,11 +114,14 @@ impl UserApi {
     }
 
     /// `GET /x/v3/fav/folder/created/list-all` (Cookie required).
+    ///
+    /// When `rid` is `Some(aid)`, each folder includes `in_folder` from `fav_state`.
     pub async fn fav_folders(
         client: &BiliClient,
         account: &Account,
         device_buvid3: Option<&str>,
         up_mid: i64,
+        rid: Option<i64>,
     ) -> Result<FavFolderList> {
         if up_mid <= 0 {
             return Err(Error::Domain(domain::Error::Unauthenticated));
@@ -126,6 +129,9 @@ impl UserApi {
         let mut params = BTreeMap::new();
         params.insert("up_mid".into(), up_mid.to_string());
         params.insert("type".into(), "2".into());
+        if let Some(aid) = rid.filter(|a| *a > 0) {
+            params.insert("rid".into(), aid.to_string());
+        }
 
         let url = BiliClient::resolve_url(API_BASE, "/x/v3/fav/folder/created/list-all");
         let opts = RequestOptions {
@@ -388,6 +394,12 @@ fn parse_fav_folder(v: Value) -> Option<FavFolder> {
         .unwrap_or(0) as i32;
     let cover = normalize_cover(v.get("cover").and_then(|x| x.as_str()).unwrap_or(""));
     let attr = v.get("attr").and_then(|x| x.as_i64()).unwrap_or(0) as i32;
+    // Present when list-all is called with `rid` (resource aid).
+    let in_folder = v
+        .get("fav_state")
+        .and_then(|x| x.as_i64())
+        .map(|n| n != 0)
+        .unwrap_or(false);
 
     Some(FavFolder {
         id,
@@ -395,6 +407,7 @@ fn parse_fav_folder(v: Value) -> Option<FavFolder> {
         media_count,
         cover,
         attr,
+        in_folder,
     })
 }
 

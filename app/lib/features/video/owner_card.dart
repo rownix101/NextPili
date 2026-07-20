@@ -3,15 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../bridge/core_api.dart';
+import '../../core/haptics/haptics.dart';
 import '../../core/icons/app_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/shapes.dart';
 import '../../core/theme/spacing.dart';
+import '../../core/widgets/content_surface.dart';
 import '../../core/widgets/np_button.dart';
 import '../../l10n/l10n.dart';
 import 'engagement_bar.dart';
 
 /// UP card on the watch-page right rail (avatar, name, follow).
+///
+/// Content surface (opaque) — design-system §2 / §8; follow CTA with visible
+/// text — §7.7; login gate — interaction §8.
 class OwnerCard extends ConsumerStatefulWidget {
   const OwnerCard({
     super.key,
@@ -31,35 +36,9 @@ class _OwnerCardState extends ConsumerState<OwnerCard> {
   String get _key =>
       relationKey(i64(widget.detail.aid), widget.detail.bvid);
 
-  Future<bool> _ensureLogin() async {
-    if (isLoggedIn()) return true;
-    final l10n = context.l10n;
-    final go = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.loginRequiredTitle),
-        content: Text(l10n.loginRequiredBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.goLogin),
-          ),
-        ],
-      ),
-    );
-    if (go == true && mounted) {
-      context.push('/auth');
-    }
-    return false;
-  }
-
   Future<void> _toggleFollow(bool currentlyFollowing) async {
     if (_busy) return;
-    if (!await _ensureLogin()) return;
+    if (!await ensureLoggedIn(context)) return;
     final next = !currentlyFollowing;
     setState(() {
       _busy = true;
@@ -71,22 +50,25 @@ class _OwnerCardState extends ConsumerState<OwnerCard> {
         follow: next,
       );
       ref.invalidate(videoRelationProvider(_key));
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+      await Haptics.impactLight();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
           SnackBar(
             content: Text(
               next ? context.l10n.followSuccess : context.l10n.unfollowSuccess,
             ),
           ),
         );
-      }
     } catch (e) {
-      if (mounted) {
-        setState(() => _followingOverride = currentlyFollowing);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage(e, context.l10n))),
-        );
-      }
+      if (!mounted) return;
+      setState(() => _followingOverride = currentlyFollowing);
+      await Haptics.error();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage(e, context.l10n))),
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -100,77 +82,83 @@ class _OwnerCardState extends ConsumerState<OwnerCard> {
     final detail = widget.detail;
     final rel = ref.watch(videoRelationProvider(_key)).asData?.value;
     final following = _followingOverride ?? rel?.following ?? false;
+    final mid = i64(detail.ownerMid);
 
-    return ContentPad(
+    final name = detail.ownerName.isEmpty ? l10n.user : detail.ownerName;
+    final openProfile = mid > 0 ? () => context.push('/user/$mid') : null;
+
+    return ContentSurface(
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 22,
-            backgroundColor: colors.sunken,
-            backgroundImage: detail.ownerFace.isNotEmpty
-                ? NetworkImage(detail.ownerFace)
-                : null,
-            child: detail.ownerFace.isEmpty
-                ? Icon(AppIcons.user, size: 22, color: colors.fgSecondary)
-                : null,
-          ),
-          const SizedBox(width: AppSpacing.sm + 2),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  detail.ownerName.isEmpty ? l10n.user : detail.ownerName,
-                  style: theme.textTheme.titleSmall,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  detail.bvid.isNotEmpty
-                      ? detail.bvid
-                      : 'av${i64(detail.aid)}',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: colors.fgMuted,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: openProfile,
+                borderRadius: AppShapes.borderSm,
+                hoverColor: colors.fgPrimary.withValues(alpha: 0.04),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                  child: Row(
+                    children: [
+                      ExcludeSemantics(
+                        child: CircleAvatar(
+                          radius: 20,
+                          backgroundColor: colors.sunken,
+                          backgroundImage: detail.ownerFace.isNotEmpty
+                              ? NetworkImage(detail.ownerFace)
+                              : null,
+                          child: detail.ownerFace.isEmpty
+                              ? Icon(
+                                  AppIcons.user,
+                                  size: AppIcons.sm,
+                                  color: colors.fgSecondary,
+                                )
+                              : null,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              name,
+                              style: theme.textTheme.titleSmall,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              detail.bvid.isNotEmpty
+                                  ? detail.bvid
+                                  : 'av${i64(detail.aid)}',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: colors.fgMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
           ),
+          const SizedBox(width: AppSpacing.sm),
           NpButton(
             label: following ? l10n.following : l10n.follow,
             icon: following ? AppIcons.check : AppIcons.plus,
+            loading: _busy,
             variant: following
                 ? NpButtonVariant.secondary
                 : NpButtonVariant.primary,
-            onPressed: _busy
-                ? null
-                : () => _toggleFollow(following),
+            onPressed: _busy ? null : () => _toggleFollow(following),
           ),
         ],
       ),
-    );
-  }
-}
-
-/// Thin padding shell for rail cards.
-class ContentPad extends StatelessWidget {
-  const ContentPad({super.key, required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: colors.elevated,
-        borderRadius: AppShapes.borderMd,
-        border: Border.all(color: colors.borderSubtle),
-      ),
-      child: child,
     );
   }
 }

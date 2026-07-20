@@ -92,7 +92,7 @@ pub async fn video_favorite(
 
     if favorite {
         let folders =
-            UserApi::fav_folders(&http, &account, Some(buvid.as_str()), mid.get()).await?;
+            UserApi::fav_folders(&http, &account, Some(buvid.as_str()), mid.get(), None).await?;
         let pairs: Vec<(i64, i32)> = folders
             .folders
             .iter()
@@ -118,6 +118,56 @@ pub async fn video_favorite(
     // Relation refresh may lag; synthesize fav bit if needed.
     let mut rel = refresh_relation(&http, &account, buvid.as_str(), aid, &bvid).await?;
     rel.favorited = favorite;
+    Ok(rel)
+}
+
+/// Add / remove an archive from specific favorite folders (`media_id`s).
+///
+/// Empty both lists is an error. Prefer this for multi-folder picker; short-press
+/// toggle still uses [`video_favorite`].
+pub async fn video_favorite_deal(
+    aid: i64,
+    bvid: String,
+    add_media_ids: Vec<i64>,
+    del_media_ids: Vec<i64>,
+) -> Result<ArchiveRelationDto, AppError> {
+    let app = CoreApp::global()?;
+    let account = require_main(&app)?;
+    let buvid = app.store.buvid3();
+    let http = app.http();
+
+    let add: Vec<String> = add_media_ids
+        .into_iter()
+        .filter(|id| *id > 0)
+        .map(|id| id.to_string())
+        .collect();
+    let del: Vec<String> = del_media_ids
+        .into_iter()
+        .filter(|id| *id > 0)
+        .map(|id| id.to_string())
+        .collect();
+    if add.is_empty() && del.is_empty() {
+        return Err(AppError::new(
+            ErrorKind::InvalidArgument,
+            "请选择要加入或移出的收藏夹",
+        ));
+    }
+
+    EngagementApi::fav_resource_deal(
+        &http,
+        &account,
+        Some(buvid.as_str()),
+        aid,
+        &add.join(","),
+        &del.join(","),
+    )
+    .await?;
+
+    let mut rel = refresh_relation(&http, &account, buvid.as_str(), aid, &bvid).await?;
+    // Any add implies still favorited; pure del relies on relation endpoint.
+    if !add.is_empty() {
+        rel.favorited = true;
+    }
     Ok(rel)
 }
 

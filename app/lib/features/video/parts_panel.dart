@@ -6,8 +6,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/shapes.dart';
 import '../../core/theme/spacing.dart';
 import '../../core/utils/format.dart';
+import '../../core/widgets/content_pad.dart';
 import '../../l10n/l10n.dart';
-import 'owner_card.dart';
 
 /// Multi-P / playlist list on the watch-page right rail (Bilibili-style).
 class PartsPanel extends StatelessWidget {

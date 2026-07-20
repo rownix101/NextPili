@@ -13,21 +13,23 @@ pub mod heartbeat;
 mod frb_generated;
 
 pub use api::{
-    api_version, bootstrap, danmaku_segments, device_buvid3, fav_folders, fav_resources,
-    feed_popular, feed_recommend, get_settings, history_list, list_accounts, login_captcha,
-    login_password, login_password_risk_captcha, login_password_risk_send_sms,
+    api_version, bootstrap, danmaku_segments, device_buvid3, dynamics_feed, fav_folders,
+    fav_resources, feed_popular, feed_recommend, get_settings, history_list, list_accounts,
+    login_captcha, login_password, login_password_risk_captcha, login_password_risk_send_sms,
     login_password_risk_verify, login_qr_poll, login_qr_start, login_sms, login_sms_send, logout,
     new_login_session_id, ping, play_url, playback_start, playback_stop, relation_follow,
     reply_list, search_suggest, search_video, set_account_slot, toview_list, update_settings,
-    video_coin, video_detail, video_favorite, video_like, video_relation, AccountPublicDto,
+    video_coin, video_detail, video_favorite, video_favorite_deal, video_like, video_relation,
+    AccountPublicDto,
     ApiVersion, ArchiveRelationDto, BootstrapConfig, CaptchaDto, DanmakuItemDto, DanmakuSegmentDto,
-    FavFolderDto, FavFolderListDto, FavResourceItemDto, FavResourcePageDto, FeedItemDto, HeaderDto,
-    HistoryItemDto, HistoryPageDto, MediaFormatDto, MediaSourceDto, PasswordLoginDto,
-    PasswordLoginResultDto, PasswordLoginResultKind, PasswordRiskDto, PasswordRiskSendSmsDto,
-    PasswordRiskSendSmsResultDto, PasswordRiskVerifyDto, PopularFeedDto, QrPollDto, QrStartDto,
-    QrStatusKind, RecommendFeedDto, ReplyDto, ReplyListDto, SearchSuggestDto, SearchVideoItemDto,
-    SearchVideoPageDto, SettingsDto, SlotDto, SmsLoginDto, SmsSendDto, SmsSendDtoResult, StreamDto,
-    SubtitleTrackDto, ToViewItemDto, ToViewPageDto, VideoDetailDto, VideoPageDto, VideoStatDto,
+    DynamicItemDto, DynamicPageDto, FavFolderDto, FavFolderListDto, FavResourceItemDto,
+    FavResourcePageDto, FeedItemDto, HeaderDto, HistoryItemDto, HistoryPageDto, MediaFormatDto,
+    MediaSourceDto, PasswordLoginDto, PasswordLoginResultDto, PasswordLoginResultKind,
+    PasswordRiskDto, PasswordRiskSendSmsDto, PasswordRiskSendSmsResultDto, PasswordRiskVerifyDto,
+    PopularFeedDto, QrPollDto, QrStartDto, QrStatusKind, RecommendFeedDto, ReplyDto, ReplyListDto,
+    SearchSuggestDto, SearchVideoItemDto, SearchVideoPageDto, SettingsDto, SlotDto, SmsLoginDto,
+    SmsSendDto, SmsSendDtoResult, StreamDto, SubtitleTrackDto, ToViewItemDto, ToViewPageDto,
+    VideoDetailDto, VideoPageDto, VideoStatDto,
 };
 pub use app::CoreApp;
 pub use error::{AppError, ErrorKind};
@@ -37,6 +39,6 @@ pub const CORE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// FFI API compatibility version (major bumps on breaking changes).
 pub const API_MAJOR: u32 = 0;
-/// minor 6: password · 7: social · 8: password risk · 9: search · 10: library · 11: engagement
-pub const API_MINOR: u32 = 11;
+/// minor 6: password · 7: social · 8: password risk · 9: search · 10: library · 11: engagement · 12: dynamics
+pub const API_MINOR: u32 = 12;
 pub const API_PATCH: u32 = 0;

@@ -12,8 +12,9 @@ class AppShell extends StatelessWidget {
 
   int _indexForLocation(String location) {
     if (location.startsWith('/search')) return 1;
-    if (location.startsWith('/library')) return 2;
-    if (location.startsWith('/settings')) return 3;
+    if (location.startsWith('/dynamics')) return 2;
+    if (location.startsWith('/library')) return 3;
+    if (location.startsWith('/settings')) return 4;
     return 0;
   }
 
@@ -24,8 +25,10 @@ class AppShell extends StatelessWidget {
       case 1:
         context.go('/search');
       case 2:
-        context.go('/library');
+        context.go('/dynamics');
       case 3:
+        context.go('/library');
+      case 4:
         context.go('/settings');
     }
   }
@@ -50,6 +53,11 @@ class AppShell extends StatelessWidget {
         label: Text(l10n.navSearch),
       ),
       NavigationRailDestination(
+        icon: const Icon(AppIcons.dynamics),
+        selectedIcon: const Icon(AppIcons.dynamics),
+        label: Text(l10n.navDynamics),
+      ),
+      NavigationRailDestination(
         icon: const Icon(AppIcons.inbox),
         selectedIcon: const Icon(AppIcons.inbox),
         label: Text(l10n.navLibrary),
@@ -71,6 +79,11 @@ class AppShell extends StatelessWidget {
         icon: const Icon(AppIcons.search),
         selectedIcon: const Icon(AppIcons.search),
         label: l10n.navSearch,
+      ),
+      NavigationDestination(
+        icon: const Icon(AppIcons.dynamics),
+        selectedIcon: const Icon(AppIcons.dynamics),
+        label: l10n.navDynamics,
       ),
       NavigationDestination(
         icon: const Icon(AppIcons.inbox),

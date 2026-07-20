@@ -8,6 +8,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/shapes.dart';
 import '../../core/theme/spacing.dart';
 import '../../core/utils/format.dart';
+import '../../core/widgets/content_pad.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/loading.dart';
 import '../../core/widgets/page_header.dart';

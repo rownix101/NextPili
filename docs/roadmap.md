@@ -3,7 +3,7 @@
 按垂直切片交付可演示能力：鉴权 → 浏览 → 播放 → 互动 → 个人库 → 扩展业务。阶段顺序与 [architecture §12](./architecture.md#12-mvp-落地顺序) 一致；用例名以 [design/core.md](./design/core.md) 为准。
 
 > 状态：草案 v0.1  
-> 当前进度：**P5 完成**（搜索 + 历史 / 稍后再看 / 收藏只读） · 下一目标 P6 扩展  
+> 当前进度：**P6 进行中**（观看页写操作 + 动态只读） · 下一目标：直播 / 番剧 / 多账号  
 > 相关：[Architecture](./architecture.md) · [API](./api/README.md) · [Design](./design/README.md) · [UX](./ux/README.md)
 
 ---
@@ -18,7 +18,7 @@
 | **P3** | 播放 | ✅ 完成 | playurl → media_kit + 清晰度 + 心跳 + 设置 qn/代理 |
 | **P4** | 互动只读 | ✅ 完成 | 评论列表 + 弹幕展示（REST） |
 | **P5** | 个人库 | ✅ 完成 | 搜索 + 历史 / 稍后再看 / 收藏（只读） |
-| **P6** | 扩展 | 🔶 进行中 | 观看页写操作（赞/币/藏/关注）✅ · 动态/直播/番剧/多账号 ⬜ |
+| **P6** | 扩展 | 🔶 进行中 | 观看页写操作 ✅ · 动态只读 ✅ · 直播/番剧/多账号 ⬜ |
 
 **每阶段结束标准（通用）**
 
@@ -156,13 +156,13 @@
 
 长尾业务与多账号路由；写操作在读路径稳定后开放。
 
-| 交付 | 说明 |
-|------|------|
-| 动态时间线 | [endpoints/dynamics.md](./api/endpoints/dynamics.md) |
-| 直播 | REST 进房 + WebSocket 弹幕（[live.md](./api/endpoints/live.md)） |
-| 番剧 / PGC | 详情与 playurl 变体（[pgc.md](./api/endpoints/pgc.md)） |
-| 多账号槽 | main / heartbeat / recommend / video 可绑不同账号 |
-| 写操作 | 点赞 / 投币 / 默认收藏夹 / 关注 ✅ · 发弹幕 / 发评 / 三连 UI ⬜ |
+| 交付 | 说明 | 状态 |
+|------|------|------|
+| 动态时间线（只读） | `dynamics_feed` · feature `dynamics` · [dynamics.md](./api/endpoints/dynamics.md) | ✅ |
+| 直播 | REST 进房 + WebSocket 弹幕（[live.md](./api/endpoints/live.md)） | ⬜ |
+| 番剧 / PGC | 详情与 playurl 变体（[pgc.md](./api/endpoints/pgc.md)） | ⬜ |
+| 多账号槽 | main / heartbeat / recommend / video 可绑不同账号 | ⬜ |
+| 写操作 | 点赞 / 投币 / 默认收藏夹 / 长按选夹 / 关注 ✅ · 发弹幕 / 发评 / 三连 UI ⬜ | 部分 |
 
 **验收**：至少「动态只读 + 一场直播可看 + 单账号槽配置 UI」可演示；写操作可按子里程碑拆 PR。
 

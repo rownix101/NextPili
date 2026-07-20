@@ -61,13 +61,15 @@ Flutter main()
 ### 3.2 模块分组（逻辑，非强制多类）
 
 ```text
-sys:     api_version, ping, bootstrap, set_proxy, shutdown
-auth:    login_sms_*, login_password, login_qr_* (desktop/tablet UI), logout, list_accounts, set_slot
-feed:    feed_recommend, feed_popular
-video:   video_detail, play_url, video_related
-social:  reply_list, danmaku_view, ...
-user:    history_list, toview_list, fav_folders, fav_resources
-search:  search_video, search_suggest
+sys:       api_version, ping, bootstrap, set_proxy, shutdown
+auth:      login_sms_*, login_password, login_qr_* (desktop/tablet UI), logout, list_accounts, set_slot
+feed:      feed_recommend, feed_popular
+video:     video_detail, play_url, video_related
+social:    reply_list, danmaku_view, ...
+user:      history_list, toview_list, fav_folders, fav_resources
+search:    search_video, search_suggest
+dynamics:  dynamics_feed
+engagement: video_relation, video_like, video_coin, video_favorite, relation_follow
 ```
 
 P0 仅需 `sys` + 占位；P1 起按 MVP 表增加。

@@ -122,6 +122,12 @@ abstract class AppLocalizations {
   /// **'确认'**
   String get confirm;
 
+  /// No description provided for @done.
+  ///
+  /// In zh, this message translates to:
+  /// **'完成'**
+  String get done;
+
   /// No description provided for @back.
   ///
   /// In zh, this message translates to:
@@ -284,6 +290,12 @@ abstract class AppLocalizations {
   /// **'搜索'**
   String get navSearch;
 
+  /// No description provided for @navDynamics.
+  ///
+  /// In zh, this message translates to:
+  /// **'动态'**
+  String get navDynamics;
+
   /// No description provided for @navLibrary.
   ///
   /// In zh, this message translates to:
@@ -295,6 +307,24 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'设置'**
   String get navSettings;
+
+  /// No description provided for @dynamicsTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'动态'**
+  String get dynamicsTitle;
+
+  /// No description provided for @dynamicsEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无关注动态'**
+  String get dynamicsEmpty;
+
+  /// No description provided for @dynamicsNeedLogin.
+  ///
+  /// In zh, this message translates to:
+  /// **'登录后查看关注动态'**
+  String get dynamicsNeedLogin;
 
   /// No description provided for @libraryTabHistory.
   ///
@@ -1177,6 +1207,42 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'已取消收藏'**
   String get favoriteRemoved;
+
+  /// No description provided for @undo.
+  ///
+  /// In zh, this message translates to:
+  /// **'撤销'**
+  String get undo;
+
+  /// No description provided for @favFolderPickerTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择收藏夹'**
+  String get favFolderPickerTitle;
+
+  /// No description provided for @favFolderPickerHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'勾选要加入的收藏夹；取消勾选将移出'**
+  String get favFolderPickerHint;
+
+  /// No description provided for @favFolderPickerEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无收藏夹'**
+  String get favFolderPickerEmpty;
+
+  /// No description provided for @favFolderMediaCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 个内容'**
+  String favFolderMediaCount(int count);
+
+  /// No description provided for @statFavoriteLongPress.
+  ///
+  /// In zh, this message translates to:
+  /// **'长按选择收藏夹'**
+  String get statFavoriteLongPress;
 
   /// No description provided for @linkCopied.
   ///

@@ -4,6 +4,7 @@
 
 pub mod account;
 pub mod danmaku;
+pub mod dynamics;
 pub mod engagement;
 pub mod error;
 pub mod feed;
@@ -16,6 +17,7 @@ pub mod video;
 
 pub use account::AccountPublic;
 pub use danmaku::DanmakuItem;
+pub use dynamics::{dynamic_is_archive, DynamicItem, DynamicPage};
 pub use engagement::{default_fav_folder_id, ArchiveRelation};
 pub use error::{map_bili_code, Error, Result};
 pub use feed::FeedItem;

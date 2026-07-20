@@ -30,8 +30,10 @@ Future<ToViewPageDto> toviewList({required int pn, required int ps}) =>
     RustLib.instance.api.crateApiUserToviewList(pn: pn, ps: ps);
 
 /// Favorite folders created by the signed-in user.
-Future<FavFolderListDto> favFolders() =>
-    RustLib.instance.api.crateApiUserFavFolders();
+///
+/// Pass `rid` (aid) > 0 to mark each folder's `in_folder` for that archive.
+Future<FavFolderListDto> favFolders({required PlatformInt64 rid}) =>
+    RustLib.instance.api.crateApiUserFavFolders(rid: rid);
 
 /// Resources in a favorite folder. `pn` starts at 1; `ps` default 20.
 Future<FavResourcePageDto> favResources({
@@ -52,12 +54,16 @@ class FavFolderDto {
   final String cover;
   final int attr;
 
+  /// True when listed with a resource `rid` and that resource is in this folder.
+  final bool inFolder;
+
   const FavFolderDto({
     required this.id,
     required this.title,
     required this.mediaCount,
     required this.cover,
     required this.attr,
+    required this.inFolder,
   });
 
   @override
@@ -66,7 +72,8 @@ class FavFolderDto {
       title.hashCode ^
       mediaCount.hashCode ^
       cover.hashCode ^
-      attr.hashCode;
+      attr.hashCode ^
+      inFolder.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -77,7 +84,8 @@ class FavFolderDto {
           title == other.title &&
           mediaCount == other.mediaCount &&
           cover == other.cover &&
-          attr == other.attr;
+          attr == other.attr &&
+          inFolder == other.inFolder;
 }
 
 /// Created folders list.

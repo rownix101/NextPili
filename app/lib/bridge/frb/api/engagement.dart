@@ -52,6 +52,22 @@ Future<ArchiveRelationDto> videoFavorite({
   favorite: favorite,
 );
 
+/// Add / remove an archive from specific favorite folders (`media_id`s).
+///
+/// Empty both lists is an error. Prefer this for multi-folder picker; short-press
+/// toggle still uses [`video_favorite`].
+Future<ArchiveRelationDto> videoFavoriteDeal({
+  required PlatformInt64 aid,
+  required String bvid,
+  required Int64List addMediaIds,
+  required Int64List delMediaIds,
+}) => RustLib.instance.api.crateApiEngagementVideoFavoriteDeal(
+  aid: aid,
+  bvid: bvid,
+  addMediaIds: addMediaIds,
+  delMediaIds: delMediaIds,
+);
+
 /// Follow / unfollow UP (`mid`).
 Future<void> relationFollow({
   required PlatformInt64 mid,
