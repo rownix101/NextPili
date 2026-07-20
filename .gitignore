@@ -1,0 +1,53 @@
+# Rust
+/target/
+**/*.rs.bk
+# Cargo.lock is committed for the application workspace
+
+
+# Flutter
+app/.dart_tool/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/.packages
+app/build/
+app/.pub-cache/
+app/.pub/
+app/coverage/
+app/**/*.iml
+app/**/Generated.xcconfig
+app/**/flutter_export_environment.sh
+app/linux/flutter/ephemeral/
+app/macos/Flutter/ephemeral/
+app/windows/flutter/ephemeral/
+app/ios/Flutter/Flutter.podspec
+app/ios/Pods/
+app/android/.gradle/
+app/android/local.properties
+app/android/**/GeneratedPluginRegistrant.*
+
+# FRB generated (regenerate with scripts/codegen.sh)
+# Keep committed generated files for CI simplicity; ignore only local temp
+*.g.part
+.dart_tool/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+*.iml
+
+# Secrets / local
+.env
+.env.*
+*.cookie
+*.sessdata
+.nextpili/
+data/
+cache/
+
+# Logs
+*.log
+
+# Local tool caches
+.flutter-plugins-dependencies

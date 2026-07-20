@@ -1,0 +1,52 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/domain",
+    "crates/auth",
+    "crates/store",
+    "crates/http",
+    "crates/media",
+    "crates/core",
+]
+default-members = ["crates/core"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "UNLICENSED"
+repository = "https://github.com/rownix/nextpili"
+rust-version = "1.85"
+
+[workspace.dependencies]
+# Internal
+domain = { path = "crates/domain" }
+auth = { path = "crates/auth" }
+store = { path = "crates/store" }
+http = { path = "crates/http" }
+media = { path = "crates/media" }
+core = { path = "crates/core" }
+
+# Shared third-party
+thiserror = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v4", "serde"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time"] }
+async-trait = "0.1"
+parking_lot = "0.12"
+reqwest = { version = "0.12", default-features = false, features = ["json", "cookies", "rustls-tls", "gzip", "brotli"] }
+url = "2"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
+md-5 = "0.10"
+hex = "0.4"
+regex = "1"
+once_cell = "1"
+flutter_rust_bridge = { version = "=2.11.1", features = ["chrono"] }
+anyhow = "1"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true

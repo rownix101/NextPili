@@ -1,0 +1,5 @@
+rust_input: crate::api
+rust_root: ../crates/core/
+dart_output: lib/bridge/frb
+full_dep: false
+web: false
