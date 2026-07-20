@@ -1,4 +1,5 @@
 use crate::error::{AppError, ErrorKind};
+use crate::heartbeat::HeartbeatSupervisor;
 use auth::{AccountRegistry, WbiSigner};
 use http::{BiliClient, ClientConfig, NavApi};
 use media::MediaService;
@@ -13,6 +14,7 @@ pub struct CoreApp {
     pub http: BiliClient,
     pub media: MediaService,
     pub wbi: RwLock<WbiSigner>,
+    pub heartbeat: HeartbeatSupervisor,
     pub log_level: String,
 }
 
@@ -54,6 +56,7 @@ impl CoreApp {
         let http = BiliClient::new(client_cfg).map_err(AppError::from)?;
         let media = MediaService::new();
         let wbi = WbiSigner::new();
+        let heartbeat = HeartbeatSupervisor::new();
 
         let app = Arc::new(CoreApp {
             store,
@@ -61,6 +64,7 @@ impl CoreApp {
             http,
             media,
             wbi: RwLock::new(wbi),
+            heartbeat,
             log_level: config.log_level,
         });
 

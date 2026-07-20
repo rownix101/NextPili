@@ -11,4 +11,4 @@ pub use login::{
     SmsSendResult,
 };
 pub use nav::{NavApi, NavInfo};
-pub use video::VideoApi;
+pub use video::{now_unix, HeartbeatParams, PlayUrlParams, VideoApi, PLAYURL_FNVAL_DASH};

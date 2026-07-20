@@ -14,7 +14,15 @@ export 'frb/api/simple.dart' show ApiVersion, BootstrapConfig;
 export 'frb/api/feed.dart'
     show FeedItemDto, PopularFeedDto, RecommendFeedDto;
 export 'frb/api/video.dart'
-    show VideoDetailDto, VideoPageDto, VideoStatDto;
+    show
+        HeaderDto,
+        MediaFormatDto,
+        MediaSourceDto,
+        StreamDto,
+        SubtitleTrackDto,
+        VideoDetailDto,
+        VideoPageDto,
+        VideoStatDto;
 export 'frb/auth_service.dart'
     show
         AccountPublicDto,
@@ -111,6 +119,32 @@ class CoreApi {
 
   Future<frb_video.VideoDetailDto> videoDetail(String id) =>
       frb_video.videoDetail(id: id);
+
+  Future<frb_video.MediaSourceDto> playUrl({
+    required String id,
+    required int cid,
+    int qn = 0,
+    int fnval = 0,
+  }) =>
+      frb_video.playUrl(
+        id: id,
+        cid: PlatformInt64Util.from(cid),
+        qn: qn,
+        fnval: fnval,
+      );
+
+  Future<void> playbackStart({
+    required int aid,
+    required String bvid,
+    required int cid,
+  }) =>
+      frb_video.playbackStart(
+        aid: PlatformInt64Util.from(aid),
+        bvid: bvid,
+        cid: PlatformInt64Util.from(cid),
+      );
+
+  void playbackStop() => frb_video.playbackStop();
 }
 
 /// Map FRB [AppError] / any into a short UI message.

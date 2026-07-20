@@ -14,4 +14,7 @@ pub use feed::{
     feed_popular, feed_recommend, FeedItemDto, PopularFeedDto, RecommendFeedDto,
 };
 pub use simple::{api_version, bootstrap, ping, ApiVersion, BootstrapConfig};
-pub use video::{video_detail, VideoDetailDto, VideoPageDto, VideoStatDto};
+pub use video::{
+    play_url, playback_start, playback_stop, video_detail, HeaderDto, MediaFormatDto,
+    MediaSourceDto, StreamDto, SubtitleTrackDto, VideoDetailDto, VideoPageDto, VideoStatDto,
+};

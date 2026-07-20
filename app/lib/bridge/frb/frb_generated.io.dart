@@ -57,6 +57,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SmsSendDto dco_decode_box_autoadd_sms_send_dto(dynamic raw);
 
   @protected
+  int dco_decode_box_autoadd_u_32(dynamic raw);
+
+  @protected
   CaptchaDto dco_decode_captcha_dto(dynamic raw);
 
   @protected
@@ -66,10 +69,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FeedItemDto dco_decode_feed_item_dto(dynamic raw);
 
   @protected
+  HeaderDto dco_decode_header_dto(dynamic raw);
+
+  @protected
   int dco_decode_i_32(dynamic raw);
 
   @protected
   PlatformInt64 dco_decode_i_64(dynamic raw);
+
+  @protected
+  List<String> dco_decode_list_String(dynamic raw);
 
   @protected
   List<AccountPublicDto> dco_decode_list_account_public_dto(dynamic raw);
@@ -78,10 +87,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<FeedItemDto> dco_decode_list_feed_item_dto(dynamic raw);
 
   @protected
+  List<HeaderDto> dco_decode_list_header_dto(dynamic raw);
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
+  List<StreamDto> dco_decode_list_stream_dto(dynamic raw);
+
+  @protected
+  List<SubtitleTrackDto> dco_decode_list_subtitle_track_dto(dynamic raw);
+
+  @protected
   List<VideoPageDto> dco_decode_list_video_page_dto(dynamic raw);
+
+  @protected
+  MediaFormatDto dco_decode_media_format_dto(dynamic raw);
+
+  @protected
+  MediaSourceDto dco_decode_media_source_dto(dynamic raw);
 
   @protected
   String? dco_decode_opt_String(dynamic raw);
@@ -91,6 +115,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int? dco_decode_opt_box_autoadd_i_32(dynamic raw);
+
+  @protected
+  int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
 
   @protected
   PopularFeedDto dco_decode_popular_feed_dto(dynamic raw);
@@ -118,6 +145,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SmsSendDtoResult dco_decode_sms_send_dto_result(dynamic raw);
+
+  @protected
+  StreamDto dco_decode_stream_dto(dynamic raw);
+
+  @protected
+  SubtitleTrackDto dco_decode_subtitle_track_dto(dynamic raw);
 
   @protected
   int dco_decode_u_32(dynamic raw);
@@ -177,6 +210,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SmsSendDto sse_decode_box_autoadd_sms_send_dto(SseDeserializer deserializer);
 
   @protected
+  int sse_decode_box_autoadd_u_32(SseDeserializer deserializer);
+
+  @protected
   CaptchaDto sse_decode_captcha_dto(SseDeserializer deserializer);
 
   @protected
@@ -186,10 +222,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FeedItemDto sse_decode_feed_item_dto(SseDeserializer deserializer);
 
   @protected
+  HeaderDto sse_decode_header_dto(SseDeserializer deserializer);
+
+  @protected
   int sse_decode_i_32(SseDeserializer deserializer);
 
   @protected
   PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
+
+  @protected
+  List<String> sse_decode_list_String(SseDeserializer deserializer);
 
   @protected
   List<AccountPublicDto> sse_decode_list_account_public_dto(
@@ -200,12 +242,29 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<FeedItemDto> sse_decode_list_feed_item_dto(SseDeserializer deserializer);
 
   @protected
+  List<HeaderDto> sse_decode_list_header_dto(SseDeserializer deserializer);
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
+
+  @protected
+  List<StreamDto> sse_decode_list_stream_dto(SseDeserializer deserializer);
+
+  @protected
+  List<SubtitleTrackDto> sse_decode_list_subtitle_track_dto(
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<VideoPageDto> sse_decode_list_video_page_dto(
     SseDeserializer deserializer,
   );
+
+  @protected
+  MediaFormatDto sse_decode_media_format_dto(SseDeserializer deserializer);
+
+  @protected
+  MediaSourceDto sse_decode_media_source_dto(SseDeserializer deserializer);
 
   @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
@@ -217,6 +276,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int? sse_decode_opt_box_autoadd_i_32(SseDeserializer deserializer);
+
+  @protected
+  int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
 
   @protected
   PopularFeedDto sse_decode_popular_feed_dto(SseDeserializer deserializer);
@@ -244,6 +306,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SmsSendDtoResult sse_decode_sms_send_dto_result(SseDeserializer deserializer);
+
+  @protected
+  StreamDto sse_decode_stream_dto(SseDeserializer deserializer);
+
+  @protected
+  SubtitleTrackDto sse_decode_subtitle_track_dto(SseDeserializer deserializer);
 
   @protected
   int sse_decode_u_32(SseDeserializer deserializer);
@@ -315,6 +383,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer);
+
+  @protected
   void sse_encode_captcha_dto(CaptchaDto self, SseSerializer serializer);
 
   @protected
@@ -324,10 +395,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_feed_item_dto(FeedItemDto self, SseSerializer serializer);
 
   @protected
+  void sse_encode_header_dto(HeaderDto self, SseSerializer serializer);
+
+  @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_String(List<String> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_account_public_dto(
@@ -342,14 +419,44 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_header_dto(
+    List<HeaderDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_prim_u_8_strict(
     Uint8List self,
     SseSerializer serializer,
   );
 
   @protected
+  void sse_encode_list_stream_dto(
+    List<StreamDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_subtitle_track_dto(
+    List<SubtitleTrackDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_video_page_dto(
     List<VideoPageDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_media_format_dto(
+    MediaFormatDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_media_source_dto(
+    MediaSourceDto self,
     SseSerializer serializer,
   );
 
@@ -364,6 +471,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_opt_box_autoadd_i_32(int? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);
 
   @protected
   void sse_encode_popular_feed_dto(
@@ -398,6 +508,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_sms_send_dto_result(
     SmsSendDtoResult self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_stream_dto(StreamDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_subtitle_track_dto(
+    SubtitleTrackDto self,
     SseSerializer serializer,
   );
 

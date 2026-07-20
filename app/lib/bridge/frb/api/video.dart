@@ -7,11 +7,224 @@ import '../error.dart';
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`
+// These functions are ignored because they are not marked as `pub`: `ensure_wbi`, `map_source`, `map_stream`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 /// Fetch video detail by bvid or aid string (e.g. `BV1…` / `av170001` / `170001`).
 Future<VideoDetailDto> videoDetail({required String id}) =>
     RustLib.instance.api.crateApiVideoVideoDetail(id: id);
+
+/// Resolve playurl → normalized [`MediaSourceDto`].
+///
+/// - `id`: bvid / aid string
+/// - `cid`: part cid
+/// - `qn`: preferred quality (0 = use store preferred_qn)
+/// - `fnval`: dash mask (0 = default full dash)
+Future<MediaSourceDto> playUrl({
+  required String id,
+  required PlatformInt64 cid,
+  required int qn,
+  required int fnval,
+}) => RustLib.instance.api.crateApiVideoPlayUrl(
+  id: id,
+  cid: cid,
+  qn: qn,
+  fnval: fnval,
+);
+
+/// Start playback heartbeat for (aid, bvid, cid). Replaces any previous session.
+Future<void> playbackStart({
+  required PlatformInt64 aid,
+  required String bvid,
+  required PlatformInt64 cid,
+}) => RustLib.instance.api.crateApiVideoPlaybackStart(
+  aid: aid,
+  bvid: bvid,
+  cid: cid,
+);
+
+/// Stop playback heartbeat.
+void playbackStop() => RustLib.instance.api.crateApiVideoPlaybackStop();
+
+/// Header key/value pair (FRB-friendly).
+class HeaderDto {
+  final String key;
+  final String value;
+
+  const HeaderDto({required this.key, required this.value});
+
+  @override
+  int get hashCode => key.hashCode ^ value.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is HeaderDto &&
+          runtimeType == other.runtimeType &&
+          key == other.key &&
+          value == other.value;
+}
+
+enum MediaFormatDto { dash, segment, unknown }
+
+/// Playable media source for the player adapter.
+class MediaSourceDto {
+  final PlatformInt64 aid;
+  final String bvid;
+  final PlatformInt64 cid;
+  final MediaFormatDto format;
+  final List<StreamDto> videos;
+  final List<StreamDto> audios;
+  final String recommendedVideoId;
+  final String recommendedAudioId;
+  final PlatformInt64 durationMs;
+
+  /// HTTP headers the player must attach (Referer, UA, …).
+  final List<HeaderDto> headers;
+  final List<SubtitleTrackDto> subtitles;
+  final int? requestedQn;
+
+  const MediaSourceDto({
+    required this.aid,
+    required this.bvid,
+    required this.cid,
+    required this.format,
+    required this.videos,
+    required this.audios,
+    required this.recommendedVideoId,
+    required this.recommendedAudioId,
+    required this.durationMs,
+    required this.headers,
+    required this.subtitles,
+    this.requestedQn,
+  });
+
+  @override
+  int get hashCode =>
+      aid.hashCode ^
+      bvid.hashCode ^
+      cid.hashCode ^
+      format.hashCode ^
+      videos.hashCode ^
+      audios.hashCode ^
+      recommendedVideoId.hashCode ^
+      recommendedAudioId.hashCode ^
+      durationMs.hashCode ^
+      headers.hashCode ^
+      subtitles.hashCode ^
+      requestedQn.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MediaSourceDto &&
+          runtimeType == other.runtimeType &&
+          aid == other.aid &&
+          bvid == other.bvid &&
+          cid == other.cid &&
+          format == other.format &&
+          videos == other.videos &&
+          audios == other.audios &&
+          recommendedVideoId == other.recommendedVideoId &&
+          recommendedAudioId == other.recommendedAudioId &&
+          durationMs == other.durationMs &&
+          headers == other.headers &&
+          subtitles == other.subtitles &&
+          requestedQn == other.requestedQn;
+}
+
+/// Single media stream (video or audio).
+class StreamDto {
+  final String id;
+  final String codec;
+  final int bandwidth;
+  final int? width;
+  final int? height;
+  final int? fps;
+  final String qualityLabel;
+  final int? qn;
+  final String? language;
+  final String? role;
+  final String url;
+  final List<String> backupUrls;
+
+  const StreamDto({
+    required this.id,
+    required this.codec,
+    required this.bandwidth,
+    this.width,
+    this.height,
+    this.fps,
+    required this.qualityLabel,
+    this.qn,
+    this.language,
+    this.role,
+    required this.url,
+    required this.backupUrls,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      codec.hashCode ^
+      bandwidth.hashCode ^
+      width.hashCode ^
+      height.hashCode ^
+      fps.hashCode ^
+      qualityLabel.hashCode ^
+      qn.hashCode ^
+      language.hashCode ^
+      role.hashCode ^
+      url.hashCode ^
+      backupUrls.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is StreamDto &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          codec == other.codec &&
+          bandwidth == other.bandwidth &&
+          width == other.width &&
+          height == other.height &&
+          fps == other.fps &&
+          qualityLabel == other.qualityLabel &&
+          qn == other.qn &&
+          language == other.language &&
+          role == other.role &&
+          url == other.url &&
+          backupUrls == other.backupUrls;
+}
+
+/// Subtitle track (placeholder for later).
+class SubtitleTrackDto {
+  final String id;
+  final String lang;
+  final String label;
+  final String url;
+
+  const SubtitleTrackDto({
+    required this.id,
+    required this.lang,
+    required this.label,
+    required this.url,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^ lang.hashCode ^ label.hashCode ^ url.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SubtitleTrackDto &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          lang == other.lang &&
+          label == other.label &&
+          url == other.url;
+}
 
 /// Video detail DTO for Flutter.
 class VideoDetailDto {

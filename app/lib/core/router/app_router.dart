@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/auth_page.dart';
 import '../../features/home/home_page.dart';
+import '../../features/player/player_page.dart';
 import '../../features/settings/settings_page.dart';
 import '../../features/shell/app_shell.dart';
 import '../../features/video/video_detail_page.dart';
@@ -45,6 +46,27 @@ GoRouter createAppRouter() {
             },
           ),
         ],
+      ),
+      GoRoute(
+        path: '/play/:id',
+        name: 'play',
+        builder: (context, state) {
+          final id = Uri.decodeComponent(state.pathParameters['id'] ?? '');
+          final q = state.uri.queryParameters;
+          final cid = int.tryParse(q['cid'] ?? '') ?? 0;
+          final aid = int.tryParse(q['aid'] ?? '') ?? 0;
+          final bvid = q['bvid'] ?? '';
+          final title = q['title'] ?? '';
+          final qn = int.tryParse(q['qn'] ?? '') ?? 0;
+          return PlayerPage(
+            videoId: id,
+            cid: cid,
+            aid: aid,
+            bvid: bvid,
+            title: title,
+            qn: qn,
+          );
+        },
       ),
     ],
   );

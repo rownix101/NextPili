@@ -1,4 +1,5 @@
 use crate::error::Result;
+use crate::playurl;
 use domain::id::Cid;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -47,9 +48,11 @@ pub struct MediaSource {
     pub duration_ms: i64,
     pub headers: HashMap<String, String>,
     pub subtitles: Vec<SubtitleTrack>,
+    /// qn requested / preferred when building this source.
+    pub requested_qn: Option<u32>,
 }
 
-/// Playurl normalization entrypoint (stub until P3).
+/// Playurl normalization entrypoint.
 #[derive(Debug, Default, Clone)]
 pub struct MediaService;
 
@@ -58,10 +61,23 @@ impl MediaService {
         Self
     }
 
-    /// Parse raw playurl JSON into [`MediaSource`].
-    pub fn parse_playurl_json(&self, _cid: Cid, _raw: &str) -> Result<MediaSource> {
-        Err(crate::error::Error::Invalid(
-            "playurl parser not implemented (P3)".into(),
-        ))
+    /// Parse raw playurl JSON (full body or `data` object) into [`MediaSource`].
+    pub fn parse_playurl_json(
+        &self,
+        cid: Cid,
+        raw: &str,
+        preferred_qn: Option<u32>,
+    ) -> Result<MediaSource> {
+        playurl::parse_playurl_json(cid, raw, preferred_qn)
+    }
+
+    /// Parse already-decoded playurl `data` value.
+    pub fn parse_playurl_data(
+        &self,
+        cid: Cid,
+        data: &serde_json::Value,
+        preferred_qn: Option<u32>,
+    ) -> Result<MediaSource> {
+        playurl::parse_playurl_data(cid, data, preferred_qn)
     }
 }

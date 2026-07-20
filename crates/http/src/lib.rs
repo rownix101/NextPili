@@ -8,8 +8,9 @@ pub mod response;
 
 pub use client::{BiliClient, ClientConfig, RequestOptions};
 pub use endpoints::{
-    CaptchaParams, FeedApi, LoginApi, LoginSuccess, NavApi, NavInfo, PopularFeed, QrPollStatus,
-    QrStart, RecommendFeed, SmsLoginRequest, SmsSendRequest, SmsSendResult, VideoApi,
+    now_unix, CaptchaParams, FeedApi, HeartbeatParams, LoginApi, LoginSuccess, NavApi, NavInfo,
+    PlayUrlParams, PopularFeed, QrPollStatus, QrStart, RecommendFeed, SmsLoginRequest,
+    SmsSendRequest, SmsSendResult, VideoApi, PLAYURL_FNVAL_DASH,
 };
 pub use error::{Error, Result};
 pub use middleware::{AuthMode, SignMode};

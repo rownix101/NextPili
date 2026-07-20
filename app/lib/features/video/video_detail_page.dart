@@ -215,22 +215,16 @@ class _InfoColumn extends StatelessWidget {
                 'cid ${i64(p.cid)} · ${_formatDuration(i64(p.durationMs))}',
               ),
               trailing: const Icon(Icons.play_circle_outline),
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('播放能力将在 P3 接入')),
-                );
-              },
+              onTap: () => _openPlayer(context, detail, i64(p.cid)),
             ),
           ),
         const SizedBox(height: 24),
         FilledButton.tonalIcon(
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('播放能力将在 P3 接入')),
-            );
-          },
+          onPressed: detail.pages.isEmpty
+              ? null
+              : () => _openPlayer(context, detail, i64(detail.pages.first.cid)),
           icon: const Icon(Icons.play_arrow),
-          label: const Text('播放（P3）'),
+          label: const Text('播放'),
         ),
       ],
     );
@@ -256,6 +250,16 @@ class _StatChip extends StatelessWidget {
       ),
     );
   }
+}
+
+void _openPlayer(BuildContext context, VideoDetailDto detail, int cid) {
+  final id = detail.bvid.isNotEmpty ? detail.bvid : 'av${i64(detail.aid)}';
+  final title = Uri.encodeComponent(detail.title);
+  final bvid = Uri.encodeComponent(detail.bvid);
+  context.push(
+    '/play/${Uri.encodeComponent(id)}'
+    '?cid=$cid&aid=${i64(detail.aid)}&bvid=$bvid&title=$title',
+  );
 }
 
 String _fmt(int n) {
