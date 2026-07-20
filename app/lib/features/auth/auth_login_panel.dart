@@ -467,7 +467,6 @@ class _CredentialPane extends StatelessWidget {
                   onOpenGee: onOpenSmsGee,
                   onSendSms: onSendSms,
                   onLogin: onSmsLogin,
-                  onRegister: onRegister,
                 );
                 return IndexedStack(
                   index: tabController.index,
@@ -650,7 +649,6 @@ class _SmsForm extends StatelessWidget {
     required this.onOpenGee,
     required this.onSendSms,
     required this.onLogin,
-    required this.onRegister,
   });
 
   final bool busy;
@@ -667,7 +665,6 @@ class _SmsForm extends StatelessWidget {
   final VoidCallback onOpenGee;
   final VoidCallback onSendSms;
   final VoidCallback onLogin;
-  final VoidCallback onRegister;
 
   @override
   Widget build(BuildContext context) {
@@ -767,11 +764,13 @@ class _SmsForm extends StatelessWidget {
           ),
         ],
         const SizedBox(height: AppSpacing.lg),
-        _ActionRow(
-          busy: busy,
-          loginLabel: busy ? l10n.authLoggingIn : l10n.login,
-          onRegister: onRegister,
-          onLogin: onLogin,
+        NpButton(
+          label: busy
+              ? l10n.authLoggingInOrRegistering
+              : l10n.authLoginOrRegister,
+          loading: busy,
+          onPressed: busy ? null : onLogin,
+          expanded: true,
         ),
       ],
     );

@@ -1,11 +1,13 @@
 //! Public FFI API surface (hand-written; FRB generates bindings from these).
 
 pub mod auth;
+pub mod engagement;
 pub mod feed;
 pub mod search;
 pub mod settings;
 pub mod simple;
 pub mod social;
+pub mod user;
 pub mod video;
 
 pub use auth::{
@@ -15,6 +17,9 @@ pub use auth::{
     CaptchaDto, PasswordLoginDto, PasswordLoginResultDto, PasswordLoginResultKind, PasswordRiskDto,
     PasswordRiskSendSmsDto, PasswordRiskSendSmsResultDto, PasswordRiskVerifyDto, QrPollDto,
     QrStartDto, QrStatusKind, SlotDto, SmsLoginDto, SmsSendDto, SmsSendDtoResult,
+};
+pub use engagement::{
+    relation_follow, video_coin, video_favorite, video_like, video_relation, ArchiveRelationDto,
 };
 pub use feed::{
     feed_popular, feed_recommend, FeedItemDto, PopularFeedDto, RecommendFeedDto,
@@ -26,6 +31,11 @@ pub use settings::{get_settings, update_settings, SettingsDto};
 pub use simple::{api_version, bootstrap, ping, ApiVersion, BootstrapConfig};
 pub use social::{
     danmaku_segments, reply_list, DanmakuItemDto, DanmakuSegmentDto, ReplyDto, ReplyListDto,
+};
+pub use user::{
+    fav_folders, fav_resources, history_list, toview_list, FavFolderDto, FavFolderListDto,
+    FavResourceItemDto, FavResourcePageDto, HistoryItemDto, HistoryPageDto, ToViewItemDto,
+    ToViewPageDto,
 };
 pub use video::{
     play_url, playback_start, playback_stop, video_detail, HeaderDto, MediaFormatDto,

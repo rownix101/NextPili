@@ -103,7 +103,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navSearch => 'Search';
 
   @override
+  String get navLibrary => 'Library';
+
+  @override
   String get navSettings => 'Settings';
+
+  @override
+  String get libraryTabHistory => 'History';
+
+  @override
+  String get libraryTabToview => 'Watch later';
+
+  @override
+  String get libraryTabFav => 'Favorites';
+
+  @override
+  String get libraryHistoryEmpty => 'No watch history yet';
+
+  @override
+  String get libraryToviewEmpty => 'Watch later is empty';
+
+  @override
+  String get libraryFavEmpty => 'No favorites yet';
 
   @override
   String get homeTabRecommend => 'For you';
@@ -135,7 +156,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAccountTitle => 'Account & sign-in';
 
   @override
-  String get settingsAccountSubtitle => 'SMS · QR on desktop/tablet';
+  String get settingsAccountSubtitle =>
+      'Sign in / register · QR on desktop/tablet';
 
   @override
   String get settingsDefaultQuality => 'Default quality';
@@ -235,7 +257,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authTitle => 'Account & sign-in';
 
   @override
-  String get authTabSms => 'SMS';
+  String get authTabSms => 'Sign in / Register';
 
   @override
   String get authTabPassword => 'Password';
@@ -285,7 +307,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authSmsIntro =>
-      'Sign in with your phone number and SMS code. Account data stays on this device.';
+      'Sign in or register with your phone number and SMS code. New numbers create an account automatically. Account data stays on this device.';
 
   @override
   String get authCountryCode => 'Country';
@@ -322,6 +344,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authProcessing => 'Signing in…';
 
   @override
+  String get authLoginOrRegister => 'Sign in / Register';
+
+  @override
+  String get authLoggingInOrRegistering => 'Signing in…';
+
+  @override
   String get authCaptchaKeyReady => 'Captcha complete';
 
   @override
@@ -340,7 +368,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authSmsHintFetchFailed => 'Couldn’t get captcha. Try again.';
 
   @override
-  String get authSmsHintSent => 'SMS sent — enter the code to sign in';
+  String get authSmsHintSent =>
+      'SMS sent — enter the code to sign in or register';
 
   @override
   String get authNeedCaptchaFirst => 'Complete captcha first';
@@ -481,17 +510,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authTermsFooter =>
-      'New phone numbers are registered on first sign-in. By signing in you agree to the Terms and Privacy Policy.';
+      'SMS is both sign-in and registration: new phone numbers create an account automatically. By continuing you agree to the Terms and Privacy Policy.';
 
   @override
   String get authShowPassword => 'Show password';
 
   @override
   String get authHidePassword => 'Hide password';
-
-  @override
-  String get authOpenExternalRegister =>
-      'Open bilibili registration in browser';
 
   @override
   String get authOpenExternalForgot => 'Open password recovery in browser';
@@ -521,7 +546,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get follow => 'Follow';
 
   @override
+  String get following => 'Following';
+
+  @override
+  String get followSuccess => 'Followed';
+
+  @override
+  String get unfollowSuccess => 'Unfollowed';
+
+  @override
   String get actionComingSoon => 'Coming soon';
+
+  @override
+  String get loginRequiredTitle => 'Sign in required';
+
+  @override
+  String get loginRequiredBody => 'Sign in to like, coin, favorite, or follow';
+
+  @override
+  String get coinDialogTitle => 'Cast coins';
+
+  @override
+  String get coinOne => '1 coin';
+
+  @override
+  String get coinTwo => '2 coins';
+
+  @override
+  String get coinAlreadyMax => 'Already cast 2 coins';
+
+  @override
+  String get favoriteAdded => 'Added to favorites';
+
+  @override
+  String get favoriteRemoved => 'Removed from favorites';
+
+  @override
+  String get linkCopied => 'Link copied';
 
   @override
   String get videoRelated => 'Related';

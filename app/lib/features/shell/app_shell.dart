@@ -12,7 +12,8 @@ class AppShell extends StatelessWidget {
 
   int _indexForLocation(String location) {
     if (location.startsWith('/search')) return 1;
-    if (location.startsWith('/settings')) return 2;
+    if (location.startsWith('/library')) return 2;
+    if (location.startsWith('/settings')) return 3;
     return 0;
   }
 
@@ -23,6 +24,8 @@ class AppShell extends StatelessWidget {
       case 1:
         context.go('/search');
       case 2:
+        context.go('/library');
+      case 3:
         context.go('/settings');
     }
   }
@@ -35,6 +38,52 @@ class AppShell extends StatelessWidget {
     final colors = AppColors.of(context);
     final l10n = context.l10n;
 
+    final destinationsRail = [
+      NavigationRailDestination(
+        icon: const Icon(AppIcons.home),
+        selectedIcon: const Icon(AppIcons.home),
+        label: Text(l10n.navHome),
+      ),
+      NavigationRailDestination(
+        icon: const Icon(AppIcons.search),
+        selectedIcon: const Icon(AppIcons.search),
+        label: Text(l10n.navSearch),
+      ),
+      NavigationRailDestination(
+        icon: const Icon(AppIcons.inbox),
+        selectedIcon: const Icon(AppIcons.inbox),
+        label: Text(l10n.navLibrary),
+      ),
+      NavigationRailDestination(
+        icon: const Icon(AppIcons.settings),
+        selectedIcon: const Icon(AppIcons.settings),
+        label: Text(l10n.navSettings),
+      ),
+    ];
+
+    final destinationsBar = [
+      NavigationDestination(
+        icon: const Icon(AppIcons.home),
+        selectedIcon: const Icon(AppIcons.home),
+        label: l10n.navHome,
+      ),
+      NavigationDestination(
+        icon: const Icon(AppIcons.search),
+        selectedIcon: const Icon(AppIcons.search),
+        label: l10n.navSearch,
+      ),
+      NavigationDestination(
+        icon: const Icon(AppIcons.inbox),
+        selectedIcon: const Icon(AppIcons.inbox),
+        label: l10n.navLibrary,
+      ),
+      NavigationDestination(
+        icon: const Icon(AppIcons.settings),
+        selectedIcon: const Icon(AppIcons.settings),
+        label: l10n.navSettings,
+      ),
+    ];
+
     if (wide) {
       return Scaffold(
         backgroundColor: colors.canvas,
@@ -45,23 +94,7 @@ class AppShell extends StatelessWidget {
               onDestinationSelected: (i) => _onDestinationSelected(context, i),
               labelType: NavigationRailLabelType.all,
               backgroundColor: colors.elevated.withValues(alpha: 0.55),
-              destinations: [
-                NavigationRailDestination(
-                  icon: const Icon(AppIcons.home),
-                  selectedIcon: const Icon(AppIcons.home),
-                  label: Text(l10n.navHome),
-                ),
-                NavigationRailDestination(
-                  icon: const Icon(AppIcons.search),
-                  selectedIcon: const Icon(AppIcons.search),
-                  label: Text(l10n.navSearch),
-                ),
-                NavigationRailDestination(
-                  icon: const Icon(AppIcons.settings),
-                  selectedIcon: const Icon(AppIcons.settings),
-                  label: Text(l10n.navSettings),
-                ),
-              ],
+              destinations: destinationsRail,
             ),
             VerticalDivider(width: 1, color: colors.borderSubtle),
             Expanded(child: child),
@@ -76,23 +109,7 @@ class AppShell extends StatelessWidget {
       bottomNavigationBar: NavigationBar(
         selectedIndex: index,
         onDestinationSelected: (i) => _onDestinationSelected(context, i),
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(AppIcons.home),
-            selectedIcon: const Icon(AppIcons.home),
-            label: l10n.navHome,
-          ),
-          NavigationDestination(
-            icon: const Icon(AppIcons.search),
-            selectedIcon: const Icon(AppIcons.search),
-            label: l10n.navSearch,
-          ),
-          NavigationDestination(
-            icon: const Icon(AppIcons.settings),
-            selectedIcon: const Icon(AppIcons.settings),
-            label: l10n.navSettings,
-          ),
-        ],
+        destinations: destinationsBar,
       ),
     );
   }

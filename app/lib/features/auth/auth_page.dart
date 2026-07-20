@@ -26,7 +26,6 @@ final accountsProvider = StateProvider<List<AccountPublicDto>>((ref) {
 });
 
 /// Passport URLs opened externally for flows we do not host in-app.
-const _registerUrl = 'https://passport.bilibili.com/register/index.html';
 const _forgotPasswordUrl =
     'https://passport.bilibili.com/pc/passport/findPassword';
 
@@ -524,10 +523,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
                             onPreparePwdCaptcha: _preparePwdCaptcha,
                             onOpenPwdGee: _openPwdGeeValidator,
                             onPasswordLogin: _loginPassword,
-                            onRegister: () => _openExternal(
-                              _registerUrl,
-                              l10n.authOpenExternalRegister,
-                            ),
+                            onRegister: () => formTabs.animateTo(1),
                             onForgotPassword: () => _openExternal(
                               _forgotPasswordUrl,
                               l10n.authOpenExternalForgot,

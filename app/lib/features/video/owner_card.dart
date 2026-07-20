@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../bridge/core_api.dart';
 import '../../core/icons/app_icons.dart';
@@ -7,18 +9,97 @@ import '../../core/theme/shapes.dart';
 import '../../core/theme/spacing.dart';
 import '../../core/widgets/np_button.dart';
 import '../../l10n/l10n.dart';
+import 'engagement_bar.dart';
 
-/// UP card on the watch-page right rail (avatar, name, follow placeholder).
-class OwnerCard extends StatelessWidget {
-  const OwnerCard({super.key, required this.detail});
+/// UP card on the watch-page right rail (avatar, name, follow).
+class OwnerCard extends ConsumerStatefulWidget {
+  const OwnerCard({
+    super.key,
+    required this.detail,
+  });
 
   final VideoDetailDto detail;
+
+  @override
+  ConsumerState<OwnerCard> createState() => _OwnerCardState();
+}
+
+class _OwnerCardState extends ConsumerState<OwnerCard> {
+  bool _busy = false;
+  bool? _followingOverride;
+
+  String get _key =>
+      relationKey(i64(widget.detail.aid), widget.detail.bvid);
+
+  Future<bool> _ensureLogin() async {
+    if (isLoggedIn()) return true;
+    final l10n = context.l10n;
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.loginRequiredTitle),
+        content: Text(l10n.loginRequiredBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.goLogin),
+          ),
+        ],
+      ),
+    );
+    if (go == true && mounted) {
+      context.push('/auth');
+    }
+    return false;
+  }
+
+  Future<void> _toggleFollow(bool currentlyFollowing) async {
+    if (_busy) return;
+    if (!await _ensureLogin()) return;
+    final next = !currentlyFollowing;
+    setState(() {
+      _busy = true;
+      _followingOverride = next;
+    });
+    try {
+      await CoreApi.instance.relationFollow(
+        mid: i64(widget.detail.ownerMid),
+        follow: next,
+      );
+      ref.invalidate(videoRelationProvider(_key));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              next ? context.l10n.followSuccess : context.l10n.unfollowSuccess,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _followingOverride = currentlyFollowing);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage(e, context.l10n))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = AppColors.of(context);
     final l10n = context.l10n;
+    final detail = widget.detail;
+    final rel = ref.watch(videoRelationProvider(_key)).asData?.value;
+    final following = _followingOverride ?? rel?.following ?? false;
 
     return ContentPad(
       child: Row(
@@ -57,14 +138,14 @@ class OwnerCard extends StatelessWidget {
             ),
           ),
           NpButton(
-            label: l10n.follow,
-            icon: AppIcons.plus,
-            variant: NpButtonVariant.secondary,
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.actionComingSoon)),
-              );
-            },
+            label: following ? l10n.following : l10n.follow,
+            icon: following ? AppIcons.check : AppIcons.plus,
+            variant: following
+                ? NpButtonVariant.secondary
+                : NpButtonVariant.primary,
+            onPressed: _busy
+                ? null
+                : () => _toggleFollow(following),
           ),
         ],
       ),

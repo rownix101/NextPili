@@ -284,11 +284,53 @@ abstract class AppLocalizations {
   /// **'搜索'**
   String get navSearch;
 
+  /// No description provided for @navLibrary.
+  ///
+  /// In zh, this message translates to:
+  /// **'我的'**
+  String get navLibrary;
+
   /// No description provided for @navSettings.
   ///
   /// In zh, this message translates to:
   /// **'设置'**
   String get navSettings;
+
+  /// No description provided for @libraryTabHistory.
+  ///
+  /// In zh, this message translates to:
+  /// **'历史'**
+  String get libraryTabHistory;
+
+  /// No description provided for @libraryTabToview.
+  ///
+  /// In zh, this message translates to:
+  /// **'稍后再看'**
+  String get libraryTabToview;
+
+  /// No description provided for @libraryTabFav.
+  ///
+  /// In zh, this message translates to:
+  /// **'收藏'**
+  String get libraryTabFav;
+
+  /// No description provided for @libraryHistoryEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无观看历史'**
+  String get libraryHistoryEmpty;
+
+  /// No description provided for @libraryToviewEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'稍后再看是空的'**
+  String get libraryToviewEmpty;
+
+  /// No description provided for @libraryFavEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无收藏'**
+  String get libraryFavEmpty;
 
   /// No description provided for @homeTabRecommend.
   ///
@@ -347,7 +389,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsAccountSubtitle.
   ///
   /// In zh, this message translates to:
-  /// **'短信登录 · 桌面/平板扫码'**
+  /// **'登录/注册 · 桌面/平板扫码'**
   String get settingsAccountSubtitle;
 
   /// No description provided for @settingsDefaultQuality.
@@ -521,7 +563,7 @@ abstract class AppLocalizations {
   /// No description provided for @authTabSms.
   ///
   /// In zh, this message translates to:
-  /// **'短信登录'**
+  /// **'登录/注册'**
   String get authTabSms;
 
   /// No description provided for @authTabPassword.
@@ -605,7 +647,7 @@ abstract class AppLocalizations {
   /// No description provided for @authSmsIntro.
   ///
   /// In zh, this message translates to:
-  /// **'使用手机号与短信验证码登录。账号信息仅保存在本机。'**
+  /// **'使用手机号与短信验证码登录或注册。未注册号码将自动创建账号。账号信息仅保存在本机。'**
   String get authSmsIntro;
 
   /// No description provided for @authCountryCode.
@@ -674,6 +716,18 @@ abstract class AppLocalizations {
   /// **'登录中…'**
   String get authProcessing;
 
+  /// No description provided for @authLoginOrRegister.
+  ///
+  /// In zh, this message translates to:
+  /// **'登录/注册'**
+  String get authLoginOrRegister;
+
+  /// No description provided for @authLoggingInOrRegistering.
+  ///
+  /// In zh, this message translates to:
+  /// **'登录/注册中…'**
+  String get authLoggingInOrRegistering;
+
   /// No description provided for @authCaptchaKeyReady.
   ///
   /// In zh, this message translates to:
@@ -713,7 +767,7 @@ abstract class AppLocalizations {
   /// No description provided for @authSmsHintSent.
   ///
   /// In zh, this message translates to:
-  /// **'短信已发送，请输入验证码登录'**
+  /// **'短信已发送，请输入验证码完成登录/注册'**
   String get authSmsHintSent;
 
   /// No description provided for @authNeedCaptchaFirst.
@@ -983,7 +1037,7 @@ abstract class AppLocalizations {
   /// No description provided for @authTermsFooter.
   ///
   /// In zh, this message translates to:
-  /// **'未注册的手机号登录后将自动创建账号。登录即表示同意用户协议与隐私政策。'**
+  /// **'短信登录与注册为同一流程：未注册手机号将自动创建账号。继续即表示同意用户协议与隐私政策。'**
   String get authTermsFooter;
 
   /// No description provided for @authShowPassword.
@@ -997,12 +1051,6 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'隐藏密码'**
   String get authHidePassword;
-
-  /// No description provided for @authOpenExternalRegister.
-  ///
-  /// In zh, this message translates to:
-  /// **'在浏览器打开 bilibili 注册页'**
-  String get authOpenExternalRegister;
 
   /// No description provided for @authOpenExternalForgot.
   ///
@@ -1058,11 +1106,83 @@ abstract class AppLocalizations {
   /// **'关注'**
   String get follow;
 
+  /// No description provided for @following.
+  ///
+  /// In zh, this message translates to:
+  /// **'已关注'**
+  String get following;
+
+  /// No description provided for @followSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'已关注'**
+  String get followSuccess;
+
+  /// No description provided for @unfollowSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'已取消关注'**
+  String get unfollowSuccess;
+
   /// No description provided for @actionComingSoon.
   ///
   /// In zh, this message translates to:
   /// **'即将支持'**
   String get actionComingSoon;
+
+  /// No description provided for @loginRequiredTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'需要登录'**
+  String get loginRequiredTitle;
+
+  /// No description provided for @loginRequiredBody.
+  ///
+  /// In zh, this message translates to:
+  /// **'登录后即可点赞、投币、收藏与关注'**
+  String get loginRequiredBody;
+
+  /// No description provided for @coinDialogTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'投币'**
+  String get coinDialogTitle;
+
+  /// No description provided for @coinOne.
+  ///
+  /// In zh, this message translates to:
+  /// **'投 1 枚'**
+  String get coinOne;
+
+  /// No description provided for @coinTwo.
+  ///
+  /// In zh, this message translates to:
+  /// **'投 2 枚'**
+  String get coinTwo;
+
+  /// No description provided for @coinAlreadyMax.
+  ///
+  /// In zh, this message translates to:
+  /// **'已投满 2 枚硬币'**
+  String get coinAlreadyMax;
+
+  /// No description provided for @favoriteAdded.
+  ///
+  /// In zh, this message translates to:
+  /// **'已收藏'**
+  String get favoriteAdded;
+
+  /// No description provided for @favoriteRemoved.
+  ///
+  /// In zh, this message translates to:
+  /// **'已取消收藏'**
+  String get favoriteRemoved;
+
+  /// No description provided for @linkCopied.
+  ///
+  /// In zh, this message translates to:
+  /// **'链接已复制'**
+  String get linkCopied;
 
   /// No description provided for @videoRelated.
   ///

@@ -4,11 +4,13 @@ import 'package:path/path.dart' as p;
 
 import '../l10n/app_localizations.dart';
 import 'frb/api/auth.dart' as frb_auth;
+import 'frb/api/engagement.dart' as frb_engagement;
 import 'frb/api/feed.dart' as frb_feed;
 import 'frb/api/search.dart' as frb_search;
 import 'frb/api/settings.dart' as frb_settings;
 import 'frb/api/simple.dart' as frb;
 import 'frb/api/social.dart' as frb_social;
+import 'frb/api/user.dart' as frb_user;
 import 'frb/api/video.dart' as frb_video;
 import 'frb/auth_service.dart';
 import 'frb/error.dart';
@@ -20,8 +22,19 @@ export 'frb/api/feed.dart'
 export 'frb/api/search.dart'
     show SearchSuggestDto, SearchVideoItemDto, SearchVideoPageDto;
 export 'frb/api/settings.dart' show SettingsDto;
+export 'frb/api/engagement.dart' show ArchiveRelationDto;
 export 'frb/api/social.dart'
     show DanmakuItemDto, DanmakuSegmentDto, ReplyDto, ReplyListDto;
+export 'frb/api/user.dart'
+    show
+        FavFolderDto,
+        FavFolderListDto,
+        FavResourceItemDto,
+        FavResourcePageDto,
+        HistoryItemDto,
+        HistoryPageDto,
+        ToViewItemDto,
+        ToViewPageDto;
 export 'frb/api/video.dart'
     show
         HeaderDto,
@@ -158,6 +171,36 @@ class CoreApi {
   }) =>
       frb_search.searchVideo(keyword: keyword, page: page);
 
+  /// History cursor. First page: `max=0`, `viewAt=0`, `business=''`.
+  Future<frb_user.HistoryPageDto> historyList({
+    int max = 0,
+    int viewAt = 0,
+    String business = '',
+    int ps = 20,
+  }) =>
+      frb_user.historyList(
+        max: PlatformInt64Util.from(max),
+        viewAt: PlatformInt64Util.from(viewAt),
+        business: business,
+        ps: ps,
+      );
+
+  Future<frb_user.ToViewPageDto> toviewList({int pn = 1, int ps = 20}) =>
+      frb_user.toviewList(pn: pn, ps: ps);
+
+  Future<frb_user.FavFolderListDto> favFolders() => frb_user.favFolders();
+
+  Future<frb_user.FavResourcePageDto> favResources({
+    required int mediaId,
+    int pn = 1,
+    int ps = 20,
+  }) =>
+      frb_user.favResources(
+        mediaId: PlatformInt64Util.from(mediaId),
+        pn: pn,
+        ps: ps,
+      );
+
   Future<frb_video.VideoDetailDto> videoDetail(String id) =>
       frb_video.videoDetail(id: id);
 
@@ -213,6 +256,60 @@ class CoreApi {
         segmentIndex: segmentIndex,
       );
 
+  /// Viewer like/coin/fav/follow flags for an archive.
+  Future<frb_engagement.ArchiveRelationDto> videoRelation({
+    required int aid,
+    required String bvid,
+  }) =>
+      frb_engagement.videoRelation(
+        aid: PlatformInt64Util.from(aid),
+        bvid: bvid,
+      );
+
+  Future<frb_engagement.ArchiveRelationDto> videoLike({
+    required int aid,
+    required String bvid,
+    required bool like,
+  }) =>
+      frb_engagement.videoLike(
+        aid: PlatformInt64Util.from(aid),
+        bvid: bvid,
+        like: like,
+      );
+
+  Future<frb_engagement.ArchiveRelationDto> videoCoin({
+    required int aid,
+    required String bvid,
+    int multiply = 1,
+    bool alsoLike = false,
+  }) =>
+      frb_engagement.videoCoin(
+        aid: PlatformInt64Util.from(aid),
+        bvid: bvid,
+        multiply: multiply,
+        alsoLike: alsoLike,
+      );
+
+  Future<frb_engagement.ArchiveRelationDto> videoFavorite({
+    required int aid,
+    required String bvid,
+    required bool favorite,
+  }) =>
+      frb_engagement.videoFavorite(
+        aid: PlatformInt64Util.from(aid),
+        bvid: bvid,
+        favorite: favorite,
+      );
+
+  Future<void> relationFollow({
+    required int mid,
+    required bool follow,
+  }) =>
+      frb_engagement.relationFollow(
+        mid: PlatformInt64Util.from(mid),
+        follow: follow,
+      );
+
   frb_settings.SettingsDto getSettings() => frb_settings.getSettings();
 
   /// Patch settings. Pass `proxy: ''` to clear proxy.
@@ -242,7 +339,7 @@ String errorMessage(Object error, AppLocalizations l10n) {
       ErrorKind.invalidArgument =>
         error.message.trim().isEmpty ? l10n.errorGeneric : error.message,
       ErrorKind.parse || ErrorKind.storage || ErrorKind.internal =>
-        l10n.errorGeneric,
+        error.message.trim().isEmpty ? l10n.errorGeneric : error.message,
     };
   }
   if (error is AnyhowException) {

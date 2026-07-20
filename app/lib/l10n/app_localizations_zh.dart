@@ -102,7 +102,28 @@ class AppLocalizationsZh extends AppLocalizations {
   String get navSearch => '搜索';
 
   @override
+  String get navLibrary => '我的';
+
+  @override
   String get navSettings => '设置';
+
+  @override
+  String get libraryTabHistory => '历史';
+
+  @override
+  String get libraryTabToview => '稍后再看';
+
+  @override
+  String get libraryTabFav => '收藏';
+
+  @override
+  String get libraryHistoryEmpty => '暂无观看历史';
+
+  @override
+  String get libraryToviewEmpty => '稍后再看是空的';
+
+  @override
+  String get libraryFavEmpty => '暂无收藏';
 
   @override
   String get homeTabRecommend => '推荐';
@@ -134,7 +155,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsAccountTitle => '账号与登录';
 
   @override
-  String get settingsAccountSubtitle => '短信登录 · 桌面/平板扫码';
+  String get settingsAccountSubtitle => '登录/注册 · 桌面/平板扫码';
 
   @override
   String get settingsDefaultQuality => '默认清晰度';
@@ -233,7 +254,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authTitle => '账号与登录';
 
   @override
-  String get authTabSms => '短信登录';
+  String get authTabSms => '登录/注册';
 
   @override
   String get authTabPassword => '密码登录';
@@ -281,7 +302,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authVerify => '验证';
 
   @override
-  String get authSmsIntro => '使用手机号与短信验证码登录。账号信息仅保存在本机。';
+  String get authSmsIntro => '使用手机号与短信验证码登录或注册。未注册号码将自动创建账号。账号信息仅保存在本机。';
 
   @override
   String get authCountryCode => '区号';
@@ -318,6 +339,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authProcessing => '登录中…';
 
   @override
+  String get authLoginOrRegister => '登录/注册';
+
+  @override
+  String get authLoggingInOrRegistering => '登录/注册中…';
+
+  @override
   String get authCaptchaKeyReady => '人机验证已通过';
 
   @override
@@ -336,7 +363,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authSmsHintFetchFailed => '无法获取人机验证，请重试';
 
   @override
-  String get authSmsHintSent => '短信已发送，请输入验证码登录';
+  String get authSmsHintSent => '短信已发送，请输入验证码完成登录/注册';
 
   @override
   String get authNeedCaptchaFirst => '请先完成人机验证';
@@ -471,16 +498,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authCaptchaSection => '人机验证';
 
   @override
-  String get authTermsFooter => '未注册的手机号登录后将自动创建账号。登录即表示同意用户协议与隐私政策。';
+  String get authTermsFooter => '短信登录与注册为同一流程：未注册手机号将自动创建账号。继续即表示同意用户协议与隐私政策。';
 
   @override
   String get authShowPassword => '显示密码';
 
   @override
   String get authHidePassword => '隐藏密码';
-
-  @override
-  String get authOpenExternalRegister => '在浏览器打开 bilibili 注册页';
 
   @override
   String get authOpenExternalForgot => '在浏览器打开找回密码页';
@@ -510,7 +534,43 @@ class AppLocalizationsZh extends AppLocalizations {
   String get follow => '关注';
 
   @override
+  String get following => '已关注';
+
+  @override
+  String get followSuccess => '已关注';
+
+  @override
+  String get unfollowSuccess => '已取消关注';
+
+  @override
   String get actionComingSoon => '即将支持';
+
+  @override
+  String get loginRequiredTitle => '需要登录';
+
+  @override
+  String get loginRequiredBody => '登录后即可点赞、投币、收藏与关注';
+
+  @override
+  String get coinDialogTitle => '投币';
+
+  @override
+  String get coinOne => '投 1 枚';
+
+  @override
+  String get coinTwo => '投 2 枚';
+
+  @override
+  String get coinAlreadyMax => '已投满 2 枚硬币';
+
+  @override
+  String get favoriteAdded => '已收藏';
+
+  @override
+  String get favoriteRemoved => '已取消收藏';
+
+  @override
+  String get linkCopied => '链接已复制';
 
   @override
   String get videoRelated => '相关推荐';

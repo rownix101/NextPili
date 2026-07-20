@@ -110,15 +110,16 @@ flutter run -d linux
 
 ## 当前进度
 
-**P0–P3 已完成 · P4 进行中**（评论列表 + 弹幕 Overlay，REST）；下一目标 **P5**（搜索 / 历史 / 收藏只读）。切片与验收以 [Roadmap](docs/roadmap.md) 为准。
+**P0–P5 已完成**；下一目标 **P6**（动态 / 直播 / 番剧 / 多账号 / 写操作）。切片与验收以 [Roadmap](docs/roadmap.md) 为准。
 
 已打通（摘要）：
 
 - Workspace 与 crate 边界：`domain` / `auth` / `store` / `http` / `media` / `core`
-- FRB：`ping` · `api_version` · `bootstrap` · 登录/账号 / feed / video / play_url / settings
+- FRB：`ping` · `api_version` · `bootstrap` · 登录/账号 / feed / video / play_url / settings / search / library
 - 账号持久化（`accounts.json`，无 Cookie 粘贴导入）与 `buvid3`（`device.json`）
 - WBI / AppSign 与 HTTP 管线（Cookie / CSRF / 签名）
 - 短信登录与桌面/平板 TV 扫码；推荐/热门/详情；playurl → media_kit 播放与清晰度
+- 评论 + 弹幕 Overlay（REST）；搜索；历史 / 稍后再看 / 收藏只读
 - 设置：`preferred_qn` / 代理（Rust store，热更新 HTTP 客户端）
 
 ## 许可

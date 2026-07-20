@@ -63,18 +63,20 @@ POST /x/passport-tv-login/qrcode/poll
 
 ---
 
-### 2. 短信登录（App，手机端首选）
+### 2. 短信登录 / 注册（App，手机端首选）
+
+与 B 站官网一致：**短信是登录与注册同一流程**。未注册手机号在 `login/sms` 成功后由服务端建号（响应可含 `is_new`）。产品 UI 文案为「登录/注册」，**不实现**独立 `web/reg/tel` 注册页（社区旧链仍可参考，见下文）。
 
 ```
 GET /x/passport-login/captcha?source=main_web
 POST /x/passport-login/sms/send   # AppSign + 极验结果
-POST /x/passport-login/login/sms  # AppSign
+POST /x/passport-login/login/sms  # AppSign；新号即注册
 ```
 
 客户端策略：
 
-- **手机**：短信 + 密码
-- **桌面 / 平板**：短信 + 密码 + TV/HD 扫码
+- **手机**：短信（登录/注册）+ 密码
+- **桌面 / 平板**：短信（登录/注册）+ 密码 + TV/HD 扫码
 - **不提供** Cookie 粘贴导入 UI（登录成功后的 jar 仍由 Rust 持久化）
 
 `cid` 为中国大陆时使用护照国家列表 **id=1**（不是拨号 86）。
@@ -103,12 +105,12 @@ POST /x/passport-login/oauth2/login # AppSign + 极验
 
 ---
 
-### 4. 短信登录（App）
+### 4. 短信登录 / 注册（App，细节）
 
 ```
 GET /x/passport-login/captcha?source=main_web # 极验参数
 POST /x/passport-login/sms/send # 发短信 AppSign
-POST /x/passport-login/login/sms # 登录 AppSign
+POST /x/passport-login/login/sms # 登录（含新号注册）AppSign
 ```
 
 发短信关键参数：
@@ -121,6 +123,46 @@ POST /x/passport-login/login/sms # 登录 AppSign
 | `login_session_id` | `md5(buvid + timestamp_ms)` |
 | `gee_*` / `recaptcha_token` | 人机验证结果 |
 | `build`, `mobi_app`, `platform`, `statistics` | 客户端信息 |
+
+成功 `data` 除 cookie / token 外，可出现 `is_new`（`true` = 本次为新注册）。客户端可忽略该字段，统一按登录成功处理。
+
+---
+
+### 5. 独立 Web 注册（社区文档，非 MVP）
+
+[bilibili-API-collect · 用户注册](https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/docs/user/register.md) 记录的旧 Web 链（官网 UI 已多半并入短信登录，**NextPili 不接**，仅备查）：
+
+```text
+极验 captcha
+→ POST /web/sms/general/v2/send   # type=1 注册短信（登录短信多为 type=21）
+→ POST /web/reg/tel               # cid, tel, code, nickName, pwd, plat=0
+```
+
+| 参数 | 说明 |
+|------|------|
+| `type=1` | 注册用途短信（与登录短信区分） |
+| `nickName` / `pwd` | 注册时设昵称与密码（明文 pwd，社区文档） |
+| `code` | 短信验证码；`1005` 错误、`1007` 过期 |
+
+Example（提交注册，脱敏）：
+
+```http
+POST /web/reg/tel
+Content-Type: application/x-www-form-urlencoded
+
+plat=0&cid=1&tel=138****8888&code=******&nickName=example&pwd=********&gourl=https://www.bilibili.com/
+```
+
+```json
+{
+  "code": 0,
+  "data": {
+    "redirectUrl": "https://www.bilibili.com",
+    "hint": "注册成功",
+    "in_reg_audit": 0
+  }
+}
+```
 
 ---
 

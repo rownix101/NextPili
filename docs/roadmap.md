@@ -3,7 +3,7 @@
 按垂直切片交付可演示能力：鉴权 → 浏览 → 播放 → 互动 → 个人库 → 扩展业务。阶段顺序与 [architecture §12](./architecture.md#12-mvp-落地顺序) 一致；用例名以 [design/core.md](./design/core.md) 为准。
 
 > 状态：草案 v0.1  
-> 当前进度：**P5 进行中**（搜索已通） · 下一目标 历史 / 稍后再看 / 收藏  
+> 当前进度：**P5 完成**（搜索 + 历史 / 稍后再看 / 收藏只读） · 下一目标 P6 扩展  
 > 相关：[Architecture](./architecture.md) · [API](./api/README.md) · [Design](./design/README.md) · [UX](./ux/README.md)
 
 ---
@@ -17,8 +17,8 @@
 | **P2** | 浏览 | ✅ 完成 | 推荐/热门 feed + 稿件详情页 |
 | **P3** | 播放 | ✅ 完成 | playurl → media_kit + 清晰度 + 心跳 + 设置 qn/代理 |
 | **P4** | 互动只读 | ✅ 完成 | 评论列表 + 弹幕展示（REST） |
-| **P5** | 个人库 | 🔶 进行中 | 搜索 ✅ · 历史/稍后再看/收藏 ⬜ |
-| **P6** | 扩展 | ⬜ 计划 | 动态、直播、番剧、多账号槽、写操作 |
+| **P5** | 个人库 | ✅ 完成 | 搜索 + 历史 / 稍后再看 / 收藏（只读） |
+| **P6** | 扩展 | 🔶 进行中 | 观看页写操作（赞/币/藏/关注）✅ · 动态/直播/番剧/多账号 ⬜ |
 
 **每阶段结束标准（通用）**
 
@@ -131,16 +131,16 @@
 
 ---
 
-### P5 · 个人库 🔶
+### P5 · 个人库 ✅
 
 可找片、回看、管理稍后再看与收藏（只读为主）。
 
 | 交付 | 用例方向 | Flutter | 状态 |
 |------|----------|---------|------|
 | 搜索（suggest + type=video，Gaia 后置） | `search_suggest` · `search_video` | feature `search` | ✅ |
-| 观看历史 | `history_*` | feature `user` | ⬜ |
-| 稍后再看 | `toview_*` | feature `user` | ⬜ |
-| 收藏夹列表与内容（只读） | `fav_*` | feature `user` | ⬜ |
+| 观看历史 | `history_list` | feature `user` | ✅ |
+| 稍后再看 | `toview_list` | feature `user` | ✅ |
+| 收藏夹列表与内容（只读） | `fav_folders` · `fav_resources` | feature `user` | ✅ |
 
 **验收**
 
@@ -162,7 +162,7 @@
 | 直播 | REST 进房 + WebSocket 弹幕（[live.md](./api/endpoints/live.md)） |
 | 番剧 / PGC | 详情与 playurl 变体（[pgc.md](./api/endpoints/pgc.md)） |
 | 多账号槽 | main / heartbeat / recommend / video 可绑不同账号 |
-| 写操作 | 点赞、投币、收藏写入、发弹幕、关注等（需 csrf + 风险提示） |
+| 写操作 | 点赞 / 投币 / 默认收藏夹 / 关注 ✅ · 发弹幕 / 发评 / 三连 UI ⬜ |
 
 **验收**：至少「动态只读 + 一场直播可看 + 单账号槽配置 UI」可演示；写操作可按子里程碑拆 PR。
 

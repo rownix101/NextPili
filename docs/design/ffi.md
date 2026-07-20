@@ -66,7 +66,7 @@ auth:    login_sms_*, login_password, login_qr_* (desktop/tablet UI), logout, li
 feed:    feed_recommend, feed_popular
 video:   video_detail, play_url, video_related
 social:  reply_list, danmaku_view, ...
-user:    history, watch_later, favorites_...
+user:    history_list, toview_list, fav_folders, fav_resources
 search:  search_video, search_suggest
 ```
 

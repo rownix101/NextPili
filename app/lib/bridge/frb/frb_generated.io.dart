@@ -4,11 +4,13 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'api/auth.dart';
+import 'api/engagement.dart';
 import 'api/feed.dart';
 import 'api/search.dart';
 import 'api/settings.dart';
 import 'api/simple.dart';
 import 'api/social.dart';
+import 'api/user.dart';
 import 'api/video.dart';
 import 'auth_service.dart';
 import 'dart:async';
@@ -37,6 +39,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   AppError dco_decode_app_error(dynamic raw);
+
+  @protected
+  ArchiveRelationDto dco_decode_archive_relation_dto(dynamic raw);
 
   @protected
   bool dco_decode_bool(dynamic raw);
@@ -91,10 +96,28 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ErrorKind dco_decode_error_kind(dynamic raw);
 
   @protected
+  FavFolderDto dco_decode_fav_folder_dto(dynamic raw);
+
+  @protected
+  FavFolderListDto dco_decode_fav_folder_list_dto(dynamic raw);
+
+  @protected
+  FavResourceItemDto dco_decode_fav_resource_item_dto(dynamic raw);
+
+  @protected
+  FavResourcePageDto dco_decode_fav_resource_page_dto(dynamic raw);
+
+  @protected
   FeedItemDto dco_decode_feed_item_dto(dynamic raw);
 
   @protected
   HeaderDto dco_decode_header_dto(dynamic raw);
+
+  @protected
+  HistoryItemDto dco_decode_history_item_dto(dynamic raw);
+
+  @protected
+  HistoryPageDto dco_decode_history_page_dto(dynamic raw);
 
   @protected
   int dco_decode_i_32(dynamic raw);
@@ -112,10 +135,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<DanmakuItemDto> dco_decode_list_danmaku_item_dto(dynamic raw);
 
   @protected
+  List<FavFolderDto> dco_decode_list_fav_folder_dto(dynamic raw);
+
+  @protected
+  List<FavResourceItemDto> dco_decode_list_fav_resource_item_dto(dynamic raw);
+
+  @protected
   List<FeedItemDto> dco_decode_list_feed_item_dto(dynamic raw);
 
   @protected
   List<HeaderDto> dco_decode_list_header_dto(dynamic raw);
+
+  @protected
+  List<HistoryItemDto> dco_decode_list_history_item_dto(dynamic raw);
 
   @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
@@ -131,6 +163,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<SubtitleTrackDto> dco_decode_list_subtitle_track_dto(dynamic raw);
+
+  @protected
+  List<ToViewItemDto> dco_decode_list_to_view_item_dto(dynamic raw);
 
   @protected
   List<VideoPageDto> dco_decode_list_video_page_dto(dynamic raw);
@@ -231,6 +266,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SubtitleTrackDto dco_decode_subtitle_track_dto(dynamic raw);
 
   @protected
+  ToViewItemDto dco_decode_to_view_item_dto(dynamic raw);
+
+  @protected
+  ToViewPageDto dco_decode_to_view_page_dto(dynamic raw);
+
+  @protected
   int dco_decode_u_32(dynamic raw);
 
   @protected
@@ -259,6 +300,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   AppError sse_decode_app_error(SseDeserializer deserializer);
+
+  @protected
+  ArchiveRelationDto sse_decode_archive_relation_dto(
+    SseDeserializer deserializer,
+  );
 
   @protected
   bool sse_decode_bool(SseDeserializer deserializer);
@@ -325,10 +371,32 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ErrorKind sse_decode_error_kind(SseDeserializer deserializer);
 
   @protected
+  FavFolderDto sse_decode_fav_folder_dto(SseDeserializer deserializer);
+
+  @protected
+  FavFolderListDto sse_decode_fav_folder_list_dto(SseDeserializer deserializer);
+
+  @protected
+  FavResourceItemDto sse_decode_fav_resource_item_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FavResourcePageDto sse_decode_fav_resource_page_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   FeedItemDto sse_decode_feed_item_dto(SseDeserializer deserializer);
 
   @protected
   HeaderDto sse_decode_header_dto(SseDeserializer deserializer);
+
+  @protected
+  HistoryItemDto sse_decode_history_item_dto(SseDeserializer deserializer);
+
+  @protected
+  HistoryPageDto sse_decode_history_page_dto(SseDeserializer deserializer);
 
   @protected
   int sse_decode_i_32(SseDeserializer deserializer);
@@ -350,10 +418,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<FavFolderDto> sse_decode_list_fav_folder_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FavResourceItemDto> sse_decode_list_fav_resource_item_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<FeedItemDto> sse_decode_list_feed_item_dto(SseDeserializer deserializer);
 
   @protected
   List<HeaderDto> sse_decode_list_header_dto(SseDeserializer deserializer);
+
+  @protected
+  List<HistoryItemDto> sse_decode_list_history_item_dto(
+    SseDeserializer deserializer,
+  );
 
   @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
@@ -371,6 +454,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<SubtitleTrackDto> sse_decode_list_subtitle_track_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<ToViewItemDto> sse_decode_list_to_view_item_dto(
     SseDeserializer deserializer,
   );
 
@@ -491,6 +579,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SubtitleTrackDto sse_decode_subtitle_track_dto(SseDeserializer deserializer);
 
   @protected
+  ToViewItemDto sse_decode_to_view_item_dto(SseDeserializer deserializer);
+
+  @protected
+  ToViewPageDto sse_decode_to_view_page_dto(SseDeserializer deserializer);
+
+  @protected
   int sse_decode_u_32(SseDeserializer deserializer);
 
   @protected
@@ -522,6 +616,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_app_error(AppError self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_archive_relation_dto(
+    ArchiveRelationDto self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_bool(bool self, SseSerializer serializer);
@@ -605,10 +705,43 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_error_kind(ErrorKind self, SseSerializer serializer);
 
   @protected
+  void sse_encode_fav_folder_dto(FavFolderDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_fav_folder_list_dto(
+    FavFolderListDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_fav_resource_item_dto(
+    FavResourceItemDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_fav_resource_page_dto(
+    FavResourcePageDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_feed_item_dto(FeedItemDto self, SseSerializer serializer);
 
   @protected
   void sse_encode_header_dto(HeaderDto self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_history_item_dto(
+    HistoryItemDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_history_page_dto(
+    HistoryPageDto self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
@@ -632,6 +765,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_fav_folder_dto(
+    List<FavFolderDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_fav_resource_item_dto(
+    List<FavResourceItemDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_feed_item_dto(
     List<FeedItemDto> self,
     SseSerializer serializer,
@@ -640,6 +785,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_header_dto(
     List<HeaderDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_history_item_dto(
+    List<HistoryItemDto> self,
     SseSerializer serializer,
   );
 
@@ -667,6 +818,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_subtitle_track_dto(
     List<SubtitleTrackDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_to_view_item_dto(
+    List<ToViewItemDto> self,
     SseSerializer serializer,
   );
 
@@ -820,6 +977,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_subtitle_track_dto(
     SubtitleTrackDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_to_view_item_dto(
+    ToViewItemDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_to_view_page_dto(
+    ToViewPageDto self,
     SseSerializer serializer,
   );
 

@@ -161,7 +161,11 @@ class _WatchBodyState extends State<_WatchBody> {
                     padding: const EdgeInsets.only(bottom: AppSpacing.xl),
                     children: [
                       player,
-                      EngagementBar(stat: detail.stat),
+                      EngagementBar(
+                        aid: i64(detail.aid),
+                        bvid: detail.bvid,
+                        stat: detail.stat,
+                      ),
                       const SizedBox(height: AppSpacing.md),
                       _TitleBlock(detail: detail),
                       const SizedBox(height: AppSpacing.md),
@@ -186,7 +190,11 @@ class _WatchBodyState extends State<_WatchBody> {
           padding: EdgeInsets.fromLTRB(padH, AppSpacing.md, padH, AppSpacing.xl),
           children: [
             player,
-            EngagementBar(stat: detail.stat),
+            EngagementBar(
+              aid: i64(detail.aid),
+              bvid: detail.bvid,
+              stat: detail.stat,
+            ),
             const SizedBox(height: AppSpacing.md),
             _TitleBlock(detail: detail),
             const SizedBox(height: AppSpacing.md),

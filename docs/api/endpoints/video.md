@@ -121,6 +121,28 @@ GET /x/web-interface/archive/relation
 
 `Login` 后数据才有意义。
 
+#### Example · 成功
+
+```json
+{
+  "code": 0,
+  "message": "0",
+  "data": {
+    "attention": 1,
+    "favorite": 1,
+    "season_fav": 0,
+    "like": 1,
+    "dislike": 0,
+    "coin": 2
+  }
+}
+```
+
+| 字段 | 含义 |
+|------|------|
+| `like` / `favorite` / `attention` | 非 0 为真 |
+| `coin` | 已投币数 0–2 |
+
 ### 相关推荐
 
 ```
@@ -454,6 +476,27 @@ GET /xlive/web-room/v2/index/getRoomPlayInfo
 
 ## 互动操作（点赞 / 投币 / 收藏等）
 
+桌面客户端默认走 **Web Cookie + csrf**（下列 Web 端点）；App 端点保留作对照。
+
+### 点赞（Web · 实现用）
+
+```
+POST /x/web-interface/archive/like
+Content-Type: application/x-www-form-urlencoded
+```
+
+| 参数 | 说明 |
+|------|------|
+| `aid` | ✓ |
+| `like` | `1` 点赞 / `2` 取消 |
+| `csrf` | ✓ `bili_jct` |
+
+#### Example · form
+
+```text
+aid=170001&like=1&csrf=<bili_jct>
+```
+
 ### 点赞（App）
 
 ```
@@ -464,7 +507,7 @@ Content-Type: application/x-www-form-urlencoded
 | 参数 | 说明 |
 |------|------|
 | `aid` | |
-| `like` | `0` 点赞 / `1` 取消 |
+| `like` | `0` 点赞 / `1` 取消（与 Web 语义相反） |
 | AppSign + access_key | 拦截器 |
 
 ### 点踩（App）
@@ -472,6 +515,19 @@ Content-Type: application/x-www-form-urlencoded
 ```
 POST https://app.bilibili.com/x/v2/view/dislike
 ```
+
+### 投币（Web · 实现用）
+
+```
+POST /x/web-interface/coin/add
+```
+
+| 参数 | 说明 |
+|------|------|
+| `aid` | ✓ |
+| `multiply` | 1 或 2 |
+| `select_like` | `0`/`1` 是否同时点赞 |
+| `csrf` | ✓ |
 
 ### 投币（App）
 

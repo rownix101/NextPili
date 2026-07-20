@@ -6,6 +6,7 @@ import '../../features/player/player_page.dart';
 import '../../features/search/search_page.dart';
 import '../../features/settings/settings_page.dart';
 import '../../features/shell/app_shell.dart';
+import '../../features/user/user_page.dart';
 import '../../features/video/video_detail_page.dart';
 
 GoRouter createAppRouter() {
@@ -27,6 +28,13 @@ GoRouter createAppRouter() {
             name: 'search',
             pageBuilder: (context, state) => const NoTransitionPage(
               child: SearchPage(),
+            ),
+          ),
+          GoRoute(
+            path: '/library',
+            name: 'library',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: UserPage(),
             ),
           ),
           GoRoute(

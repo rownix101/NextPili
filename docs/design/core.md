@@ -61,7 +61,7 @@ shutdown()
 |------|----------|
 | `login_qr_start` | 申请 TV 二维码；返回 url + auth_code；内部开任务轮询 |
 | `login_qr_cancel` | 取消轮询 |
-| `login_captcha` / `login_sms_send` / `login_sms` | 短信登录：极验 → 发码 → 校验登录 |
+| `login_captcha` / `login_sms_send` / `login_sms` | 短信登录/注册：极验 → 发码 → 校验（新号即建号） |
 | `login_qr_*` | 仅桌面/平板 UI 暴露 |
 | `logout` | 清指定账号或当前；可选调登出 API |
 | `list_accounts` | 返回公开资料列表（无密钥） |
@@ -92,15 +92,28 @@ shutdown()
 | `reply_list` | 分页评论 |
 | `danmaku_segments` | 分段弹幕 → 结构化条目列表 |
 
-### P5 个人库（进行中）
+### P5 个人库 ✅
 
 | 用例 | 行为摘要 |
 |------|----------|
 | `search_suggest` | 搜索建议（recommend 槽） |
 | `search_video` | 分类搜索 `type=video` + WBI |
-| `history_*` / `toview_*` / `fav_*` | ⬜ 待实现 |
+| `history_list` | 观看历史 cursor（main 槽 · Cookie） |
+| `toview_list` | 稍后再看分页 |
+| `fav_folders` | 当前用户创建的收藏夹列表 |
+| `fav_resources` | 收藏夹内容分页（只读） |
 
-其余：动态、直播、番剧、写操作 → P6。按 `docs/api/endpoints` 逐项加，**先写用例名与 DTO 再实现 HTTP**。
+### P6 写操作（部分）
+
+| 用例 | 行为摘要 |
+|------|----------|
+| `video_relation` | 当前用户对稿件的赞/币/藏/关注态 |
+| `video_like` | 点赞 / 取消 |
+| `video_coin` | 投币（1–2）+ 可选同时点赞 |
+| `video_favorite` | 默认收藏夹收藏 / 取消全部 |
+| `relation_follow` | 关注 / 取关 UP |
+
+其余：动态、直播、番剧、楼中楼发评、发弹幕 → 继续按 `docs/api/endpoints` 逐项加，**先写用例名与 DTO 再实现 HTTP**。
 
 ---
 

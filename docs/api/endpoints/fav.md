@@ -21,6 +21,27 @@ GET /x/v3/fav/folder/collected/list # 我的订阅（播单等）
 
 `list-all` 的 `rid` 可查询某稿件在哪些收藏夹。
 
+**`list-all` 成功 data（最小）**
+
+```json
+{
+  "count": 1,
+  "list": [
+    {
+      "id": 1052622027,
+      "fid": 10526220,
+      "mid": 686127,
+      "title": "默认收藏夹",
+      "media_count": 12,
+      "cover": "",
+      "attr": 1
+    }
+  ]
+}
+```
+
+NextPili：`fav_folders` 使用当前账号 mid · `type=2`（视频）。
+
 ### 内容
 
 ```
@@ -36,6 +57,28 @@ GET /x/v3/fav/resource/list
 | `type` | `0` 当前夹 `1` 全部 |
 | `tid` | 分区 |
 | `platform` | `web` |
+
+**成功 data（最小）**
+
+```json
+{
+  "medias": [
+    {
+      "id": 9,
+      "type": 2,
+      "title": "收藏稿件",
+      "cover": "https://i0.hdslb.com/bfs/archive/x.jpg",
+      "duration": 60,
+      "fav_time": 1700000000,
+      "bvid": "BV1xx411c7mD",
+      "upper": { "mid": 1, "name": "UP" }
+    }
+  ],
+  "has_more": false
+}
+```
+
+NextPili：`fav_resources`（只读分页）。
 
 ### 增删改收藏夹
 

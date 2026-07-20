@@ -35,9 +35,41 @@ GET /x/web-interface/history/cursor
 | 参数 | 说明 |
 |------|------|
 | `max` | 游标，首页 0 |
-| `view_at` | 游标时间 |
-| `ps` | 每页 |
-| `business` | 可选类型过滤 |
+| `view_at` | 游标时间（秒） |
+| `ps` | 每页（≤30） |
+| `business` | 游标业务类型（与上一页 cursor 对齐） |
+| `type` | 筛选：`all` / `archive` / … |
+
+**Auth**：Cookie（SESSDATA） · Referer：`https://www.bilibili.com/account/history`
+
+**成功 data（最小）**
+
+```json
+{
+  "cursor": { "max": 123, "view_at": 1700000000, "business": "archive", "ps": 20 },
+  "list": [
+    {
+      "title": "示例稿件",
+      "cover": "https://i0.hdslb.com/bfs/archive/x.jpg",
+      "author_name": "UP",
+      "view_at": 1700000000,
+      "progress": 30,
+      "duration": 120,
+      "kid": 42,
+      "show_title": "P1",
+      "history": {
+        "oid": 42,
+        "bvid": "BV1xx411c7mD",
+        "cid": 99,
+        "business": "archive",
+        "page": 1
+      }
+    }
+  ]
+}
+```
+
+NextPili：`history_list` 仅保留可进详情的 `archive` / `pgc`；时间统一转毫秒。
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
@@ -59,6 +91,29 @@ GET /x/web-interface/history/cursor
 | POST | `/x/v2/history/toview/clear` | 清空；`clean_type` 可选；csrf |
 | POST | `/x/v2/history/toview/copy` | 复制到收藏夹等 |
 | POST | `/x/v2/history/toview/move` | 移动 |
+
+**`GET /x/v2/history/toview/web` 成功 data（最小）**
+
+```json
+{
+  "count": 1,
+  "list": [
+    {
+      "aid": 1,
+      "bvid": "BV1xx411c7mD",
+      "cid": 2,
+      "title": "稍后再看示例",
+      "pic": "https://i0.hdslb.com/bfs/archive/x.jpg",
+      "duration": 90,
+      "progress": 10,
+      "add_at": 1700000000,
+      "owner": { "mid": 1, "name": "UP", "face": "" }
+    }
+  ]
+}
+```
+
+NextPili：`toview_list`（只读）；写操作后置 P6。
 
 ### 媒体列表（稍后再看/收藏夹资源）
 
