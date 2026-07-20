@@ -121,8 +121,12 @@ shutdown()
 | `pgc_rank` | 番剧/影视排行（WBI · `season_type`） |
 | `pgc_season` | `season_id` / `ep_id` → 详情 + 分集 |
 | `pgc_play_url` | `/pgc/player/web/v2/playurl` → `result.video_info` → `MediaSourceDto` |
+| `reply_add` | 发评论（主楼；`root`/`parent` 可嵌套） |
+| `danmaku_post` | 发视频弹幕（cid + progress_ms · WBI + csrf） |
+| `live_dm_history` | 直播间历史弹幕（REST） |
+| `live_send_msg` | 发送直播弹幕（REST `/msg/send`） |
 
-其余：直播弹幕 WS、多账号槽、楼中楼发评、发弹幕 → 继续按 `docs/api/endpoints` 逐项加，**先写用例名与 DTO 再实现 HTTP**。
+  其余：直播弹幕 WS、多账号槽 → 继续按 `docs/api/endpoints` 逐项加，**先写用例名与 DTO 再实现 HTTP**。
 
 ---
 

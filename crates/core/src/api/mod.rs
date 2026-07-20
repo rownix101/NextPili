@@ -30,7 +30,8 @@ pub use feed::{
     feed_popular, feed_recommend, FeedItemDto, PopularFeedDto, RecommendFeedDto,
 };
 pub use live::{
-    live_play_url, live_recommend, live_room, LiveRecommendPageDto, LiveRoomCardDto, LiveRoomDto,
+    live_dm_history, live_play_url, live_recommend, live_room, live_send_msg, LiveDanmakuItemDto,
+    LiveRecommendPageDto, LiveRoomCardDto, LiveRoomDto,
 };
 pub use pgc::{
     pgc_play_url, pgc_rank, pgc_season, PgcEpisodeDto, PgcRankItemDto, PgcRankPageDto, PgcSeasonDto,
@@ -41,7 +42,8 @@ pub use search::{
 pub use settings::{get_settings, update_settings, SettingsDto};
 pub use simple::{api_version, bootstrap, ping, ApiVersion, BootstrapConfig};
 pub use social::{
-    danmaku_segments, reply_list, DanmakuItemDto, DanmakuSegmentDto, ReplyDto, ReplyListDto,
+    danmaku_post, danmaku_segments, reply_add, reply_list, DanmakuItemDto, DanmakuSegmentDto,
+    ReplyDto, ReplyListDto,
 };
 pub use user::{
     fav_folders, fav_resources, history_list, toview_list, FavFolderDto, FavFolderListDto,
@@ -49,6 +51,6 @@ pub use user::{
     ToViewPageDto,
 };
 pub use video::{
-    play_url, playback_start, playback_stop, video_detail, HeaderDto, MediaFormatDto,
+    play_url, playback_start, playback_stop, subtitle_vtt, video_detail, HeaderDto, MediaFormatDto,
     MediaSourceDto, StreamDto, SubtitleTrackDto, VideoDetailDto, VideoPageDto, VideoStatDto,
 };

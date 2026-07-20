@@ -7,6 +7,7 @@ import '../error.dart';
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+// These functions are ignored because they are not marked as `pub`: `ensure_wbi`, `require_main`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`
 
 /// Main-floor comment list (REST `/x/v2/reply/main`).
@@ -38,6 +39,46 @@ Future<DanmakuSegmentDto> danmakuSegments({
   aid: aid,
   cid: cid,
   segmentIndex: segmentIndex,
+);
+
+/// Post a main-floor comment (or nested when `root`/`parent` > 0).
+///
+/// Requires login. `oid` is video **aid** for `type_=1`.
+Future<ReplyDto> replyAdd({
+  required PlatformInt64 oid,
+  required int type,
+  required String message,
+  required PlatformInt64 root,
+  required PlatformInt64 parent,
+}) => RustLib.instance.api.crateApiSocialReplyAdd(
+  oid: oid,
+  type: type,
+  message: message,
+  root: root,
+  parent: parent,
+);
+
+/// Post a video danmaku at `progress_ms` (Cookie + WBI).
+///
+/// - `oid`: **cid**
+/// - `mode`: 0/1 scroll · 4 bottom · 5 top
+/// - `color`: 0 → white
+Future<DanmakuItemDto> danmakuPost({
+  required PlatformInt64 oid,
+  required PlatformInt64 aid,
+  required String bvid,
+  required String msg,
+  required PlatformInt64 progressMs,
+  required int mode,
+  required int color,
+}) => RustLib.instance.api.crateApiSocialDanmakuPost(
+  oid: oid,
+  aid: aid,
+  bvid: bvid,
+  msg: msg,
+  progressMs: progressMs,
+  mode: mode,
+  color: color,
 );
 
 /// Single danmaku item on the player timeline.

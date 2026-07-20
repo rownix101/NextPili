@@ -25,3 +25,12 @@ pub struct ReplyPage {
     /// Total count when known (may be 0 if API omitted).
     pub all_count: i64,
 }
+
+/// Result of posting a comment (`/x/v2/reply/add`).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ReplyAddResult {
+    pub rpid: i64,
+    pub success_toast: String,
+    /// Full reply when API returns it; otherwise synthesize in core.
+    pub reply: Option<Reply>,
+}

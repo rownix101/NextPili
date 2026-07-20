@@ -10,3 +10,10 @@ pub struct DanmakuItem {
     pub text: String,
     pub mid_hash: String,
 }
+
+/// Result of posting a video danmaku (`/x/v2/dm/post`).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct DanmakuPostResult {
+    pub dmid: i64,
+    pub visible: bool,
+}

@@ -163,7 +163,7 @@
 | 直播弹幕 WS | `getDanmuInfo` + WSS 包头/心跳/解压（[live.md](./api/endpoints/live.md) §弹幕 WebSocket） | ⬜ |
 | 番剧 / PGC | `pgc_rank` · `pgc_season` · `pgc_play_url` · feature `pgc` · [pgc.md](./api/endpoints/pgc.md) | ✅ |
 | 多账号槽 | main / heartbeat / recommend / video 可绑不同账号 | ⬜ |
-| 写操作 | 点赞 / 投币 / 默认收藏夹 / 长按选夹 / 关注 ✅ · 发弹幕 / 发评 / 三连 UI ⬜ | 部分 |
+| 写操作 | 点赞 / 投币 / 默认收藏夹 / 长按选夹 / 关注 / 发弹幕 / 发评 / 直播发弹幕 ✅ · 三连 UI ⬜ | 部分 |
 
 **验收**：「动态只读 + 一场直播可看 + 番剧排行→分集可播」已可演示；账号槽配置 UI / 写操作 / 直播弹幕可按子里程碑拆 PR。
 

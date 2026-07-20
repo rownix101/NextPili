@@ -138,6 +138,43 @@ impl VideoApi {
         map_view(data)
     }
 
+    /// `GET /x/player/wbi/v2` — playback page meta (subtitles, viewpoints, …).
+    pub async fn player_v2(
+        client: &BiliClient,
+        account: Option<&Account>,
+        device_buvid3: Option<&str>,
+        wbi: &WbiSigner,
+        id: &VideoId,
+        cid: Cid,
+    ) -> Result<Value> {
+        let mut params = BTreeMap::new();
+        match id {
+            VideoId::Bvid(b) => {
+                params.insert("bvid".into(), b.clone());
+            }
+            VideoId::Aid(a) => {
+                params.insert("aid".into(), a.to_string());
+            }
+        }
+        params.insert("cid".into(), cid.get().to_string());
+
+        let url = BiliClient::resolve_url(API_BASE, "/x/player/wbi/v2");
+        let mut opts = RequestOptions {
+            account,
+            device_buvid3,
+            auth: if account.is_some() {
+                crate::middleware::AuthMode::Cookie
+            } else {
+                crate::middleware::AuthMode::OptionalLogin
+            },
+            ..RequestOptions::default()
+        };
+        opts = opts.with_wbi(wbi);
+
+        let resp = client.get_bili::<Value>(&url, params, opts).await?;
+        resp.into_data()
+    }
+
     /// `GET /x/player/wbi/playurl` — returns raw `data` JSON for media crate.
     pub async fn play_url(
         client: &BiliClient,

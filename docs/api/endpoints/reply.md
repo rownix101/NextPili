@@ -156,6 +156,7 @@ UI 逻辑：
 
 | 阶段 | 做法 |
 |------|------|
-| MVP | 可先不做评论翻译，或客户端侧接第三方翻译（隐私/准确度另议） |
+| MVP | REST 列表 + 发评 ✅（`reply_list` · `reply_add`） |
+| 评论翻译 | 可先不做，或客户端侧接第三方翻译（隐私/准确度另议） |
 | 完整实现 | 引入 gRPC 客户端 + reply proto，实现 `TranslateReply` |
 | 列表 | 若走 gRPC `MainList`，可一并拿到 `translation_switch`；纯 REST 列表则看 `translation_switch` 字段是否仍返回 |

@@ -253,6 +253,11 @@ Body：UTF-8 JSON：
 - [x] `getH5InfoByRoom` → `live_room`
 - [x] `getRoomPlayInfo`（WBI）→ `live_play_url`（FLV/HLS → `MediaSourceDto`）
 
+**REST 弹幕（已落地）**
+
+- [x] `gethistory` → `live_dm_history`（Flutter 轮询 ~4s）
+- [x] `POST /msg/send` → `live_send_msg`
+
 **WebSocket 弹幕（后置）**
 
 - [ ] `getDanmuInfo`（WBI）→ token + hosts 
@@ -261,6 +266,4 @@ Body：UTF-8 JSON：
 - [ ] 认证 JSON + op7/8 
 - [ ] 30s 心跳 op2 
 - [ ] zlib / brotli 解压 + 粘包切分 
-- [ ] 按 `cmd` 分发业务事件 
-
-REST 历史弹幕预取：`GET .../dM/gethistory?roomid=`（进房前展示）。
+- [ ] 按 `cmd` 分发业务事件

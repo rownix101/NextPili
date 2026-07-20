@@ -162,6 +162,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<HistoryItemDto> dco_decode_list_history_item_dto(dynamic raw);
 
   @protected
+  List<LiveDanmakuItemDto> dco_decode_list_live_danmaku_item_dto(dynamic raw);
+
+  @protected
   List<LiveRoomCardDto> dco_decode_list_live_room_card_dto(dynamic raw);
 
   @protected
@@ -193,6 +196,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<VideoPageDto> dco_decode_list_video_page_dto(dynamic raw);
+
+  @protected
+  LiveDanmakuItemDto dco_decode_live_danmaku_item_dto(dynamic raw);
 
   @protected
   LiveRecommendPageDto dco_decode_live_recommend_page_dto(dynamic raw);
@@ -495,6 +501,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<LiveDanmakuItemDto> sse_decode_list_live_danmaku_item_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<LiveRoomCardDto> sse_decode_list_live_room_card_dto(
     SseDeserializer deserializer,
   );
@@ -538,6 +549,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<VideoPageDto> sse_decode_list_video_page_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  LiveDanmakuItemDto sse_decode_live_danmaku_item_dto(
     SseDeserializer deserializer,
   );
 
@@ -910,6 +926,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_live_danmaku_item_dto(
+    List<LiveDanmakuItemDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_live_room_card_dto(
     List<LiveRoomCardDto> self,
     SseSerializer serializer,
@@ -969,6 +991,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_video_page_dto(
     List<VideoPageDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_live_danmaku_item_dto(
+    LiveDanmakuItemDto self,
     SseSerializer serializer,
   );
 

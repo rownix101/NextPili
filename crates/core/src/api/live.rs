@@ -1,4 +1,4 @@
-//! Live FFI (recommend + room metadata + playurl).
+//! Live FFI (recommend + room metadata + playurl + chat).
 
 use crate::api::video::{HeaderDto, MediaFormatDto, MediaSourceDto, StreamDto};
 use crate::app::CoreApp;
@@ -41,6 +41,15 @@ pub struct LiveRoomDto {
     /// 0 offline · 1 live · 2 round.
     pub live_status: i32,
     pub area_name: String,
+}
+
+/// One live chat line (history REST; WS later).
+#[derive(Debug, Clone)]
+pub struct LiveDanmakuItemDto {
+    pub uid: i64,
+    pub uname: String,
+    pub text: String,
+    pub timeline_ms: i64,
 }
 
 /// Web live recommend (`getUserRecommend`). Optional login.
@@ -213,6 +222,68 @@ pub async fn live_play_url(room_id: i64, qn: u32) -> Result<MediaSourceDto, AppE
         subtitles: vec![],
         requested_qn: source.requested_qn,
     })
+}
+
+/// Recent room chat (history REST). Optional login.
+pub async fn live_dm_history(room_id: i64) -> Result<Vec<LiveDanmakuItemDto>, AppError> {
+    if room_id <= 0 {
+        return Err(AppError::new(
+            ErrorKind::InvalidArgument,
+            "room_id must be > 0",
+        ));
+    }
+    let app = CoreApp::global()?;
+    let buvid = app.store.buvid3();
+    let account = {
+        let reg = app.accounts.read();
+        reg.account_for(AccountSlot::Main)
+            .or_else(|| reg.active_main())
+            .cloned()
+    };
+    let http = app.http();
+    let items =
+        LiveApi::dm_history(&http, account.as_ref(), Some(buvid.as_str()), room_id).await?;
+    Ok(items
+        .into_iter()
+        .map(|it| LiveDanmakuItemDto {
+            uid: it.uid,
+            uname: it.uname,
+            text: it.text,
+            timeline_ms: it.timeline_ms,
+        })
+        .collect())
+}
+
+/// Send live room danmaku. Requires login.
+pub async fn live_send_msg(room_id: i64, msg: String) -> Result<(), AppError> {
+    if room_id <= 0 {
+        return Err(AppError::new(
+            ErrorKind::InvalidArgument,
+            "room_id must be > 0",
+        ));
+    }
+    let app = CoreApp::global()?;
+    let account = {
+        let reg = app.accounts.read();
+        reg.account_for(AccountSlot::Main)
+            .or_else(|| reg.active_main())
+            .cloned()
+            .ok_or_else(|| AppError::new(ErrorKind::Unauthenticated, "未登录或登录已失效"))?
+    };
+    let buvid = app.store.buvid3();
+    let http = app.http();
+    LiveApi::send_msg(
+        &http,
+        &account,
+        Some(buvid.as_str()),
+        room_id,
+        &msg,
+        16_777_215,
+        25,
+        1,
+    )
+    .await?;
+    Ok(())
 }
 
 async fn ensure_wbi(app: &CoreApp) -> Result<(), AppError> {

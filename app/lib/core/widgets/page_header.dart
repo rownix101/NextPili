@@ -34,7 +34,11 @@ class PageHeader extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return AppBar(
-      title: Text(title),
+      title: Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
       backgroundColor: colors.canvas,
       leading: leading ??
           (showBack

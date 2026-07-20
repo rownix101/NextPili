@@ -1,9 +1,9 @@
-//! Social read-only FFI API (replies + danmaku).
+//! Social FFI API (replies + danmaku read/write).
 
 use crate::app::CoreApp;
 use crate::error::{AppError, ErrorKind};
 use auth::AccountSlot;
-use http::{DanmakuApi, ReplyApi};
+use http::{DanmakuApi, NavApi, ReplyApi};
 use media::{limit_danmaku, parse_dm_seg_so};
 
 /// One comment for Flutter lists.
@@ -157,4 +157,131 @@ pub async fn danmaku_segments(
             })
             .collect(),
     })
+}
+
+/// Post a main-floor comment (or nested when `root`/`parent` > 0).
+///
+/// Requires login. `oid` is video **aid** for `type_=1`.
+pub async fn reply_add(
+    oid: i64,
+    type_: i32,
+    message: String,
+    root: i64,
+    parent: i64,
+) -> Result<ReplyDto, AppError> {
+    let app = CoreApp::global()?;
+    let account = require_main(&app)?;
+    let buvid = app.store.buvid3();
+    let http = app.http();
+    let result = ReplyApi::add(
+        &http,
+        &account,
+        Some(buvid.as_str()),
+        oid,
+        type_,
+        &message,
+        root,
+        parent,
+    )
+    .await?;
+
+    if let Some(r) = result.reply {
+        return Ok(ReplyDto {
+            rpid: r.rpid,
+            mid: r.mid.get(),
+            uname: r.uname,
+            avatar: r.avatar,
+            content: r.content,
+            ctime_ms: r.ctime_ms,
+            like: r.like,
+            children_count: r.children_count,
+        });
+    }
+
+    // API sometimes omits nested `reply`; synthesize for optimistic UI.
+    Ok(ReplyDto {
+        rpid: result.rpid,
+        mid: account.mid.get(),
+        uname: account.name.clone(),
+        avatar: account.face.clone(),
+        content: message.trim().to_string(),
+        ctime_ms: 0,
+        like: 0,
+        children_count: 0,
+    })
+}
+
+/// Post a video danmaku at `progress_ms` (Cookie + WBI).
+///
+/// - `oid`: **cid**
+/// - `mode`: 0/1 scroll · 4 bottom · 5 top
+/// - `color`: 0 → white
+pub async fn danmaku_post(
+    oid: i64,
+    aid: i64,
+    bvid: String,
+    msg: String,
+    progress_ms: i64,
+    mode: i32,
+    color: u32,
+) -> Result<DanmakuItemDto, AppError> {
+    let app = CoreApp::global()?;
+    let account = require_main(&app)?;
+    ensure_wbi(&app).await?;
+    let buvid = app.store.buvid3();
+    let wbi = app.wbi.read().clone();
+    let http = app.http();
+    let result = DanmakuApi::post(
+        &http,
+        &account,
+        Some(buvid.as_str()),
+        &wbi,
+        oid,
+        aid,
+        &bvid,
+        &msg,
+        progress_ms,
+        mode,
+        color,
+        25,
+    )
+    .await?;
+
+    Ok(DanmakuItemDto {
+        id: result.dmid,
+        progress_ms: progress_ms.max(0),
+        mode: if mode == 0 { 1 } else { mode },
+        fontsize: 25,
+        color: if color == 0 { 16_777_215 } else { color },
+        text: msg.trim().to_string(),
+        mid_hash: String::new(),
+    })
+}
+
+fn require_main(app: &CoreApp) -> Result<auth::Account, AppError> {
+    let reg = app.accounts.read();
+    reg.account_for(AccountSlot::Main)
+        .or_else(|| reg.active_main())
+        .cloned()
+        .ok_or_else(|| AppError::new(ErrorKind::Unauthenticated, "未登录或登录已失效"))
+}
+
+async fn ensure_wbi(app: &CoreApp) -> Result<(), AppError> {
+    if app.wbi.read().has_keys() {
+        return Ok(());
+    }
+    let buvid = app.store.buvid3();
+    let account = app.accounts.read().active_main().cloned();
+    let mut wbi = app.wbi.read().clone();
+    NavApi::refresh_wbi(&app.http(), &mut wbi, account.as_ref(), Some(buvid.as_str()))
+        .await
+        .map_err(AppError::from)?;
+    if !wbi.has_keys() {
+        return Err(AppError::new(
+            ErrorKind::Internal,
+            "无法获取 WBI 签名密钥",
+        ));
+    }
+    *app.wbi.write() = wbi;
+    Ok(())
 }

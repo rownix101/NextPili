@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:media_kit_video/media_kit_video.dart';
@@ -12,8 +14,9 @@ import '../../core/widgets/loading.dart';
 import '../../core/widgets/np_button.dart';
 import '../../l10n/l10n.dart';
 import '../player/player_adapter.dart';
+import '../video/engagement_bar.dart';
 
-/// Live room watch page: metadata + media_kit stream.
+/// Live room watch page: metadata + media_kit stream + chat.
 class LiveRoomPage extends StatefulWidget {
   const LiveRoomPage({
     super.key,
@@ -30,10 +33,15 @@ class LiveRoomPage extends StatefulWidget {
 
 class _LiveRoomPageState extends State<LiveRoomPage> {
   late final MediaKitPlayerAdapter _adapter;
+  final TextEditingController _chatComposer = TextEditingController();
+  final ScrollController _chatScroll = ScrollController();
+  final List<LiveDanmakuItemDto> _chat = [];
   LiveRoomDto? _room;
+  Timer? _chatPoll;
   bool _loading = true;
   String? _error;
   bool _showChrome = true;
+  bool _sendingChat = false;
   int _qn = 0;
 
   @override
@@ -41,12 +49,66 @@ class _LiveRoomPageState extends State<LiveRoomPage> {
     super.initState();
     _adapter = MediaKitPlayerAdapter();
     _load();
+    _refreshChat();
+    _chatPoll = Timer.periodic(const Duration(seconds: 4), (_) {
+      _refreshChat();
+    });
   }
 
   @override
   void dispose() {
+    _chatPoll?.cancel();
+    _chatComposer.dispose();
+    _chatScroll.dispose();
     _adapter.dispose();
     super.dispose();
+  }
+
+  Future<void> _refreshChat() async {
+    try {
+      final items = await CoreApi.instance.liveDmHistory(widget.roomId);
+      if (!mounted) return;
+      setState(() {
+        _chat
+          ..clear()
+          ..addAll(items);
+      });
+      if (_chatScroll.hasClients) {
+        _chatScroll.jumpTo(_chatScroll.position.maxScrollExtent);
+      }
+    } catch (_) {
+      // Soft-fail: keep last snapshot.
+    }
+  }
+
+  Future<void> _sendChat() async {
+    final text = _chatComposer.text.trim();
+    final l10n = context.l10n;
+    if (text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.liveChatEmptyMessage)),
+      );
+      return;
+    }
+    if (!await ensureLoggedIn(context)) return;
+    if (!mounted) return;
+    setState(() => _sendingChat = true);
+    try {
+      await CoreApi.instance.liveSendMsg(roomId: widget.roomId, msg: text);
+      if (!mounted) return;
+      _chatComposer.clear();
+      setState(() => _sendingChat = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.liveChatSent)),
+      );
+      await _refreshChat();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _sendingChat = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage(e, context.l10n))),
+      );
+    }
   }
 
   Future<void> _load({int? qn}) async {
@@ -302,6 +364,107 @@ class _LiveRoomPageState extends State<LiveRoomPage> {
                             ),
                       ),
                     ],
+                  ],
+                ),
+              ),
+            ),
+            Material(
+              color: colors.canvas,
+              child: SizedBox(
+                height: 180,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.md,
+                        AppSpacing.sm,
+                        AppSpacing.md,
+                        AppSpacing.xs,
+                      ),
+                      child: Text(
+                        l10n.liveChatTitle,
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                    ),
+                    Expanded(
+                      child: _chat.isEmpty
+                          ? Center(
+                              child: Text(
+                                l10n.liveChatEmpty,
+                                style: TextStyle(color: colors.fgMuted),
+                              ),
+                            )
+                          : ListView.builder(
+                              controller: _chatScroll,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.md,
+                              ),
+                              itemCount: _chat.length,
+                              itemBuilder: (context, i) {
+                                final m = _chat[i];
+                                final name =
+                                    m.uname.isEmpty ? l10n.user : m.uname;
+                                return Padding(
+                                  padding: const EdgeInsets.only(
+                                    bottom: AppSpacing.xs,
+                                  ),
+                                  child: Text.rich(
+                                    TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          text: '$name: ',
+                                          style: TextStyle(
+                                            color: colors.accent,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                        TextSpan(
+                                          text: m.text,
+                                          style: TextStyle(
+                                            color: colors.fgPrimary,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.md,
+                        AppSpacing.xs,
+                        AppSpacing.md,
+                        AppSpacing.md,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _chatComposer,
+                              textInputAction: TextInputAction.send,
+                              onSubmitted: (_) {
+                                if (!_sendingChat) _sendChat();
+                              },
+                              decoration: InputDecoration(
+                                hintText: l10n.liveChatHint,
+                                isDense: true,
+                                border: const OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          NpButton(
+                            label: l10n.liveChatSend,
+                            onPressed: _sendingChat ? null : _sendChat,
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),

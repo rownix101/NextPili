@@ -434,6 +434,42 @@ abstract class AppLocalizations {
   /// **'{count} 人气'**
   String liveOnline(String count);
 
+  /// No description provided for @liveChatTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'弹幕'**
+  String get liveChatTitle;
+
+  /// No description provided for @liveChatEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无弹幕'**
+  String get liveChatEmpty;
+
+  /// No description provided for @liveChatHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'发送弹幕'**
+  String get liveChatHint;
+
+  /// No description provided for @liveChatSend.
+  ///
+  /// In zh, this message translates to:
+  /// **'发送'**
+  String get liveChatSend;
+
+  /// No description provided for @liveChatSent.
+  ///
+  /// In zh, this message translates to:
+  /// **'已发送'**
+  String get liveChatSent;
+
+  /// No description provided for @liveChatEmptyMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入弹幕内容'**
+  String get liveChatEmptyMessage;
+
   /// No description provided for @dynamicsTitle.
   ///
   /// In zh, this message translates to:
@@ -626,6 +662,18 @@ abstract class AppLocalizations {
   /// **'暂无简介'**
   String get videoDescEmpty;
 
+  /// 截断文案展开控件
+  ///
+  /// In zh, this message translates to:
+  /// **'展开'**
+  String get expand;
+
+  /// 截断文案收起控件
+  ///
+  /// In zh, this message translates to:
+  /// **'收起'**
+  String get collapse;
+
   /// No description provided for @videoPartsCount.
   ///
   /// In zh, this message translates to:
@@ -680,6 +728,30 @@ abstract class AppLocalizations {
   /// **'{count} 条回复'**
   String replyChildrenCount(int count);
 
+  /// No description provided for @replyHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'写一条友善的评论'**
+  String get replyHint;
+
+  /// No description provided for @replySend.
+  ///
+  /// In zh, this message translates to:
+  /// **'发送'**
+  String get replySend;
+
+  /// No description provided for @replySent.
+  ///
+  /// In zh, this message translates to:
+  /// **'评论已发送'**
+  String get replySent;
+
+  /// No description provided for @replyEmptyMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入评论内容'**
+  String get replyEmptyMessage;
+
   /// No description provided for @playerDanmakuOn.
   ///
   /// In zh, this message translates to:
@@ -698,11 +770,59 @@ abstract class AppLocalizations {
   /// **'弹幕已关闭'**
   String get playerDanmakuClosed;
 
+  /// No description provided for @playerDanmakuHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'发条弹幕'**
+  String get playerDanmakuHint;
+
+  /// No description provided for @playerDanmakuSend.
+  ///
+  /// In zh, this message translates to:
+  /// **'发送'**
+  String get playerDanmakuSend;
+
+  /// No description provided for @playerDanmakuSent.
+  ///
+  /// In zh, this message translates to:
+  /// **'弹幕已发送'**
+  String get playerDanmakuSent;
+
+  /// No description provided for @playerDanmakuEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入弹幕内容'**
+  String get playerDanmakuEmpty;
+
   /// No description provided for @playerQuality.
   ///
   /// In zh, this message translates to:
   /// **'清晰度'**
   String get playerQuality;
+
+  /// 播放器倍速菜单
+  ///
+  /// In zh, this message translates to:
+  /// **'倍速'**
+  String get playerSpeed;
+
+  /// 播放器音轨菜单
+  ///
+  /// In zh, this message translates to:
+  /// **'音轨'**
+  String get playerAudio;
+
+  /// 播放器字幕菜单
+  ///
+  /// In zh, this message translates to:
+  /// **'字幕'**
+  String get playerSubtitle;
+
+  /// 关闭字幕选项
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭字幕'**
+  String get playerSubtitleOff;
 
   /// No description provided for @playerFullscreen.
   ///
@@ -1307,7 +1427,7 @@ abstract class AppLocalizations {
   /// No description provided for @loginRequiredBody.
   ///
   /// In zh, this message translates to:
-  /// **'登录后即可点赞、投币、收藏与关注'**
+  /// **'登录后即可点赞、投币、收藏、关注、发评论与弹幕'**
   String get loginRequiredBody;
 
   /// No description provided for @coinDialogTitle.

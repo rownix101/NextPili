@@ -92,6 +92,12 @@
       "count": { "type": "String" }
     }
   },
+  "liveChatTitle": "弹幕",
+  "liveChatEmpty": "暂无弹幕",
+  "liveChatHint": "发送弹幕",
+  "liveChatSend": "发送",
+  "liveChatSent": "已发送",
+  "liveChatEmptyMessage": "请输入弹幕内容",
 
   "dynamicsTitle": "动态",
   "dynamicsEmpty": "暂无关注动态",
@@ -147,6 +153,10 @@
   "videoDetailTitle": "稿件详情",
   "videoDesc": "简介",
   "videoDescEmpty": "暂无简介",
+  "expand": "展开",
+  "@expand": { "description": "截断文案展开控件" },
+  "collapse": "收起",
+  "@collapse": { "description": "截断文案收起控件" },
   "videoPartsCount": "分 P（{count}）",
   "@videoPartsCount": {
     "placeholders": {
@@ -177,11 +187,27 @@
       "count": { "type": "int" }
     }
   },
+  "replyHint": "写一条友善的评论",
+  "replySend": "发送",
+  "replySent": "评论已发送",
+  "replyEmptyMessage": "请输入评论内容",
 
   "playerDanmakuOn": "打开弹幕",
   "playerDanmakuOff": "关闭弹幕",
   "playerDanmakuClosed": "弹幕已关闭",
+  "playerDanmakuHint": "发条弹幕",
+  "playerDanmakuSend": "发送",
+  "playerDanmakuSent": "弹幕已发送",
+  "playerDanmakuEmpty": "请输入弹幕内容",
   "playerQuality": "清晰度",
+  "playerSpeed": "倍速",
+  "@playerSpeed": { "description": "播放器倍速菜单" },
+  "playerAudio": "音轨",
+  "@playerAudio": { "description": "播放器音轨菜单" },
+  "playerSubtitle": "字幕",
+  "@playerSubtitle": { "description": "播放器字幕菜单" },
+  "playerSubtitleOff": "关闭字幕",
+  "@playerSubtitleOff": { "description": "关闭字幕选项" },
   "playerFullscreen": "全屏",
 
   "authTitle": "账号与登录",
@@ -307,7 +333,7 @@
   "unfollowSuccess": "已取消关注",
   "actionComingSoon": "即将支持",
   "loginRequiredTitle": "需要登录",
-  "loginRequiredBody": "登录后即可点赞、投币、收藏与关注",
+  "loginRequiredBody": "登录后即可点赞、投币、收藏、关注、发评论与弹幕",
   "coinDialogTitle": "投币",
   "coinOne": "投 1 枚",
   "coinTwo": "投 2 枚",

@@ -52,10 +52,10 @@ class DanmakuOverlay extends StatefulWidget {
   final bool enabled;
 
   @override
-  State<DanmakuOverlay> createState() => _DanmakuOverlayState();
+  State<DanmakuOverlay> createState() => DanmakuOverlayState();
 }
 
-class _DanmakuOverlayState extends State<DanmakuOverlay>
+class DanmakuOverlayState extends State<DanmakuOverlay>
     with SingleTickerProviderStateMixin {
   final Map<int, List<DanmakuItemDto>> _segments = {};
   final Set<int> _loading = {};
@@ -115,6 +115,23 @@ class _DanmakuOverlayState extends State<DanmakuOverlay>
     _playingSub?.cancel();
     _tick.dispose();
     super.dispose();
+  }
+
+  /// Immediately show a locally posted danmaku (optimistic).
+  void injectLocal(DanmakuItemDto item) {
+    if (!mounted || !widget.enabled) return;
+    final id = i64(item.id);
+    final key = id != 0
+        ? id
+        : Object.hash(i64(item.progressMs), item.text);
+    _spawnedIds.add(key);
+    _active.add(
+      _ActiveDanmaku(
+        item: item,
+        lane: _pickLane(item.mode),
+      ),
+    );
+    setState(() {});
   }
 
   void _onPlaying(bool playing) {

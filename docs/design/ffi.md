@@ -65,11 +65,11 @@ sys:       api_version, ping, bootstrap, set_proxy, shutdown
 auth:      login_sms_*, login_password, login_qr_* (desktop/tablet UI), logout, list_accounts, set_slot
 feed:      feed_recommend, feed_popular
 video:     video_detail, play_url, video_related
-social:    reply_list, danmaku_view, ...
+social:    reply_list, reply_add, danmaku_segments, danmaku_post
 user:      history_list, toview_list, fav_folders, fav_resources
 search:    search_video, search_suggest
 dynamics:  dynamics_feed
-live:      live_recommend, live_room, live_play_url
+live:      live_recommend, live_room, live_play_url, live_dm_history, live_send_msg
 pgc:       pgc_rank, pgc_season, pgc_play_url
 engagement: video_relation, video_like, video_coin, video_favorite, relation_follow
 ```

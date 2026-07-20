@@ -9,7 +9,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'video.dart';
 
 // These functions are ignored because they are not marked as `pub`: `ensure_wbi`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`
 
 /// Web live recommend (`getUserRecommend`). Optional login.
 Future<LiveRecommendPageDto> liveRecommend({
@@ -34,6 +34,46 @@ Future<MediaSourceDto> livePlayUrl({
   required PlatformInt64 roomId,
   required int qn,
 }) => RustLib.instance.api.crateApiLiveLivePlayUrl(roomId: roomId, qn: qn);
+
+/// Recent room chat (history REST). Optional login.
+Future<List<LiveDanmakuItemDto>> liveDmHistory({
+  required PlatformInt64 roomId,
+}) => RustLib.instance.api.crateApiLiveLiveDmHistory(roomId: roomId);
+
+/// Send live room danmaku. Requires login.
+Future<void> liveSendMsg({
+  required PlatformInt64 roomId,
+  required String msg,
+}) => RustLib.instance.api.crateApiLiveLiveSendMsg(roomId: roomId, msg: msg);
+
+/// One live chat line (history REST; WS later).
+class LiveDanmakuItemDto {
+  final PlatformInt64 uid;
+  final String uname;
+  final String text;
+  final PlatformInt64 timelineMs;
+
+  const LiveDanmakuItemDto({
+    required this.uid,
+    required this.uname,
+    required this.text,
+    required this.timelineMs,
+  });
+
+  @override
+  int get hashCode =>
+      uid.hashCode ^ uname.hashCode ^ text.hashCode ^ timelineMs.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LiveDanmakuItemDto &&
+          runtimeType == other.runtimeType &&
+          uid == other.uid &&
+          uname == other.uname &&
+          text == other.text &&
+          timelineMs == other.timelineMs;
+}
 
 /// Paginated live recommend page.
 class LiveRecommendPageDto {

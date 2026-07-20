@@ -120,25 +120,11 @@ class _OwnerCardState extends ConsumerState<OwnerCard> {
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              name,
-                              style: theme.textTheme.titleSmall,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: AppSpacing.xs),
-                            Text(
-                              detail.bvid.isNotEmpty
-                                  ? detail.bvid
-                                  : 'av${i64(detail.aid)}',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: colors.fgMuted,
-                              ),
-                            ),
-                          ],
+                        child: Text(
+                          name,
+                          style: theme.textTheme.titleSmall,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -148,6 +134,7 @@ class _OwnerCardState extends ConsumerState<OwnerCard> {
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
+          // Follow is a CTA — visible text required (design-system §7.7).
           NpButton(
             label: following ? l10n.following : l10n.follow,
             icon: following ? AppIcons.check : AppIcons.plus,

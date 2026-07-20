@@ -62,6 +62,16 @@ pub struct LivePlaySource {
     pub requested_qn: Option<u32>,
 }
 
+/// One live room chat message (history REST or future WS).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct LiveDanmakuItem {
+    pub uid: i64,
+    pub uname: String,
+    pub text: String,
+    /// Unix time in **milliseconds** when known.
+    pub timeline_ms: i64,
+}
+
 /// Live qn → short label.
 pub fn live_quality_label(qn: u32) -> String {
     match qn {

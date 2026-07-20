@@ -32,6 +32,10 @@ Future<MediaSourceDto> playUrl({
   fnval: fnval,
 );
 
+/// Fetch Bilibili subtitle JSON at `url` and convert to WebVTT for the player.
+Future<String> subtitleVtt({required String url}) =>
+    RustLib.instance.api.crateApiVideoSubtitleVtt(url: url);
+
 /// Start playback heartbeat for (aid, bvid, cid). Replaces any previous session.
 Future<void> playbackStart({
   required PlatformInt64 aid,
@@ -197,7 +201,7 @@ class StreamDto {
           backupUrls == other.backupUrls;
 }
 
-/// Subtitle track (placeholder for later).
+/// Subtitle track from `/x/player/wbi/v2` (url points to Bilibili JSON body).
 class SubtitleTrackDto {
   final String id;
   final String lang;

@@ -61,7 +61,7 @@ pub struct StreamDto {
     pub backup_urls: Vec<String>,
 }
 
-/// Subtitle track (placeholder for later).
+/// Subtitle track from `/x/player/wbi/v2` (url points to Bilibili JSON body).
 #[derive(Debug, Clone)]
 pub struct SubtitleTrackDto {
     pub id: String,
@@ -210,10 +210,27 @@ pub async fn play_url(
     )
     .await?;
 
-    let source = app
+    let mut source = app
         .media
         .parse_playurl_data(cid, &data, Some(preferred))
         .map_err(|e| AppError::new(ErrorKind::Parse, e.to_string()))?;
+
+    // Soft-attach subtitle list from player/v2 (failures must not block play).
+    if let Ok(v2) = VideoApi::player_v2(
+        &http,
+        account.as_ref(),
+        Some(buvid.as_str()),
+        &wbi,
+        &video_id,
+        cid,
+    )
+    .await
+    {
+        let tracks = media::parse_player_v2_subtitles(&v2);
+        if !tracks.is_empty() {
+            source.subtitles = tracks;
+        }
+    }
 
     // Prefer ids from playurl payload when present; fall back to request.
     let aid_from_req = match &video_id {
@@ -236,6 +253,31 @@ pub async fn play_url(
         });
 
     Ok(map_source(aid, bvid, source))
+}
+
+/// Fetch Bilibili subtitle JSON at `url` and convert to WebVTT for the player.
+pub async fn subtitle_vtt(url: String) -> Result<String, AppError> {
+    let app = CoreApp::global()?;
+    if url.is_empty() {
+        return Err(AppError::new(
+            ErrorKind::InvalidArgument,
+            "subtitle url is empty",
+        ));
+    }
+    let normalized = if url.starts_with("//") {
+        format!("https:{url}")
+    } else if url.starts_with("http://") {
+        format!("https://{}", url.trim_start_matches("http://"))
+    } else {
+        url
+    };
+    let raw = app
+        .http()
+        .get_text(&normalized)
+        .await
+        .map_err(|e| AppError::new(ErrorKind::Network, e.to_string()))?;
+    media::bilibili_json_to_vtt(&raw)
+        .map_err(|e| AppError::new(ErrorKind::Parse, e.to_string()))
 }
 
 /// Start playback heartbeat for (aid, bvid, cid). Replaces any previous session.

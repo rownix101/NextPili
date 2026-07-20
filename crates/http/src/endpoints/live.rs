@@ -1,15 +1,16 @@
-//! Live recommend + room info + playurl (REST; WebSocket danmaku later).
+//! Live recommend + room info + playurl + chat send/history (REST; WS later).
 
 use crate::client::{BiliClient, RequestOptions};
 use crate::error::{Error, Result};
 use auth::{Account, LIVE_BASE, WbiSigner};
 use domain::live::{
-    live_quality_label, pick_live_stream, LivePlaySource, LiveRecommendPage, LiveRoomCard,
-    LiveRoomInfo, LiveStreamOption,
+    live_quality_label, pick_live_stream, LiveDanmakuItem, LivePlaySource, LiveRecommendPage,
+    LiveRoomCard, LiveRoomInfo, LiveStreamOption,
 };
 use serde::Deserialize;
 use serde_json::Value;
 use std::collections::BTreeMap;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Live API surface.
 pub struct LiveApi;
@@ -151,6 +152,112 @@ impl LiveApi {
         let data = resp.into_data()?;
         parse_play_source(data, room_id, qn)
     }
+
+    /// Recent room chat: `GET /xlive/web-room/v1/dM/gethistory`.
+    pub async fn dm_history(
+        client: &BiliClient,
+        account: Option<&Account>,
+        device_buvid3: Option<&str>,
+        room_id: i64,
+    ) -> Result<Vec<LiveDanmakuItem>> {
+        if room_id <= 0 {
+            return Err(Error::Domain(domain::Error::InvalidArgument {
+                msg: "room_id must be > 0".into(),
+            }));
+        }
+
+        let mut params = BTreeMap::new();
+        params.insert("roomid".into(), room_id.to_string());
+
+        let url = BiliClient::resolve_url(LIVE_BASE, "/xlive/web-room/v1/dM/gethistory");
+        let referer = format!("https://live.bilibili.com/{room_id}");
+        let opts = RequestOptions {
+            account,
+            device_buvid3,
+            auth: if account.is_some() {
+                crate::middleware::AuthMode::Cookie
+            } else {
+                crate::middleware::AuthMode::OptionalLogin
+            },
+            ..RequestOptions::default()
+        }
+        .with_referer(&referer);
+
+        let resp = client.get_bili::<HistoryData>(&url, params, opts).await?;
+        let data = resp.into_data().unwrap_or_default();
+        Ok(parse_history(data))
+    }
+
+    /// Send live danmaku: `POST /msg/send` (Cookie + csrf).
+    pub async fn send_msg(
+        client: &BiliClient,
+        account: &Account,
+        device_buvid3: Option<&str>,
+        room_id: i64,
+        msg: &str,
+        color: u32,
+        fontsize: i32,
+        mode: i32,
+    ) -> Result<()> {
+        if room_id <= 0 {
+            return Err(Error::Domain(domain::Error::InvalidArgument {
+                msg: "room_id must be > 0".into(),
+            }));
+        }
+        let msg = msg.trim();
+        if msg.is_empty() {
+            return Err(Error::Domain(domain::Error::InvalidArgument {
+                msg: "msg must not be empty".into(),
+            }));
+        }
+        if msg.chars().count() > 100 {
+            return Err(Error::Domain(domain::Error::InvalidArgument {
+                msg: "msg too long (max 100)".into(),
+            }));
+        }
+        let color = if color == 0 { 16_777_215 } else { color };
+        let fontsize = if fontsize <= 0 { 25 } else { fontsize };
+        let mode = if mode == 0 { 1 } else { mode };
+        let rnd = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|d| d.as_secs() as i64)
+            .unwrap_or(0);
+
+        let mut params = BTreeMap::new();
+        params.insert("roomid".into(), room_id.to_string());
+        params.insert("msg".into(), msg.to_string());
+        params.insert("color".into(), color.to_string());
+        params.insert("fontsize".into(), fontsize.to_string());
+        params.insert("mode".into(), mode.to_string());
+        params.insert("bubble".into(), "0".into());
+        params.insert("rnd".into(), rnd.to_string());
+        // Live web also echoes csrf as csrf_token.
+        if let Some(csrf) = account.cookie_jar.csrf() {
+            params.insert("csrf_token".into(), csrf.to_string());
+        }
+
+        let url = BiliClient::resolve_url(LIVE_BASE, "/msg/send");
+        let referer = format!("https://live.bilibili.com/{room_id}");
+        let opts = RequestOptions {
+            account: Some(account),
+            device_buvid3,
+            auth: crate::middleware::AuthMode::Cookie,
+            csrf: true,
+            ..RequestOptions::default()
+        }
+        .with_referer(&referer);
+
+        let resp = client.post_form_bili::<Value>(&url, params, opts).await?;
+        resp.ensure_ok()
+    }
+}
+
+#[derive(Debug, Deserialize, Default)]
+struct HistoryData {
+    #[serde(default)]
+    room: Option<Vec<Value>>,
+    #[serde(default)]
+    admin: Option<Vec<Value>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -344,6 +451,42 @@ fn parse_play_source(data: PlayInfoData, fallback_room_id: i64, requested_qn: u3
     })
 }
 
+fn parse_history(data: HistoryData) -> Vec<LiveDanmakuItem> {
+    let mut out = Vec::new();
+    for list in [data.admin, data.room] {
+        let Some(items) = list else { continue };
+        for v in items {
+            let text = first_nonempty(&[json_str(&v, "text"), json_str(&v, "msg")]);
+            if text.is_empty() {
+                continue;
+            }
+            let uname = first_nonempty(&[json_str(&v, "nickname"), json_str(&v, "uname")]);
+            let uid = json_i64(&v, "uid").max(json_i64(&v, "mid"));
+            let timeline = json_str(&v, "timeline");
+            let timeline_ms = parse_timeline_ms(&timeline);
+            out.push(LiveDanmakuItem {
+                uid,
+                uname,
+                text,
+                timeline_ms,
+            });
+        }
+    }
+    out
+}
+
+/// `timeline` is often `"2024-01-02 15:04:05"`; keep 0 when unparsable.
+fn parse_timeline_ms(s: &str) -> i64 {
+    if s.is_empty() {
+        return 0;
+    }
+    // Prefer pure unix if API ever returns it.
+    if let Ok(secs) = s.parse::<i64>() {
+        return secs.saturating_mul(1000);
+    }
+    0
+}
+
 fn json_str(v: &Value, key: &str) -> String {
     match v.get(key) {
         Some(Value::String(s)) => s.clone(),
@@ -458,5 +601,23 @@ mod tests {
             playurl_info: None,
         };
         assert!(parse_play_source(data, 1, 10000).is_err());
+    }
+
+    #[test]
+    fn parse_dm_history() {
+        let data = HistoryData {
+            room: Some(vec![json!({
+                "uid": 9,
+                "nickname": "观众",
+                "text": "你好",
+                "timeline": "2024-01-01 12:00:00"
+            })]),
+            admin: None,
+        };
+        let items = parse_history(data);
+        assert_eq!(items.len(), 1);
+        assert_eq!(items[0].text, "你好");
+        assert_eq!(items[0].uname, "观众");
+        assert_eq!(items[0].uid, 9);
     }
 }

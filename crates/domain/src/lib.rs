@@ -18,7 +18,7 @@ pub mod search;
 pub mod video;
 
 pub use account::AccountPublic;
-pub use danmaku::DanmakuItem;
+pub use danmaku::{DanmakuItem, DanmakuPostResult};
 pub use dynamics::{dynamic_is_archive, DynamicItem, DynamicPage};
 pub use engagement::{default_fav_folder_id, ArchiveRelation};
 pub use error::{map_bili_code, Error, Result};
@@ -29,13 +29,13 @@ pub use library::{
     HistoryPage, ToViewItem, ToViewPage,
 };
 pub use live::{
-    live_quality_label, live_stream_preference_score, pick_live_stream, LivePlaySource,
-    LiveRecommendPage, LiveRoomCard, LiveRoomInfo, LiveStreamOption,
+    live_quality_label, live_stream_preference_score, pick_live_stream, LiveDanmakuItem,
+    LivePlaySource, LiveRecommendPage, LiveRoomCard, LiveRoomInfo, LiveStreamOption,
 };
 pub use pgc::{
     pgc_season_type_label, PgcEpisode, PgcRankItem, PgcRankPage, PgcSeason, PGC_RANK_TYPES,
 };
 pub use quality::{pick_audio_track, pick_quality, AudioTrack};
-pub use reply::{Reply, ReplyPage};
+pub use reply::{Reply, ReplyAddResult, ReplyPage};
 pub use search::{parse_duration_label, strip_search_highlight, SearchVideoItem};
 pub use video::{Owner, VideoDetail, VideoPage, VideoStat};

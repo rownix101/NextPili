@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../../bridge/core_api.dart';
+import '../../core/haptics/haptics.dart';
 import '../../core/icons/app_icons.dart';
 import '../../core/theme/player_colors.dart';
 import '../../core/theme/spacing.dart';
@@ -125,19 +126,86 @@ class _PlayerPaneState extends State<PlayerPane> {
 
   Future<void> _switchQuality(StreamDto stream) async {
     try {
+      final prevSub = _adapter.currentSubtitle;
       if (stream.qn != null) {
         final pos = _adapter.player.state.position;
+        final rate = _adapter.rate;
         final source = await _fetchSource(stream.qn!);
         if (!mounted) return;
         await _adapter.open(source);
+        if (rate != 1.0) {
+          await _adapter.setRate(rate);
+        }
         if (pos > Duration.zero) {
           await _adapter.seek(pos);
+        }
+        // Re-apply subtitle if still listed after refresh.
+        if (prevSub != null) {
+          final match = source.subtitles
+              .where((t) => t.id == prevSub.id || t.url == prevSub.url)
+              .toList();
+          if (match.isNotEmpty) {
+            await _switchSubtitle(match.first);
+          }
         }
       } else {
         await _adapter.setQuality(stream.id);
       }
+      await Haptics.selection();
       if (mounted) setState(() {});
     } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage(e, context.l10n))),
+      );
+    }
+  }
+
+  Future<void> _switchAudio(StreamDto stream) async {
+    try {
+      await _adapter.setAudio(stream.id);
+      await Haptics.selection();
+      if (mounted) setState(() {});
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage(e, context.l10n))),
+      );
+    }
+  }
+
+  Future<void> _switchSpeed(double rate) async {
+    try {
+      await _adapter.setRate(rate);
+      await Haptics.selection();
+      if (mounted) setState(() {});
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage(e, context.l10n))),
+      );
+    }
+  }
+
+  Future<void> _switchSubtitle(SubtitleTrackDto? track) async {
+    try {
+      if (track == null) {
+        await _adapter.setSubtitle();
+      } else {
+        final vtt = await CoreApi.instance.subtitleVtt(track.url);
+        if (!mounted) return;
+        await _adapter.setSubtitle(
+          id: track.id,
+          vtt: vtt,
+          title: track.label,
+          language: track.lang,
+        );
+      }
+      await Haptics.selection();
+      if (mounted) setState(() {});
+    } catch (e) {
+      if (!mounted) return;
+      await Haptics.error();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(errorMessage(e, context.l10n))),
@@ -219,9 +287,6 @@ class _PlayerPaneState extends State<PlayerPane> {
                 showBack: widget.showBack,
                 colors: player,
                 onBack: widget.onBack,
-                qualities: _adapter.qualityOptions,
-                current: _adapter.currentVideo,
-                onQuality: _switchQuality,
                 danmakuOn: _danmakuOn,
                 onToggleDanmaku: () =>
                     setState(() => _danmakuOn = !_danmakuOn),
@@ -237,6 +302,10 @@ class _PlayerPaneState extends State<PlayerPane> {
                   adapter: _adapter,
                   colors: player,
                   onFullscreen: widget.onRequestFullscreen,
+                  onQuality: _switchQuality,
+                  onAudio: _switchAudio,
+                  onSpeed: _switchSpeed,
+                  onSubtitle: _switchSubtitle,
                 ),
               ),
           ],
@@ -252,9 +321,6 @@ class _TopBar extends StatelessWidget {
     required this.showTitle,
     required this.showBack,
     required this.onBack,
-    required this.qualities,
-    required this.current,
-    required this.onQuality,
     required this.colors,
     required this.danmakuOn,
     required this.onToggleDanmaku,
@@ -265,9 +331,6 @@ class _TopBar extends StatelessWidget {
   final bool showTitle;
   final bool showBack;
   final VoidCallback? onBack;
-  final List<StreamDto> qualities;
-  final StreamDto? current;
-  final ValueChanged<StreamDto> onQuality;
   final PlayerColors colors;
   final bool danmakuOn;
   final VoidCallback onToggleDanmaku;
@@ -304,22 +367,6 @@ class _TopBar extends StatelessWidget {
             onPressed: onToggleDanmaku,
             tooltip: danmakuOn ? l10n.playerDanmakuOff : l10n.playerDanmakuOn,
           ),
-          if (qualities.isNotEmpty)
-            PopupMenuButton<StreamDto>(
-              tooltip: l10n.playerQuality,
-              icon: Text(
-                current?.qualityLabel ?? l10n.playerQuality,
-                style: TextStyle(color: colors.controlFg, fontSize: 13),
-              ),
-              onSelected: onQuality,
-              itemBuilder: (context) => [
-                for (final q in qualities)
-                  PopupMenuItem(
-                    value: q,
-                    child: Text(q.qualityLabel),
-                  ),
-              ],
-            ),
           if (onFullscreen != null)
             NpIconButton(
               icon: AppIcons.fullscreen,
@@ -337,11 +384,19 @@ class _BottomChrome extends StatelessWidget {
   const _BottomChrome({
     required this.adapter,
     required this.colors,
+    required this.onQuality,
+    required this.onAudio,
+    required this.onSpeed,
+    required this.onSubtitle,
     this.onFullscreen,
   });
 
   final MediaKitPlayerAdapter adapter;
   final PlayerColors colors;
+  final ValueChanged<StreamDto> onQuality;
+  final ValueChanged<StreamDto> onAudio;
+  final ValueChanged<double> onSpeed;
+  final ValueChanged<SubtitleTrackDto?> onSubtitle;
   final VoidCallback? onFullscreen;
 
   @override
@@ -362,9 +417,18 @@ class _BottomChrome extends StatelessWidget {
                 final pos = posSnap.data ?? Duration.zero;
                 final dur = durSnap.data ?? Duration.zero;
                 final playing = playSnap.data ?? false;
-                final maxMs = dur.inMilliseconds.toDouble().clamp(1.0, 1e12).toDouble();
+                final maxMs =
+                    dur.inMilliseconds.toDouble().clamp(1.0, 1e12).toDouble();
                 final value =
                     pos.inMilliseconds.toDouble().clamp(0.0, maxMs).toDouble();
+
+                final qualities = adapter.qualityOptions;
+                final audios = adapter.audioOptions;
+                final subs = adapter.subtitleOptions;
+                final currentQ = adapter.currentVideo;
+                final currentA = adapter.currentAudio;
+                final currentSub = adapter.currentSubtitle;
+                final rate = adapter.rate;
 
                 return Material(
                   color: colors.chromeGlass,
@@ -420,6 +484,99 @@ class _BottomChrome extends StatelessWidget {
                               ),
                             ),
                             const Spacer(),
+                            // design-system §7.7 — quality / speed as text menus.
+                            if (qualities.isNotEmpty)
+                              _TextMenuButton(
+                                label: currentQ?.qualityLabel ??
+                                    l10n.playerQuality,
+                                tooltip: l10n.playerQuality,
+                                colors: colors,
+                                items: [
+                                  for (final q in qualities)
+                                    PopupMenuItem(
+                                      value: q.id,
+                                      child: Text(q.qualityLabel),
+                                    ),
+                                ],
+                                onSelected: (id) {
+                                  final q = qualities.firstWhere(
+                                    (e) => e.id == id,
+                                    orElse: () => qualities.first,
+                                  );
+                                  onQuality(q);
+                                },
+                              ),
+                            // Show when ≥2 options, or a single Dolby/Hi-Res special track.
+                            if (audios.length > 1 ||
+                                (audios.length == 1 &&
+                                    (audios.first.role == 'dolby' ||
+                                        audios.first.role == 'hires')))
+                              _TextMenuButton(
+                                label: currentA?.qualityLabel ??
+                                    l10n.playerAudio,
+                                tooltip: l10n.playerAudio,
+                                colors: colors,
+                                items: [
+                                  for (final a in audios)
+                                    PopupMenuItem(
+                                      value: a.id,
+                                      child: Text(a.qualityLabel),
+                                    ),
+                                ],
+                                onSelected: (id) {
+                                  final a = audios.firstWhere(
+                                    (e) => e.id == id,
+                                    orElse: () => audios.first,
+                                  );
+                                  onAudio(a);
+                                },
+                              ),
+                            _TextMenuButton(
+                              label: _speedLabel(rate),
+                              tooltip: l10n.playerSpeed,
+                              colors: colors,
+                              items: [
+                                for (final r
+                                    in MediaKitPlayerAdapter.speedOptions)
+                                  PopupMenuItem(
+                                    value: r.toString(),
+                                    child: Text(_speedLabel(r)),
+                                  ),
+                              ],
+                              onSelected: (v) {
+                                final r = double.tryParse(v);
+                                if (r != null) onSpeed(r);
+                              },
+                            ),
+                            if (subs.isNotEmpty)
+                              _TextMenuButton(
+                                label: currentSub?.label ??
+                                    l10n.playerSubtitleOff,
+                                tooltip: l10n.playerSubtitle,
+                                colors: colors,
+                                items: [
+                                  PopupMenuItem(
+                                    value: '',
+                                    child: Text(l10n.playerSubtitleOff),
+                                  ),
+                                  for (final t in subs)
+                                    PopupMenuItem(
+                                      value: t.id,
+                                      child: Text(t.label),
+                                    ),
+                                ],
+                                onSelected: (id) {
+                                  if (id.isEmpty) {
+                                    onSubtitle(null);
+                                    return;
+                                  }
+                                  final t = subs.firstWhere(
+                                    (e) => e.id == id,
+                                    orElse: () => subs.first,
+                                  );
+                                  onSubtitle(t);
+                                },
+                              ),
                             if (onFullscreen != null)
                               NpIconButton(
                                 icon: AppIcons.fullscreen,
@@ -440,6 +597,50 @@ class _BottomChrome extends StatelessWidget {
       },
     );
   }
+}
+
+/// Compact text popup control for player chrome (quality / speed / audio / sub).
+class _TextMenuButton extends StatelessWidget {
+  const _TextMenuButton({
+    required this.label,
+    required this.tooltip,
+    required this.colors,
+    required this.items,
+    required this.onSelected,
+  });
+
+  final String label;
+  final String tooltip;
+  final PlayerColors colors;
+  final List<PopupMenuEntry<String>> items;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<String>(
+      tooltip: tooltip,
+      onSelected: onSelected,
+      itemBuilder: (context) => items,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: colors.controlFg,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+String _speedLabel(double rate) {
+  if (rate == rate.roundToDouble()) {
+    return '${rate.toStringAsFixed(0)}x';
+  }
+  return '${rate}x';
 }
 
 String _fmt(Duration d) {

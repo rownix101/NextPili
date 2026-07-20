@@ -187,6 +187,24 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get liveChatTitle => '弹幕';
+
+  @override
+  String get liveChatEmpty => '暂无弹幕';
+
+  @override
+  String get liveChatHint => '发送弹幕';
+
+  @override
+  String get liveChatSend => '发送';
+
+  @override
+  String get liveChatSent => '已发送';
+
+  @override
+  String get liveChatEmptyMessage => '请输入弹幕内容';
+
+  @override
   String get dynamicsTitle => '动态';
 
   @override
@@ -289,6 +307,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get videoDescEmpty => '暂无简介';
 
   @override
+  String get expand => '展开';
+
+  @override
+  String get collapse => '收起';
+
+  @override
   String videoPartsCount(int count) {
     return '分 P（$count）';
   }
@@ -324,6 +348,18 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get replyHint => '写一条友善的评论';
+
+  @override
+  String get replySend => '发送';
+
+  @override
+  String get replySent => '评论已发送';
+
+  @override
+  String get replyEmptyMessage => '请输入评论内容';
+
+  @override
   String get playerDanmakuOn => '打开弹幕';
 
   @override
@@ -333,7 +369,31 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playerDanmakuClosed => '弹幕已关闭';
 
   @override
+  String get playerDanmakuHint => '发条弹幕';
+
+  @override
+  String get playerDanmakuSend => '发送';
+
+  @override
+  String get playerDanmakuSent => '弹幕已发送';
+
+  @override
+  String get playerDanmakuEmpty => '请输入弹幕内容';
+
+  @override
   String get playerQuality => '清晰度';
+
+  @override
+  String get playerSpeed => '倍速';
+
+  @override
+  String get playerAudio => '音轨';
+
+  @override
+  String get playerSubtitle => '字幕';
+
+  @override
+  String get playerSubtitleOff => '关闭字幕';
 
   @override
   String get playerFullscreen => '全屏';
@@ -643,7 +703,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get loginRequiredTitle => '需要登录';
 
   @override
-  String get loginRequiredBody => '登录后即可点赞、投币、收藏与关注';
+  String get loginRequiredBody => '登录后即可点赞、投币、收藏、关注、发评论与弹幕';
 
   @override
   String get coinDialogTitle => '投币';

@@ -24,7 +24,11 @@ export 'frb/api/dynamics.dart' show DynamicItemDto, DynamicPageDto;
 export 'frb/api/feed.dart'
     show FeedItemDto, PopularFeedDto, RecommendFeedDto;
 export 'frb/api/live.dart'
-    show LiveRecommendPageDto, LiveRoomCardDto, LiveRoomDto;
+    show
+        LiveDanmakuItemDto,
+        LiveRecommendPageDto,
+        LiveRoomCardDto,
+        LiveRoomDto;
 export 'frb/api/pgc.dart'
     show PgcEpisodeDto, PgcRankItemDto, PgcRankPageDto, PgcSeasonDto;
 export 'frb/api/search.dart'
@@ -204,6 +208,17 @@ class CoreApi {
         qn: qn,
       );
 
+  /// Recent live room chat (history REST; poll for near-live updates).
+  Future<List<frb_live.LiveDanmakuItemDto>> liveDmHistory(int roomId) =>
+      frb_live.liveDmHistory(roomId: PlatformInt64Util.from(roomId));
+
+  /// Send live room danmaku (login required).
+  Future<void> liveSendMsg({required int roomId, required String msg}) =>
+      frb_live.liveSendMsg(
+        roomId: PlatformInt64Util.from(roomId),
+        msg: msg,
+      );
+
   /// PGC rank. `seasonType`: 1 番剧 · 4 国创 · 2 电影 …
   Future<frb_pgc.PgcRankPageDto> pgcRank({
     int seasonType = 1,
@@ -305,6 +320,9 @@ class CoreApi {
 
   void playbackStop() => frb_video.playbackStop();
 
+  /// Fetch Bilibili subtitle JSON and convert to WebVTT for media_kit.
+  Future<String> subtitleVtt(String url) => frb_video.subtitleVtt(url: url);
+
   /// Main-floor comments. `oid` is video **aid**. `mode`: 0/3 heat, 2 time.
   Future<frb_social.ReplyListDto> replyList({
     required int oid,
@@ -329,6 +347,42 @@ class CoreApi {
         aid: PlatformInt64Util.from(aid),
         cid: PlatformInt64Util.from(cid),
         segmentIndex: segmentIndex,
+      );
+
+  /// Post a main-floor comment. `oid` is video **aid**. Login required.
+  Future<frb_social.ReplyDto> replyAdd({
+    required int oid,
+    required String message,
+    int type = 1,
+    int root = 0,
+    int parent = 0,
+  }) =>
+      frb_social.replyAdd(
+        oid: PlatformInt64Util.from(oid),
+        type: type,
+        message: message,
+        root: PlatformInt64Util.from(root),
+        parent: PlatformInt64Util.from(parent),
+      );
+
+  /// Post a video danmaku at [progressMs]. `oid` is **cid**. Login required.
+  Future<frb_social.DanmakuItemDto> danmakuPost({
+    required int oid,
+    required int aid,
+    required String bvid,
+    required String msg,
+    int progressMs = 0,
+    int mode = 1,
+    int color = 16777215,
+  }) =>
+      frb_social.danmakuPost(
+        oid: PlatformInt64Util.from(oid),
+        aid: PlatformInt64Util.from(aid),
+        bvid: bvid,
+        msg: msg,
+        progressMs: PlatformInt64Util.from(progressMs),
+        mode: mode,
+        color: color,
       );
 
   /// Viewer like/coin/fav/follow flags for an archive.

@@ -1,10 +1,10 @@
-//! Comment list endpoints (REST main list).
+//! Comment list + post endpoints (REST).
 
 use crate::client::{BiliClient, RequestOptions};
 use crate::error::{Error, Result};
 use auth::{Account, API_BASE};
 use domain::id::UserMid;
-use domain::reply::{Reply, ReplyPage};
+use domain::reply::{Reply, ReplyAddResult, ReplyPage};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
@@ -140,6 +140,93 @@ impl ReplyApi {
         let data = resp.into_data()?;
         map_main(data)
     }
+
+    /// `POST /x/v2/reply/add` — post a main-floor or nested comment.
+    ///
+    /// - `oid`: subject id (video = **aid**)
+    /// - `type_`: subject type (`1` = video)
+    /// - `message`: body (max ~1000 chars)
+    /// - `root` / `parent`: 0 for top-level; both set for reply-to
+    pub async fn add(
+        client: &BiliClient,
+        account: &Account,
+        device_buvid3: Option<&str>,
+        oid: i64,
+        type_: i32,
+        message: &str,
+        root: i64,
+        parent: i64,
+    ) -> Result<ReplyAddResult> {
+        if oid <= 0 {
+            return Err(Error::Domain(domain::Error::InvalidArgument {
+                msg: "oid must be > 0".into(),
+            }));
+        }
+        let msg = message.trim();
+        if msg.is_empty() {
+            return Err(Error::Domain(domain::Error::InvalidArgument {
+                msg: "message must not be empty".into(),
+            }));
+        }
+        if msg.chars().count() > 1000 {
+            return Err(Error::Domain(domain::Error::InvalidArgument {
+                msg: "message too long".into(),
+            }));
+        }
+        let type_ = if type_ == 0 { REPLY_TYPE_VIDEO } else { type_ };
+
+        let mut params = BTreeMap::new();
+        params.insert("oid".into(), oid.to_string());
+        params.insert("type".into(), type_.to_string());
+        params.insert("message".into(), msg.to_string());
+        params.insert("plat".into(), "1".into());
+        if root > 0 {
+            params.insert("root".into(), root.to_string());
+        }
+        if parent > 0 {
+            params.insert("parent".into(), parent.to_string());
+        }
+
+        let url = BiliClient::resolve_url(API_BASE, "/x/v2/reply/add");
+        let opts = RequestOptions {
+            account: Some(account),
+            device_buvid3,
+            auth: crate::middleware::AuthMode::Cookie,
+            csrf: true,
+            ..RequestOptions::default()
+        }
+        .with_referer("https://www.bilibili.com/");
+
+        let resp = client.post_form_bili::<AddData>(&url, params, opts).await?;
+        let data = resp.into_data()?;
+        map_add(data, msg)
+    }
+}
+
+#[derive(Debug, Deserialize, Default)]
+struct AddData {
+    #[serde(default)]
+    rpid: i64,
+    #[serde(default)]
+    success_toast: String,
+    #[serde(default)]
+    reply: Option<ReplyRaw>,
+}
+
+fn map_add(data: AddData, _fallback_msg: &str) -> Result<ReplyAddResult> {
+    let reply = match data.reply {
+        Some(raw) => map_reply(raw)?,
+        None => None,
+    };
+    Ok(ReplyAddResult {
+        rpid: data.rpid.max(reply.as_ref().map(|r| r.rpid).unwrap_or(0)),
+        success_toast: if data.success_toast.is_empty() {
+            "发送成功".into()
+        } else {
+            data.success_toast
+        },
+        reply,
+    })
 }
 
 fn map_main(data: MainData) -> Result<ReplyPage> {
@@ -265,5 +352,31 @@ mod tests {
         assert_eq!(page.all_count, 42);
         assert!(page.replies[1].avatar.starts_with("https://"));
         assert_eq!(page.replies[1].ctime_ms, 1_700_000_000_000);
+    }
+
+    #[test]
+    fn maps_add_result() {
+        let data = AddData {
+            rpid: 99,
+            success_toast: "发送成功".into(),
+            reply: Some(ReplyRaw {
+                rpid: 99,
+                mid: 1,
+                like: 0,
+                ctime: 1700000000,
+                rcount: 0,
+                member: MemberRaw {
+                    mid: serde_json::json!(1),
+                    uname: "me".into(),
+                    avatar: "https://i0.hdslb.com/a.jpg".into(),
+                },
+                content: ContentRaw {
+                    message: "hello".into(),
+                },
+            }),
+        };
+        let r = map_add(data, "hello").unwrap();
+        assert_eq!(r.rpid, 99);
+        assert_eq!(r.reply.as_ref().unwrap().content, "hello");
     }
 }

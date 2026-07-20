@@ -188,6 +188,24 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get liveChatTitle => 'Chat';
+
+  @override
+  String get liveChatEmpty => 'No messages yet';
+
+  @override
+  String get liveChatHint => 'Send a message';
+
+  @override
+  String get liveChatSend => 'Send';
+
+  @override
+  String get liveChatSent => 'Sent';
+
+  @override
+  String get liveChatEmptyMessage => 'Enter a message';
+
+  @override
   String get dynamicsTitle => 'Following';
 
   @override
@@ -292,6 +310,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoDescEmpty => 'No description';
 
   @override
+  String get expand => 'Show more';
+
+  @override
+  String get collapse => 'Show less';
+
+  @override
   String videoPartsCount(int count) {
     return 'Parts ($count)';
   }
@@ -327,6 +351,18 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get replyHint => 'Write a friendly comment';
+
+  @override
+  String get replySend => 'Post';
+
+  @override
+  String get replySent => 'Comment posted';
+
+  @override
+  String get replyEmptyMessage => 'Enter a comment';
+
+  @override
   String get playerDanmakuOn => 'Show danmaku';
 
   @override
@@ -336,7 +372,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerDanmakuClosed => 'Danmaku off';
 
   @override
+  String get playerDanmakuHint => 'Send danmaku';
+
+  @override
+  String get playerDanmakuSend => 'Send';
+
+  @override
+  String get playerDanmakuSent => 'Danmaku sent';
+
+  @override
+  String get playerDanmakuEmpty => 'Enter danmaku text';
+
+  @override
   String get playerQuality => 'Quality';
+
+  @override
+  String get playerSpeed => 'Speed';
+
+  @override
+  String get playerAudio => 'Audio';
+
+  @override
+  String get playerSubtitle => 'Subtitles';
+
+  @override
+  String get playerSubtitleOff => 'Off';
 
   @override
   String get playerFullscreen => 'Fullscreen';
@@ -655,7 +715,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginRequiredTitle => 'Sign in required';
 
   @override
-  String get loginRequiredBody => 'Sign in to like, coin, favorite, or follow';
+  String get loginRequiredBody =>
+      'Sign in to like, coin, favorite, follow, comment, or send danmaku';
 
   @override
   String get coinDialogTitle => 'Cast coins';

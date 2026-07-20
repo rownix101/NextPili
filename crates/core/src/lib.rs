@@ -13,25 +13,25 @@ pub mod heartbeat;
 mod frb_generated;
 
 pub use api::{
-    api_version, bootstrap, danmaku_segments, device_buvid3, dynamics_feed, fav_folders,
-    fav_resources, feed_popular, feed_recommend, get_settings, history_list, list_accounts,
-    live_play_url, live_recommend, live_room, login_captcha, login_password,
-    login_password_risk_captcha, login_password_risk_send_sms, login_password_risk_verify,
-    login_qr_poll, login_qr_start, login_sms, login_sms_send, logout, new_login_session_id,
-    pgc_play_url, pgc_rank, pgc_season, ping, play_url, playback_start, playback_stop,
-    relation_follow, reply_list, search_suggest, search_video, set_account_slot, toview_list,
-    update_settings, video_coin, video_detail, video_favorite, video_favorite_deal, video_like,
-    video_relation, AccountPublicDto, ApiVersion, ArchiveRelationDto, BootstrapConfig, CaptchaDto,
-    DanmakuItemDto, DanmakuSegmentDto, DynamicItemDto, DynamicPageDto, FavFolderDto,
-    FavFolderListDto, FavResourceItemDto, FavResourcePageDto, FeedItemDto, HeaderDto,
-    HistoryItemDto, HistoryPageDto, LiveRecommendPageDto, LiveRoomCardDto, LiveRoomDto,
-    MediaFormatDto, MediaSourceDto, PasswordLoginDto, PasswordLoginResultDto,
-    PasswordLoginResultKind, PasswordRiskDto, PasswordRiskSendSmsDto, PasswordRiskSendSmsResultDto,
-    PasswordRiskVerifyDto, PgcEpisodeDto, PgcRankItemDto, PgcRankPageDto, PgcSeasonDto,
-    PopularFeedDto, QrPollDto, QrStartDto, QrStatusKind, RecommendFeedDto, ReplyDto, ReplyListDto,
-    SearchSuggestDto, SearchVideoItemDto, SearchVideoPageDto, SettingsDto, SlotDto, SmsLoginDto,
-    SmsSendDto, SmsSendDtoResult, StreamDto, SubtitleTrackDto, ToViewItemDto, ToViewPageDto,
-    VideoDetailDto, VideoPageDto, VideoStatDto,
+    api_version, bootstrap, danmaku_post, danmaku_segments, device_buvid3, dynamics_feed,
+    fav_folders, fav_resources, feed_popular, feed_recommend, get_settings, history_list,
+    list_accounts, live_dm_history, live_play_url, live_recommend, live_room, live_send_msg,
+    login_captcha, login_password, login_password_risk_captcha, login_password_risk_send_sms,
+    login_password_risk_verify, login_qr_poll, login_qr_start, login_sms, login_sms_send, logout,
+    new_login_session_id, pgc_play_url, pgc_rank, pgc_season, ping, play_url, playback_start,
+    playback_stop, relation_follow, reply_add, reply_list, search_suggest, search_video,
+    set_account_slot, subtitle_vtt, toview_list, update_settings, video_coin, video_detail,
+    video_favorite, video_favorite_deal, video_like, video_relation, AccountPublicDto, ApiVersion,
+    ArchiveRelationDto, BootstrapConfig, CaptchaDto, DanmakuItemDto, DanmakuSegmentDto,
+    DynamicItemDto, DynamicPageDto, FavFolderDto, FavFolderListDto, FavResourceItemDto,
+    FavResourcePageDto, FeedItemDto, HeaderDto, HistoryItemDto, HistoryPageDto, LiveDanmakuItemDto,
+    LiveRecommendPageDto, LiveRoomCardDto, LiveRoomDto, MediaFormatDto, MediaSourceDto,
+    PasswordLoginDto, PasswordLoginResultDto, PasswordLoginResultKind, PasswordRiskDto,
+    PasswordRiskSendSmsDto, PasswordRiskSendSmsResultDto, PasswordRiskVerifyDto, PgcEpisodeDto,
+    PgcRankItemDto, PgcRankPageDto, PgcSeasonDto, PopularFeedDto, QrPollDto, QrStartDto,
+    QrStatusKind, RecommendFeedDto, ReplyDto, ReplyListDto, SearchSuggestDto, SearchVideoItemDto,
+    SearchVideoPageDto, SettingsDto, SlotDto, SmsLoginDto, SmsSendDto, SmsSendDtoResult, StreamDto,
+    SubtitleTrackDto, ToViewItemDto, ToViewPageDto, VideoDetailDto, VideoPageDto, VideoStatDto,
 };
 pub use app::CoreApp;
 pub use error::{AppError, ErrorKind};
@@ -41,6 +41,6 @@ pub const CORE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// FFI API compatibility version (major bumps on breaking changes).
 pub const API_MAJOR: u32 = 0;
-/// minor … · 13: live · 14: pgc
-pub const API_MINOR: u32 = 14;
+/// minor … · 15: reply_add / danmaku_post / live chat · 16: subtitle_vtt + player/v2 tracks
+pub const API_MINOR: u32 = 16;
 pub const API_PATCH: u32 = 0;
