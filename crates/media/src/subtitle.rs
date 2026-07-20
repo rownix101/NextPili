@@ -75,7 +75,12 @@ pub fn parse_player_v2_subtitles(data: &Value) -> Vec<SubtitleTrack> {
     out
 }
 
-/// Convert Bilibili subtitle JSON body (`{ body: [{from,to,content}] }`) to WebVTT.
+/// Convert Bilibili subtitle JSON body (`{ body: [{from,to,content,location?}] }`) to WebVTT.
+///
+/// When `location` is present (B 站「高级」位置字幕), emit WebVTT line/position settings:
+/// - `5` → top (`line:8%`)
+/// - `2` / default → bottom (`line:88%`)
+/// - other → middle (`line:50%`)
 pub fn bilibili_json_to_vtt(raw: &str) -> Result<String> {
     let doc: SubtitleDoc = serde_json::from_str(raw)
         .map_err(|e| Error::Invalid(format!("subtitle json: {e}")))?;
@@ -86,15 +91,37 @@ pub fn bilibili_json_to_vtt(raw: &str) -> Result<String> {
         }
         let from = format_vtt_ts(cue.from);
         let to = format_vtt_ts(cue.to);
+        let settings = location_to_vtt_settings(cue.location);
         // Escape for WebVTT cue text (minimal).
         let text = cue
             .content
             .replace('&', "&amp;")
             .replace('<', "&lt;")
             .replace('\n', "\n");
-        vtt.push_str(&format!("{}\n{} --> {}\n{}\n\n", i + 1, from, to, text));
+        if settings.is_empty() {
+            vtt.push_str(&format!("{}\n{} --> {}\n{}\n\n", i + 1, from, to, text));
+        } else {
+            vtt.push_str(&format!(
+                "{}\n{} --> {} {}\n{}\n\n",
+                i + 1,
+                from,
+                to,
+                settings,
+                text
+            ));
+        }
     }
     Ok(vtt)
+}
+
+fn location_to_vtt_settings(location: i32) -> String {
+    // Bilibili player: 2 bottom · 5 top · others center-ish.
+    match location {
+        0 | 2 => "line:88% position:50% align:center".into(),
+        5 => "line:8% position:50% align:center".into(),
+        _ if location > 0 => "line:50% position:50% align:center".into(),
+        _ => String::new(),
+    }
 }
 
 fn normalize_url(url: &str) -> String {
@@ -147,6 +174,9 @@ struct SubtitleCue {
     to: f64,
     #[serde(default)]
     content: String,
+    /// Position: 2 bottom · 5 top (B 站字幕 location).
+    #[serde(default)]
+    location: i32,
 }
 
 #[cfg(test)]
@@ -236,7 +266,16 @@ mod tests {
         let vtt = bilibili_json_to_vtt(raw).unwrap();
         assert!(vtt.starts_with("WEBVTT"));
         assert!(vtt.contains("00:00:01.500 --> 00:00:03.250"));
+        assert!(vtt.contains("line:88%"));
         assert!(vtt.contains("你好"));
         assert!(vtt.contains("world"));
+    }
+
+    #[test]
+    fn location_top_emits_line_setting() {
+        let raw = r#"{"body":[{"from":0,"to":1,"location":5,"content":"TOP"}]}"#;
+        let vtt = bilibili_json_to_vtt(raw).unwrap();
+        assert!(vtt.contains("line:8%"));
+        assert!(vtt.contains("TOP"));
     }
 }

@@ -146,6 +146,109 @@ impl DanmakuApi {
             visible: data.visible.unwrap_or(true),
         })
     }
+
+    /// `POST /x/v2/dm/thumbup/add` — like / unlike a video danmaku.
+    ///
+    /// - `op`: `true` like · `false` cancel
+    /// - `dmid`: danmaku id
+    /// - `oid`: **cid**
+    pub async fn like(
+        client: &BiliClient,
+        account: &Account,
+        device_buvid3: Option<&str>,
+        oid: i64,
+        dmid: i64,
+        like: bool,
+    ) -> Result<()> {
+        if oid <= 0 || dmid <= 0 {
+            return Err(Error::Domain(domain::Error::InvalidArgument {
+                msg: "cid and dmid must be > 0".into(),
+            }));
+        }
+        let mut params = BTreeMap::new();
+        params.insert("op".into(), if like { "1" } else { "2" }.into());
+        params.insert("dmid".into(), dmid.to_string());
+        params.insert("oid".into(), oid.to_string());
+        params.insert("platform".into(), "web_player".into());
+        params.insert("polaris_app_id".into(), "100".into());
+        params.insert("polaris_platform".into(), "5".into());
+        params.insert("spmid".into(), "333.788.0.0".into());
+        params.insert("from_spmid".into(), "333.788.0.0".into());
+        params.insert(
+            "statistics".into(),
+            r#"{"appId":100,"platform":5,"abtest":"","version":""}"#.into(),
+        );
+
+        let url = BiliClient::resolve_url(API_BASE, "/x/v2/dm/thumbup/add");
+        let opts = RequestOptions {
+            account: Some(account),
+            device_buvid3,
+            auth: crate::middleware::AuthMode::Cookie,
+            csrf: true,
+            ..RequestOptions::default()
+        }
+        .with_referer("https://www.bilibili.com/");
+
+        let resp = client
+            .post_form_bili::<serde_json::Value>(&url, params, opts)
+            .await?;
+        resp.ensure_ok()
+    }
+
+    /// `POST /x/dm/report/add` — report a video danmaku.
+    ///
+    /// - `reason`: see `docs/api/endpoints/danmaku.md` / PiliPlus report map
+    /// - `block_user`: also block mid (server-side flag)
+    /// - `content`: free text when reason is “other”
+    pub async fn report(
+        client: &BiliClient,
+        account: &Account,
+        device_buvid3: Option<&str>,
+        cid: i64,
+        dmid: i64,
+        reason: i32,
+        block_user: bool,
+        content: Option<&str>,
+    ) -> Result<i32> {
+        if cid <= 0 || dmid <= 0 {
+            return Err(Error::Domain(domain::Error::InvalidArgument {
+                msg: "cid and dmid must be > 0".into(),
+            }));
+        }
+        let mut params = BTreeMap::new();
+        params.insert("cid".into(), cid.to_string());
+        params.insert("originCid".into(), cid.to_string());
+        params.insert("dmid".into(), dmid.to_string());
+        params.insert("reason".into(), reason.to_string());
+        params.insert("block".into(), if block_user { "true" } else { "false" }.into());
+        if let Some(c) = content.map(str::trim).filter(|s| !s.is_empty()) {
+            params.insert("content".into(), c.to_string());
+        }
+        params.insert("polaris_app_id".into(), "100".into());
+        params.insert("polaris_platform".into(), "5".into());
+        params.insert("spmid".into(), "333.788.0.0".into());
+        params.insert("from_spmid".into(), "333.788.0.0".into());
+        params.insert(
+            "statistics".into(),
+            r#"{"appId":100,"platform":5,"abtest":"","version":""}"#.into(),
+        );
+
+        let url = BiliClient::resolve_url(API_BASE, "/x/dm/report/add");
+        let opts = RequestOptions {
+            account: Some(account),
+            device_buvid3,
+            auth: crate::middleware::AuthMode::Cookie,
+            csrf: true,
+            ..RequestOptions::default()
+        }
+        .with_referer("https://www.bilibili.com/");
+
+        let resp = client
+            .post_form_bili::<ReportData>(&url, params, opts)
+            .await?;
+        let data = resp.into_data_opt()?.unwrap_or_default();
+        Ok(data.block.unwrap_or(0))
+    }
 }
 
 #[derive(Debug, Deserialize, Default)]
@@ -154,4 +257,11 @@ struct PostData {
     dmid: i64,
     #[serde(default)]
     visible: Option<bool>,
+}
+
+#[derive(Debug, Deserialize, Default)]
+struct ReportData {
+    /// Business code: 0 submitted · -1 not activated · -4 rate limited · -5 already reported.
+    #[serde(default)]
+    block: Option<i32>,
 }

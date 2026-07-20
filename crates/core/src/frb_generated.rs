@@ -38,7 +38,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.12.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1433449953;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 3557542;
 
 // Section: executor
 
@@ -108,6 +108,45 @@ fn wire__crate__api__simple__bootstrap_impl(
         },
     )
 }
+fn wire__crate__api__social__danmaku_like_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "danmaku_like",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_oid = <i64>::sse_decode(&mut deserializer);
+            let api_dmid = <i64>::sse_decode(&mut deserializer);
+            let api_like = <bool>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, crate::error::AppError>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::social::danmaku_like(api_oid, api_dmid, api_like).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crate__api__social__danmaku_post_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -149,6 +188,53 @@ fn wire__crate__api__social__danmaku_post_impl(
                             api_progress_ms,
                             api_mode,
                             api_color,
+                        )
+                        .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__social__danmaku_report_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "danmaku_report",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_cid = <i64>::sse_decode(&mut deserializer);
+            let api_dmid = <i64>::sse_decode(&mut deserializer);
+            let api_reason = <i32>::sse_decode(&mut deserializer);
+            let api_block_user = <bool>::sse_decode(&mut deserializer);
+            let api_content = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, crate::error::AppError>(
+                    (move || async move {
+                        let output_ok = crate::api::social::danmaku_report(
+                            api_cid,
+                            api_dmid,
+                            api_reason,
+                            api_block_user,
+                            api_content,
                         )
                         .await?;
                         Ok(output_ok)
@@ -3556,69 +3642,71 @@ fn pde_ffi_dispatcher_primary_impl(
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
         2 => wire__crate__api__simple__bootstrap_impl(port, ptr, rust_vec_len, data_len),
-        3 => wire__crate__api__social__danmaku_post_impl(port, ptr, rust_vec_len, data_len),
-        4 => wire__crate__api__social__danmaku_segments_impl(port, ptr, rust_vec_len, data_len),
-        6 => wire__crate__api__dynamics__dynamics_feed_impl(port, ptr, rust_vec_len, data_len),
-        7 => wire__crate__api__user__fav_folders_impl(port, ptr, rust_vec_len, data_len),
-        8 => wire__crate__api__user__fav_resources_impl(port, ptr, rust_vec_len, data_len),
-        9 => wire__crate__api__feed__feed_popular_impl(port, ptr, rust_vec_len, data_len),
-        10 => wire__crate__api__feed__feed_ranking_impl(port, ptr, rust_vec_len, data_len),
-        11 => wire__crate__api__feed__feed_recommend_impl(port, ptr, rust_vec_len, data_len),
-        12 => wire__crate__api__feed__feed_regions_impl(port, ptr, rust_vec_len, data_len),
-        14 => wire__crate__api__user__history_list_impl(port, ptr, rust_vec_len, data_len),
-        15 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
-        17 => wire__crate__api__live__live_dm_history_impl(port, ptr, rust_vec_len, data_len),
-        18 => wire__crate__api__live__live_play_url_impl(port, ptr, rust_vec_len, data_len),
-        19 => wire__crate__api__live__live_recommend_impl(port, ptr, rust_vec_len, data_len),
-        20 => wire__crate__api__live__live_room_impl(port, ptr, rust_vec_len, data_len),
-        21 => wire__crate__api__live__live_send_msg_impl(port, ptr, rust_vec_len, data_len),
-        22 => wire__crate__api__auth__login_captcha_impl(port, ptr, rust_vec_len, data_len),
-        23 => wire__crate__api__auth__login_password_impl(port, ptr, rust_vec_len, data_len),
-        24 => wire__crate__api__auth__login_password_risk_captcha_impl(
+        3 => wire__crate__api__social__danmaku_like_impl(port, ptr, rust_vec_len, data_len),
+        4 => wire__crate__api__social__danmaku_post_impl(port, ptr, rust_vec_len, data_len),
+        5 => wire__crate__api__social__danmaku_report_impl(port, ptr, rust_vec_len, data_len),
+        6 => wire__crate__api__social__danmaku_segments_impl(port, ptr, rust_vec_len, data_len),
+        8 => wire__crate__api__dynamics__dynamics_feed_impl(port, ptr, rust_vec_len, data_len),
+        9 => wire__crate__api__user__fav_folders_impl(port, ptr, rust_vec_len, data_len),
+        10 => wire__crate__api__user__fav_resources_impl(port, ptr, rust_vec_len, data_len),
+        11 => wire__crate__api__feed__feed_popular_impl(port, ptr, rust_vec_len, data_len),
+        12 => wire__crate__api__feed__feed_ranking_impl(port, ptr, rust_vec_len, data_len),
+        13 => wire__crate__api__feed__feed_recommend_impl(port, ptr, rust_vec_len, data_len),
+        14 => wire__crate__api__feed__feed_regions_impl(port, ptr, rust_vec_len, data_len),
+        16 => wire__crate__api__user__history_list_impl(port, ptr, rust_vec_len, data_len),
+        17 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
+        19 => wire__crate__api__live__live_dm_history_impl(port, ptr, rust_vec_len, data_len),
+        20 => wire__crate__api__live__live_play_url_impl(port, ptr, rust_vec_len, data_len),
+        21 => wire__crate__api__live__live_recommend_impl(port, ptr, rust_vec_len, data_len),
+        22 => wire__crate__api__live__live_room_impl(port, ptr, rust_vec_len, data_len),
+        23 => wire__crate__api__live__live_send_msg_impl(port, ptr, rust_vec_len, data_len),
+        24 => wire__crate__api__auth__login_captcha_impl(port, ptr, rust_vec_len, data_len),
+        25 => wire__crate__api__auth__login_password_impl(port, ptr, rust_vec_len, data_len),
+        26 => wire__crate__api__auth__login_password_risk_captcha_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        25 => wire__crate__api__auth__login_password_risk_send_sms_impl(
+        27 => wire__crate__api__auth__login_password_risk_send_sms_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        26 => wire__crate__api__auth__login_password_risk_verify_impl(
+        28 => wire__crate__api__auth__login_password_risk_verify_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        27 => wire__crate__api__auth__login_qr_poll_impl(port, ptr, rust_vec_len, data_len),
-        28 => wire__crate__api__auth__login_qr_start_impl(port, ptr, rust_vec_len, data_len),
-        29 => wire__crate__api__auth__login_sms_impl(port, ptr, rust_vec_len, data_len),
-        30 => wire__crate__api__auth__login_sms_send_impl(port, ptr, rust_vec_len, data_len),
-        33 => wire__crate__api__pgc__pgc_play_url_impl(port, ptr, rust_vec_len, data_len),
-        34 => wire__crate__api__pgc__pgc_rank_impl(port, ptr, rust_vec_len, data_len),
-        35 => wire__crate__api__pgc__pgc_season_impl(port, ptr, rust_vec_len, data_len),
-        37 => wire__crate__api__video__play_url_impl(port, ptr, rust_vec_len, data_len),
-        38 => wire__crate__api__video__playback_start_impl(port, ptr, rust_vec_len, data_len),
-        40 => wire__crate__api__engagement__relation_follow_impl(port, ptr, rust_vec_len, data_len),
-        41 => wire__crate__api__social__reply_add_impl(port, ptr, rust_vec_len, data_len),
-        42 => wire__crate__api__social__reply_list_impl(port, ptr, rust_vec_len, data_len),
-        43 => wire__crate__api__search__search_suggest_impl(port, ptr, rust_vec_len, data_len),
-        44 => wire__crate__api__search__search_video_impl(port, ptr, rust_vec_len, data_len),
-        46 => wire__crate__api__video__subtitle_vtt_impl(port, ptr, rust_vec_len, data_len),
-        47 => wire__crate__api__user__toview_list_impl(port, ptr, rust_vec_len, data_len),
-        49 => wire__crate__api__engagement__video_coin_impl(port, ptr, rust_vec_len, data_len),
-        50 => wire__crate__api__video__video_detail_impl(port, ptr, rust_vec_len, data_len),
-        51 => wire__crate__api__engagement__video_favorite_impl(port, ptr, rust_vec_len, data_len),
-        52 => wire__crate__api__engagement__video_favorite_deal_impl(
+        29 => wire__crate__api__auth__login_qr_poll_impl(port, ptr, rust_vec_len, data_len),
+        30 => wire__crate__api__auth__login_qr_start_impl(port, ptr, rust_vec_len, data_len),
+        31 => wire__crate__api__auth__login_sms_impl(port, ptr, rust_vec_len, data_len),
+        32 => wire__crate__api__auth__login_sms_send_impl(port, ptr, rust_vec_len, data_len),
+        35 => wire__crate__api__pgc__pgc_play_url_impl(port, ptr, rust_vec_len, data_len),
+        36 => wire__crate__api__pgc__pgc_rank_impl(port, ptr, rust_vec_len, data_len),
+        37 => wire__crate__api__pgc__pgc_season_impl(port, ptr, rust_vec_len, data_len),
+        39 => wire__crate__api__video__play_url_impl(port, ptr, rust_vec_len, data_len),
+        40 => wire__crate__api__video__playback_start_impl(port, ptr, rust_vec_len, data_len),
+        42 => wire__crate__api__engagement__relation_follow_impl(port, ptr, rust_vec_len, data_len),
+        43 => wire__crate__api__social__reply_add_impl(port, ptr, rust_vec_len, data_len),
+        44 => wire__crate__api__social__reply_list_impl(port, ptr, rust_vec_len, data_len),
+        45 => wire__crate__api__search__search_suggest_impl(port, ptr, rust_vec_len, data_len),
+        46 => wire__crate__api__search__search_video_impl(port, ptr, rust_vec_len, data_len),
+        48 => wire__crate__api__video__subtitle_vtt_impl(port, ptr, rust_vec_len, data_len),
+        49 => wire__crate__api__user__toview_list_impl(port, ptr, rust_vec_len, data_len),
+        51 => wire__crate__api__engagement__video_coin_impl(port, ptr, rust_vec_len, data_len),
+        52 => wire__crate__api__video__video_detail_impl(port, ptr, rust_vec_len, data_len),
+        53 => wire__crate__api__engagement__video_favorite_impl(port, ptr, rust_vec_len, data_len),
+        54 => wire__crate__api__engagement__video_favorite_deal_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        53 => wire__crate__api__engagement__video_like_impl(port, ptr, rust_vec_len, data_len),
-        54 => wire__crate__api__engagement__video_relation_impl(port, ptr, rust_vec_len, data_len),
+        55 => wire__crate__api__engagement__video_like_impl(port, ptr, rust_vec_len, data_len),
+        56 => wire__crate__api__engagement__video_relation_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -3632,15 +3720,15 @@ fn pde_ffi_dispatcher_sync_impl(
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
         1 => wire__crate__api__simple__api_version_impl(ptr, rust_vec_len, data_len),
-        5 => wire__crate__api__auth__device_buvid3_impl(ptr, rust_vec_len, data_len),
-        13 => wire__crate__api__settings__get_settings_impl(ptr, rust_vec_len, data_len),
-        16 => wire__crate__api__auth__list_accounts_impl(ptr, rust_vec_len, data_len),
-        31 => wire__crate__api__auth__logout_impl(ptr, rust_vec_len, data_len),
-        32 => wire__crate__api__auth__new_login_session_id_impl(ptr, rust_vec_len, data_len),
-        36 => wire__crate__api__simple__ping_impl(ptr, rust_vec_len, data_len),
-        39 => wire__crate__api__video__playback_stop_impl(ptr, rust_vec_len, data_len),
-        45 => wire__crate__api__auth__set_account_slot_impl(ptr, rust_vec_len, data_len),
-        48 => wire__crate__api__settings__update_settings_impl(ptr, rust_vec_len, data_len),
+        7 => wire__crate__api__auth__device_buvid3_impl(ptr, rust_vec_len, data_len),
+        15 => wire__crate__api__settings__get_settings_impl(ptr, rust_vec_len, data_len),
+        18 => wire__crate__api__auth__list_accounts_impl(ptr, rust_vec_len, data_len),
+        33 => wire__crate__api__auth__logout_impl(ptr, rust_vec_len, data_len),
+        34 => wire__crate__api__auth__new_login_session_id_impl(ptr, rust_vec_len, data_len),
+        38 => wire__crate__api__simple__ping_impl(ptr, rust_vec_len, data_len),
+        41 => wire__crate__api__video__playback_stop_impl(ptr, rust_vec_len, data_len),
+        47 => wire__crate__api__auth__set_account_slot_impl(ptr, rust_vec_len, data_len),
+        50 => wire__crate__api__settings__update_settings_impl(ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }

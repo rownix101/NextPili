@@ -183,6 +183,8 @@ POST /x/v2/dm/edit/state
 
 | 阶段 | 做法 |
 |------|------|
-| MVP | REST 发弹幕 + `seg.so` 或社区 XML 拉取 ✅（`danmaku_post` · `danmaku_segments`） |
+| MVP | REST 发弹幕 + `seg.so` 拉取 ✅（`danmaku_post` · `danmaku_segments`） |
+| 互动 | 点赞 / 举报 ✅（`danmaku_like` · `danmaku_report`） |
+| 高级弹幕 | mode 7 JSON 数组相对坐标绘制 ✅ |
 | 完整实现 | gRPC `DmSegMobile` + `DmView` + 屏蔽词同步 |
 | 直播 | 独立 WS 协议，勿与视频弹幕混用（发送 REST 见 [live.md](./live.md)） |

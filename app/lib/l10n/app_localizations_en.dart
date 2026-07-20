@@ -387,6 +387,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerDanmakuEmpty => 'Enter danmaku text';
 
   @override
+  String get playerDanmakuLike => 'Like danmaku';
+
+  @override
+  String get playerDanmakuLiked => 'Liked';
+
+  @override
+  String get playerDanmakuReport => 'Report danmaku';
+
+  @override
+  String get playerDanmakuReportOther => 'Details';
+
+  @override
+  String get playerDanmakuReportOtherHint => 'Describe the issue (optional)';
+
+  @override
+  String get playerDanmakuReportSubmit => 'Submit';
+
+  @override
+  String get playerDanmakuReportOk => 'Report submitted';
+
+  @override
+  String get playerDanmakuReportRateLimit =>
+      'Too many requests — try again later';
+
+  @override
+  String get playerDanmakuReportDup => 'You already reported this';
+
+  @override
   String get playerQuality => 'Quality';
 
   @override

@@ -124,15 +124,29 @@ DanmakuItem {
   text: String,
   mid_hash: String,
   id: i64,
+  weight: i32,   // proto field 9; density cap prefers higher
 }
 ```
+
+拉取后：`merge_duplicate_danmaku`（同文案 100ms 窗合并，对齐 PiliPlus）→ `limit_danmaku`（weight 优先，默认 cap 4000）。
 
 ### 4.2 渲染（MVP）
 
 - Flutter `Stack` + Overlay，按 `progress_ms` 与播放器 position 同步。
-- 在屏运动用 **播放时钟**（仅 `playing == true` 时累计 elapsed），禁止纯墙钟驱动；暂停时冻结，恢复后连续。
-- 限流：同屏上限、密度设置；过高时丢弃低优先级（颜色/模式可配置）。
+- **100ms 时间桶**索引（对齐 PiliPlus `progress ~/ 100`），避免每帧扫整段。
+- 滚动轨 **避让**（同轨未出清不复用）；顶/底各少量固定轨。
+- Seek 大跳（>|1s|）清空在屏与已 spawn 标记，避免漏弹/重弹。
+- 在屏运动用 **播放时钟**（仅 `playing == true` 时累计 elapsed；倍速缩短 TTL），禁止纯墙钟驱动；暂停时冻结，恢复后连续。
+- 限流：同屏上限、opacity；过高时丢弃。
+- 发送：底栏输入 + `danmaku_post` + `injectLocal` 乐观上屏。
+- **mode 7 高级弹幕**：`content` 为 JSON 数组（位置/透明度/时长/旋转），相对坐标绘制；解析失败则降级为普通滚动。
+- 长按弹幕：点赞 / 举报（`danmaku_like` · `danmaku_report`）。
 - 后期：评估 canvas / GPU / 播放器层弹幕。
+
+### 4.3 字幕（含位置）
+
+- 列表：`/x/player/wbi/v2` → `subtitle.subtitles`（优先 `subtitle_url`）。
+- JSON body → WebVTT；`location` 2/默认底、5 顶，写出 VTT `line`/`position` 设置（高级位置字幕）。
 
 gRPC 弹幕：后续可选，同一 `DanmakuItem` 出口。
 

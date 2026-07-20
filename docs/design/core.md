@@ -125,6 +125,8 @@ shutdown()
 | `pgc_play_url` | `/pgc/player/web/v2/playurl` → `result.video_info` → `MediaSourceDto` |
 | `reply_add` | 发评论（主楼；`root`/`parent` 可嵌套） |
 | `danmaku_post` | 发视频弹幕（cid + progress_ms · WBI + csrf） |
+| `danmaku_like` | 弹幕点赞 / 取消（`/x/v2/dm/thumbup/add`） |
+| `danmaku_report` | 弹幕举报（`/x/dm/report/add` · reason + 可选拉黑） |
 | `live_dm_history` | 直播间历史弹幕（REST） |
 | `live_send_msg` | 发送直播弹幕（REST `/msg/send`） |
 

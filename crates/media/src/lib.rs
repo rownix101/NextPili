@@ -9,8 +9,8 @@ pub mod source;
 pub mod subtitle;
 
 pub use danmaku::{
-    limit_danmaku, normalize_danmaku, parse_dm_seg_so, segment_index_for_progress,
-    DANMAKU_SEGMENT_MS,
+    limit_danmaku, merge_duplicate_danmaku, normalize_danmaku, parse_dm_seg_so,
+    segment_index_for_progress, DANMAKU_SEGMENT_MS,
 };
 pub use error::{Error, Result};
 pub use playurl::{

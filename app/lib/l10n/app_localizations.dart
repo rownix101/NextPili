@@ -800,6 +800,60 @@ abstract class AppLocalizations {
   /// **'请输入弹幕内容'**
   String get playerDanmakuEmpty;
 
+  /// No description provided for @playerDanmakuLike.
+  ///
+  /// In zh, this message translates to:
+  /// **'点赞弹幕'**
+  String get playerDanmakuLike;
+
+  /// No description provided for @playerDanmakuLiked.
+  ///
+  /// In zh, this message translates to:
+  /// **'已点赞'**
+  String get playerDanmakuLiked;
+
+  /// No description provided for @playerDanmakuReport.
+  ///
+  /// In zh, this message translates to:
+  /// **'举报弹幕'**
+  String get playerDanmakuReport;
+
+  /// No description provided for @playerDanmakuReportOther.
+  ///
+  /// In zh, this message translates to:
+  /// **'补充说明'**
+  String get playerDanmakuReportOther;
+
+  /// No description provided for @playerDanmakuReportOtherHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'请描述问题（可选）'**
+  String get playerDanmakuReportOtherHint;
+
+  /// No description provided for @playerDanmakuReportSubmit.
+  ///
+  /// In zh, this message translates to:
+  /// **'提交举报'**
+  String get playerDanmakuReportSubmit;
+
+  /// No description provided for @playerDanmakuReportOk.
+  ///
+  /// In zh, this message translates to:
+  /// **'举报已提交'**
+  String get playerDanmakuReportOk;
+
+  /// No description provided for @playerDanmakuReportRateLimit.
+  ///
+  /// In zh, this message translates to:
+  /// **'操作过于频繁，请稍后再试'**
+  String get playerDanmakuReportRateLimit;
+
+  /// No description provided for @playerDanmakuReportDup.
+  ///
+  /// In zh, this message translates to:
+  /// **'已举报过这条弹幕'**
+  String get playerDanmakuReportDup;
+
   /// No description provided for @playerQuality.
   ///
   /// In zh, this message translates to:

@@ -395,6 +395,34 @@ class CoreApi {
         color: color,
       );
 
+  /// Like / unlike a video danmaku. `oid` is **cid**. Login required.
+  Future<void> danmakuLike({
+    required int oid,
+    required int dmid,
+    required bool like,
+  }) =>
+      frb_social.danmakuLike(
+        oid: PlatformInt64Util.from(oid),
+        dmid: PlatformInt64Util.from(dmid),
+        like: like,
+      );
+
+  /// Report a video danmaku. Login required. Returns server `data.block` code.
+  Future<int> danmakuReport({
+    required int cid,
+    required int dmid,
+    required int reason,
+    bool blockUser = false,
+    String content = '',
+  }) =>
+      frb_social.danmakuReport(
+        cid: PlatformInt64Util.from(cid),
+        dmid: PlatformInt64Util.from(dmid),
+        reason: reason,
+        blockUser: blockUser,
+        content: content,
+      );
+
   /// Viewer like/coin/fav/follow flags for an archive.
   Future<frb_engagement.ArchiveRelationDto> videoRelation({
     required int aid,

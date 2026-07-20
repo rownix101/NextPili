@@ -11,16 +11,22 @@ import '../../core/motion/app_motion.dart';
 import '../../core/theme/player_colors.dart';
 import '../../core/theme/spacing.dart';
 import '../../core/widgets/loading.dart';
-import '../../core/widgets/np_button.dart';
 import '../../l10n/l10n.dart';
+import '../video/engagement_bar.dart' show ensureLoggedIn;
+import 'danmaku_actions.dart';
 import 'danmaku_overlay.dart';
 import 'playback_session.dart';
 import 'player_adapter.dart';
+import 'player_bottom_chrome.dart';
+import 'player_top_bar.dart';
 
 /// Inline (or host-bound) video surface + chrome for one cid.
 ///
 /// Uses [playbackSessionProvider] so fullscreen / mini never remount the
 /// decoder — progress and audio stay continuous.
+///
+/// Chrome widgets live in [PlayerTopBar] / [PlayerBottomChrome]; this module
+/// owns session host binding, chrome visibility policy, and stream switches.
 class PlayerPane extends ConsumerStatefulWidget {
   const PlayerPane({
     super.key,
@@ -65,6 +71,10 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> {
   bool _showChrome = true;
   bool _chromeHeld = false;
   Timer? _chromeHideTimer;
+  final GlobalKey<DanmakuOverlayState> _danmakuKey =
+      GlobalKey<DanmakuOverlayState>();
+  final TextEditingController _dmComposer = TextEditingController();
+  bool _sendingDm = false;
 
   PlaybackTarget get _target => PlaybackTarget(
         videoId: widget.videoId,
@@ -92,7 +102,51 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> {
   @override
   void dispose() {
     _chromeHideTimer?.cancel();
+    _dmComposer.dispose();
     super.dispose();
+  }
+
+  Future<void> _sendDanmaku(MediaKitPlayerAdapter adapter) async {
+    final text = _dmComposer.text.trim();
+    final l10n = context.l10n;
+    if (text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.playerDanmakuEmpty)),
+      );
+      return;
+    }
+    if (!await ensureLoggedIn(context)) return;
+    if (!mounted) return;
+    setState(() => _sendingDm = true);
+    try {
+      final pos = adapter.player.state.position.inMilliseconds;
+      final posted = await CoreApi.instance.danmakuPost(
+        oid: widget.cid,
+        aid: widget.aid > 0
+            ? widget.aid
+            : ref.read(playbackSessionProvider).resolvedAid,
+        bvid: widget.bvid,
+        msg: text,
+        progressMs: pos,
+      );
+      if (!mounted) return;
+      await Haptics.success();
+      _dmComposer.clear();
+      _danmakuKey.currentState?.injectLocal(posted);
+      setState(() => _sendingDm = false);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.playerDanmakuSent)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      await Haptics.error();
+      if (!mounted) return;
+      setState(() => _sendingDm = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage(e, context.l10n))),
+      );
+    }
   }
 
   void _scheduleChromeHide() {
@@ -289,12 +343,23 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> {
                     ),
                     if (session.resolvedAid > 0)
                       DanmakuOverlay(
+                        key: _danmakuKey,
                         aid: session.resolvedAid,
                         cid: widget.cid,
                         position: adapter.player.stream.position,
                         playing: adapter.player.stream.playing,
                         initialPlaying: adapter.player.state.playing,
                         enabled: session.danmakuOn,
+                        playbackRate: adapter.rate,
+                        onDanmakuLongPress: (item) {
+                          unawaited(
+                            showDanmakuActions(
+                              context,
+                              item: item,
+                              cid: widget.cid,
+                            ),
+                          );
+                        },
                       ),
                   ],
                 ),
@@ -319,7 +384,7 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> {
                       top: 0,
                       left: 0,
                       right: 0,
-                      child: _TopBar(
+                      child: PlayerTopBar(
                         title: widget.title.isEmpty
                             ? widget.videoId
                             : widget.title,
@@ -351,9 +416,19 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> {
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        child: _BottomChrome(
+                        child: PlayerBottomChrome(
                           adapter: adapter,
                           colors: player,
+                          danmakuOn: session.danmakuOn,
+                          dmComposer: _dmComposer,
+                          sendingDm: _sendingDm,
+                          onSendDanmaku: () {
+                            _holdChrome(true);
+                            unawaited(_sendDanmaku(adapter).whenComplete(() {
+                              if (mounted) _holdChrome(false);
+                            }));
+                          },
+                          onDmFocus: (focused) => _holdChrome(focused),
                           onFullscreen: widget.host ==
                                   PlayerSurfaceHost.fullscreen
                               ? () => notifier.exitFullscreen()
@@ -389,401 +464,4 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> {
       ),
     );
   }
-}
-
-class _TopBar extends StatelessWidget {
-  const _TopBar({
-    required this.title,
-    required this.showTitle,
-    required this.showBack,
-    required this.onBack,
-    required this.colors,
-    required this.danmakuOn,
-    required this.onToggleDanmaku,
-    this.onFullscreen,
-    this.fullscreenExit = false,
-    this.onMini,
-  });
-
-  final String title;
-  final bool showTitle;
-  final bool showBack;
-  final VoidCallback? onBack;
-  final PlayerColors colors;
-  final bool danmakuOn;
-  final VoidCallback onToggleDanmaku;
-  final VoidCallback? onFullscreen;
-  final bool fullscreenExit;
-  final VoidCallback? onMini;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return Material(
-      color: colors.chromeGlass,
-      child: Row(
-        children: [
-          if (showBack)
-            NpIconButton(
-              icon: AppIcons.arrowLeft,
-              color: colors.controlFg,
-              onPressed: onBack,
-              tooltip: l10n.back,
-            ),
-          if (showTitle)
-            Expanded(
-              child: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: colors.controlFg, fontSize: 15),
-              ),
-            )
-          else
-            const Spacer(),
-          NpIconButton(
-            icon: AppIcons.danmaku,
-            color: danmakuOn ? colors.controlFg : colors.controlFgMuted,
-            onPressed: onToggleDanmaku,
-            tooltip: danmakuOn ? l10n.playerDanmakuOff : l10n.playerDanmakuOn,
-          ),
-          if (onMini != null)
-            NpIconButton(
-              icon: AppIcons.pictureInPicture,
-              color: colors.controlFg,
-              onPressed: onMini,
-              tooltip: l10n.playerMini,
-            ),
-          if (onFullscreen != null)
-            NpIconButton(
-              icon: fullscreenExit
-                  ? AppIcons.fullscreenExit
-                  : AppIcons.fullscreen,
-              color: colors.controlFg,
-              onPressed: onFullscreen,
-              tooltip: fullscreenExit
-                  ? l10n.playerFullscreenExit
-                  : l10n.playerFullscreen,
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BottomChrome extends StatelessWidget {
-  const _BottomChrome({
-    required this.adapter,
-    required this.colors,
-    required this.onQuality,
-    required this.onAudio,
-    required this.onSpeed,
-    required this.onSubtitle,
-    this.onFullscreen,
-    this.fullscreenExit = false,
-    this.onHoldChrome,
-    this.onInteract,
-  });
-
-  final MediaKitPlayerAdapter adapter;
-  final PlayerColors colors;
-  final ValueChanged<StreamDto> onQuality;
-  final ValueChanged<StreamDto> onAudio;
-  final ValueChanged<double> onSpeed;
-  final ValueChanged<SubtitleTrackDto?> onSubtitle;
-  final VoidCallback? onFullscreen;
-  final bool fullscreenExit;
-  final ValueChanged<bool>? onHoldChrome;
-  final VoidCallback? onInteract;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return StreamBuilder<Duration>(
-      stream: adapter.player.stream.position,
-      initialData: adapter.player.state.position,
-      builder: (context, posSnap) {
-        return StreamBuilder<Duration>(
-          stream: adapter.player.stream.duration,
-          initialData: adapter.player.state.duration,
-          builder: (context, durSnap) {
-            return StreamBuilder<bool>(
-              stream: adapter.player.stream.playing,
-              initialData: adapter.player.state.playing,
-              builder: (context, playSnap) {
-                final pos = posSnap.data ?? Duration.zero;
-                final dur = durSnap.data ?? Duration.zero;
-                final playing = playSnap.data ?? false;
-                final maxMs =
-                    dur.inMilliseconds.toDouble().clamp(1.0, 1e12).toDouble();
-                final value =
-                    pos.inMilliseconds.toDouble().clamp(0.0, maxMs).toDouble();
-
-                final qualities = adapter.qualityOptions;
-                final audios = adapter.audioOptions;
-                final subs = adapter.subtitleOptions;
-                final currentQ = adapter.currentVideo;
-                final currentA = adapter.currentAudio;
-                final currentSub = adapter.currentSubtitle;
-                final rate = adapter.rate;
-
-                return Material(
-                  color: colors.chromeGlass,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SliderTheme(
-                          data: SliderTheme.of(context).copyWith(
-                            trackHeight: 3,
-                            thumbShape: const RoundSliderThumbShape(
-                              enabledThumbRadius: 6,
-                            ),
-                            overlayShape: const RoundSliderOverlayShape(
-                              overlayRadius: 12,
-                            ),
-                            activeTrackColor: colors.progressPlayed,
-                            inactiveTrackColor: colors.progressTrack,
-                            thumbColor: colors.progressPlayed,
-                          ),
-                          child: Slider(
-                            value: value,
-                            max: maxMs,
-                            onChangeStart: (_) => onHoldChrome?.call(true),
-                            onChanged: (v) {
-                              adapter.seek(Duration(milliseconds: v.round()));
-                            },
-                            onChangeEnd: (_) => onHoldChrome?.call(false),
-                          ),
-                        ),
-                        LayoutBuilder(
-                          builder: (context, rowConstraints) {
-                            final controls = Row(
-                              children: [
-                                NpIconButton(
-                                  icon:
-                                      playing ? AppIcons.pause : AppIcons.play,
-                                  color: colors.controlFg,
-                                  onPressed: () {
-                                    onInteract?.call();
-                                    if (playing) {
-                                      adapter.pause();
-                                    } else {
-                                      adapter.play();
-                                    }
-                                  },
-                                  tooltip: playing ? l10n.pause : l10n.play,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${_fmt(pos)} / ${_fmt(dur)}',
-                                  style: TextStyle(
-                                    color: colors.controlFgMuted,
-                                    fontSize: 12,
-                                    fontFeatures: const [
-                                      FontFeature.tabularFigures(),
-                                    ],
-                                  ),
-                                ),
-                                const Spacer(),
-                                if (qualities.isNotEmpty)
-                                  _TextMenuButton(
-                                    label: currentQ?.qualityLabel ??
-                                        l10n.playerQuality,
-                                    tooltip: l10n.playerQuality,
-                                    colors: colors,
-                                    onOpened: () => onHoldChrome?.call(true),
-                                    onClosed: () => onHoldChrome?.call(false),
-                                    items: [
-                                      for (final q in qualities)
-                                        PopupMenuItem(
-                                          value: q.id,
-                                          child: Text(q.qualityLabel),
-                                        ),
-                                    ],
-                                    onSelected: (id) {
-                                      final q = qualities.firstWhere(
-                                        (e) => e.id == id,
-                                        orElse: () => qualities.first,
-                                      );
-                                      onQuality(q);
-                                    },
-                                  ),
-                                if (audios.length > 1 ||
-                                    (audios.length == 1 &&
-                                        (audios.first.role == 'dolby' ||
-                                            audios.first.role == 'hires')))
-                                  _TextMenuButton(
-                                    label: currentA?.qualityLabel ??
-                                        l10n.playerAudio,
-                                    tooltip: l10n.playerAudio,
-                                    colors: colors,
-                                    onOpened: () => onHoldChrome?.call(true),
-                                    onClosed: () => onHoldChrome?.call(false),
-                                    items: [
-                                      for (final a in audios)
-                                        PopupMenuItem(
-                                          value: a.id,
-                                          child: Text(a.qualityLabel),
-                                        ),
-                                    ],
-                                    onSelected: (id) {
-                                      final a = audios.firstWhere(
-                                        (e) => e.id == id,
-                                        orElse: () => audios.first,
-                                      );
-                                      onAudio(a);
-                                    },
-                                  ),
-                                _TextMenuButton(
-                                  label: _speedLabel(rate),
-                                  tooltip: l10n.playerSpeed,
-                                  colors: colors,
-                                  onOpened: () => onHoldChrome?.call(true),
-                                  onClosed: () => onHoldChrome?.call(false),
-                                  items: [
-                                    for (final r in MediaKitPlayerAdapter
-                                        .speedOptions)
-                                      PopupMenuItem(
-                                        value: r.toString(),
-                                        child: Text(_speedLabel(r)),
-                                      ),
-                                  ],
-                                  onSelected: (v) {
-                                    final r = double.tryParse(v);
-                                    if (r != null) onSpeed(r);
-                                  },
-                                ),
-                                if (subs.isNotEmpty)
-                                  _TextMenuButton(
-                                    label: currentSub?.label ??
-                                        l10n.playerSubtitleOff,
-                                    tooltip: l10n.playerSubtitle,
-                                    colors: colors,
-                                    onOpened: () => onHoldChrome?.call(true),
-                                    onClosed: () => onHoldChrome?.call(false),
-                                    items: [
-                                      PopupMenuItem(
-                                        value: '',
-                                        child: Text(l10n.playerSubtitleOff),
-                                      ),
-                                      for (final t in subs)
-                                        PopupMenuItem(
-                                          value: t.id,
-                                          child: Text(t.label),
-                                        ),
-                                    ],
-                                    onSelected: (id) {
-                                      if (id.isEmpty) {
-                                        onSubtitle(null);
-                                        return;
-                                      }
-                                      final t = subs.firstWhere(
-                                        (e) => e.id == id,
-                                        orElse: () => subs.first,
-                                      );
-                                      onSubtitle(t);
-                                    },
-                                  ),
-                                if (onFullscreen != null)
-                                  NpIconButton(
-                                    icon: fullscreenExit
-                                        ? AppIcons.fullscreenExit
-                                        : AppIcons.fullscreen,
-                                    color: colors.controlFg,
-                                    onPressed: onFullscreen,
-                                    tooltip: fullscreenExit
-                                        ? l10n.playerFullscreenExit
-                                        : l10n.playerFullscreen,
-                                  ),
-                              ],
-                            );
-                            // Narrow / short-height player: allow horizontal scroll
-                            // instead of RenderFlex overflow.
-                            if (rowConstraints.maxWidth < 520) {
-                              return SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                    minWidth: rowConstraints.maxWidth,
-                                  ),
-                                  child: controls,
-                                ),
-                              );
-                            }
-                            return controls;
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            );
-          },
-        );
-      },
-    );
-  }
-}
-
-class _TextMenuButton extends StatelessWidget {
-  const _TextMenuButton({
-    required this.label,
-    required this.tooltip,
-    required this.colors,
-    required this.items,
-    required this.onSelected,
-    this.onOpened,
-    this.onClosed,
-  });
-
-  final String label;
-  final String tooltip;
-  final PlayerColors colors;
-  final List<PopupMenuEntry<String>> items;
-  final ValueChanged<String> onSelected;
-  final VoidCallback? onOpened;
-  final VoidCallback? onClosed;
-
-  @override
-  Widget build(BuildContext context) {
-    return PopupMenuButton<String>(
-      tooltip: tooltip,
-      onOpened: onOpened,
-      onCanceled: onClosed,
-      onSelected: (v) {
-        onClosed?.call();
-        onSelected(v);
-      },
-      itemBuilder: (context) => items,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: colors.controlFg,
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-String _speedLabel(double rate) {
-  if (rate == rate.roundToDouble()) {
-    return '${rate.toStringAsFixed(0)}x';
-  }
-  return '${rate}x';
-}
-
-String _fmt(Duration d) {
-  final h = d.inHours;
-  final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
-  final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
-  if (h > 0) return '$h:$m:$s';
-  return '${d.inMinutes}:$s';
 }

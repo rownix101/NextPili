@@ -27,8 +27,9 @@ class PlayerOverlayLayer extends ConsumerWidget {
     final host = session.host;
     final target = session.target;
 
-    // Fullscreen/mini sit above the navigator (sibling of [child]) and need a
-    // local Overlay for Tooltips / PopupMenus ("No Overlay widget found").
+    // Fullscreen/mini sit above the router navigator (sibling of [child]) and
+    // need a local Navigator (which also owns an Overlay) so Tooltips and
+    // PopupMenuButton/showMenu work ("No Overlay" / "no Navigator").
     // Mini stays a direct [Positioned] child of this Stack for drag layout.
     return Stack(
       fit: StackFit.expand,
@@ -45,30 +46,26 @@ class PlayerOverlayLayer extends ConsumerWidget {
   }
 }
 
-/// Local [Overlay] for chrome that lives outside the navigator.
-class _OverlayHost extends StatefulWidget {
+/// Local [Navigator] for chrome that lives outside the app router.
+///
+/// [PopupMenuButton] / [showMenu] push a route and require a [Navigator]
+/// ancestor; tooltips only need the [Overlay] that [Navigator] owns.
+class _OverlayHost extends StatelessWidget {
   const _OverlayHost({required this.child});
 
   final Widget child;
 
   @override
-  State<_OverlayHost> createState() => _OverlayHostState();
-}
-
-class _OverlayHostState extends State<_OverlayHost> {
-  late final OverlayEntry _entry = OverlayEntry(
-    builder: (context) => widget.child,
-  );
-
-  @override
-  void didUpdateWidget(covariant _OverlayHost oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _entry.markNeedsBuild();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Overlay(initialEntries: [_entry]);
+    return Navigator(
+      pages: [
+        MaterialPage<void>(
+          key: const ValueKey<String>('player-overlay-root'),
+          child: child,
+        ),
+      ],
+      onDidRemovePage: (_) {},
+    );
   }
 }
 

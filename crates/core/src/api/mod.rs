@@ -43,8 +43,8 @@ pub use search::{
 pub use settings::{get_settings, update_settings, SettingsDto};
 pub use simple::{api_version, bootstrap, ping, ApiVersion, BootstrapConfig};
 pub use social::{
-    danmaku_post, danmaku_segments, reply_add, reply_list, DanmakuItemDto, DanmakuSegmentDto,
-    ReplyDto, ReplyListDto,
+    danmaku_like, danmaku_post, danmaku_report, danmaku_segments, reply_add, reply_list,
+    DanmakuItemDto, DanmakuSegmentDto, ReplyDto, ReplyListDto,
 };
 pub use user::{
     fav_folders, fav_resources, history_list, toview_list, FavFolderDto, FavFolderListDto,

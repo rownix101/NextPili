@@ -4,7 +4,7 @@ use crate::app::CoreApp;
 use crate::error::{AppError, ErrorKind};
 use auth::AccountSlot;
 use http::{DanmakuApi, NavApi, ReplyApi};
-use media::{limit_danmaku, parse_dm_seg_so};
+use media::{limit_danmaku, merge_duplicate_danmaku, parse_dm_seg_so};
 
 /// One comment for Flutter lists.
 #[derive(Debug, Clone)]
@@ -139,7 +139,9 @@ pub async fn danmaku_segments(
     } else {
         let parsed = parse_dm_seg_so(&bytes)
             .map_err(|e| AppError::new(ErrorKind::Parse, e.to_string()))?;
-        limit_danmaku(parsed, 4000)
+        // Merge near-duplicate text (PiliPlus mergeDanmaku), then density cap.
+        let merged = merge_duplicate_danmaku(parsed);
+        limit_danmaku(merged, 4000)
     };
 
     Ok(DanmakuSegmentDto {
@@ -256,6 +258,69 @@ pub async fn danmaku_post(
         text: msg.trim().to_string(),
         mid_hash: String::new(),
     })
+}
+
+/// Like / unlike a video danmaku (`POST /x/v2/dm/thumbup/add`).
+///
+/// - `oid`: **cid**
+/// - `dmid`: danmaku id
+/// - `like`: `true` 赞 · `false` 取消
+pub async fn danmaku_like(oid: i64, dmid: i64, like: bool) -> Result<(), AppError> {
+    let app = CoreApp::global()?;
+    let account = require_main(&app)?;
+    let buvid = app.store.buvid3();
+    let http = app.http();
+    DanmakuApi::like(
+        &http,
+        &account,
+        Some(buvid.as_str()),
+        oid,
+        dmid,
+        like,
+    )
+    .await?;
+    Ok(())
+}
+
+/// Report a video danmaku (`POST /x/dm/report/add`).
+///
+/// - `cid`: part cid
+/// - `dmid`: danmaku id
+/// - `reason`: report reason code (0 → server `11` “其它” with optional `content`)
+/// - `block_user`: also request block
+/// - `content`: free text when reason is other
+///
+/// Returns server `data.block` business code (0 = submitted).
+pub async fn danmaku_report(
+    cid: i64,
+    dmid: i64,
+    reason: i32,
+    block_user: bool,
+    content: String,
+) -> Result<i32, AppError> {
+    let app = CoreApp::global()?;
+    let account = require_main(&app)?;
+    let buvid = app.store.buvid3();
+    let http = app.http();
+    // PiliPlus: reasonType 0 maps to API reason 11 (“其它”).
+    let api_reason = if reason == 0 { 11 } else { reason };
+    let content_opt = if content.trim().is_empty() {
+        None
+    } else {
+        Some(content.as_str())
+    };
+    let code = DanmakuApi::report(
+        &http,
+        &account,
+        Some(buvid.as_str()),
+        cid,
+        dmid,
+        api_reason,
+        block_user,
+        content_opt,
+    )
+    .await?;
+    Ok(code)
 }
 
 fn require_main(app: &CoreApp) -> Result<auth::Account, AppError> {

@@ -54,5 +54,27 @@ void main() {
       );
       expect(elapsed, const Duration(milliseconds: 2100));
     });
+
+    test('playback rate scales elapsed', () {
+      const base = Duration(milliseconds: 1000);
+      const step = Duration(milliseconds: 100);
+      expect(
+        advanceDanmakuElapsed(base, step, playing: true, rate: 2.0),
+        const Duration(milliseconds: 1200),
+      );
+      expect(
+        advanceDanmakuElapsed(base, step, playing: true, rate: 0.5),
+        const Duration(milliseconds: 1050),
+      );
+    });
+  });
+
+  group('danmakuBucket', () {
+    test('100ms buckets match PiliPlus progress~/100', () {
+      expect(danmakuBucket(0), 0);
+      expect(danmakuBucket(99), 0);
+      expect(danmakuBucket(100), 1);
+      expect(danmakuBucket(1250), 12);
+    });
   });
 }

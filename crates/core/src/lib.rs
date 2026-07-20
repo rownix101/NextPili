@@ -14,7 +14,8 @@ pub mod hw_decode;
 mod frb_generated;
 
 pub use api::{
-    api_version, bootstrap, danmaku_post, danmaku_segments, device_buvid3, dynamics_feed,
+    api_version, bootstrap, danmaku_like, danmaku_post, danmaku_report, danmaku_segments,
+    device_buvid3, dynamics_feed,
     fav_folders, fav_resources, feed_popular, feed_ranking, feed_recommend, feed_regions,
     get_settings, history_list,
     list_accounts, live_dm_history, live_play_url, live_recommend, live_room, live_send_msg,
@@ -44,6 +45,6 @@ pub const CORE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// FFI API compatibility version (major bumps on breaking changes).
 pub const API_MAJOR: u32 = 0;
-/// minor … · 16: subtitle_vtt · 17: feed_ranking / feed_regions (首页分区)
-pub const API_MINOR: u32 = 17;
+/// minor … · 17: feed_ranking / feed_regions · 18: danmaku_like / danmaku_report
+pub const API_MINOR: u32 = 18;
 pub const API_PATCH: u32 = 0;

@@ -81,6 +81,44 @@ Future<DanmakuItemDto> danmakuPost({
   color: color,
 );
 
+/// Like / unlike a video danmaku (`POST /x/v2/dm/thumbup/add`).
+///
+/// - `oid`: **cid**
+/// - `dmid`: danmaku id
+/// - `like`: `true` 赞 · `false` 取消
+Future<void> danmakuLike({
+  required PlatformInt64 oid,
+  required PlatformInt64 dmid,
+  required bool like,
+}) => RustLib.instance.api.crateApiSocialDanmakuLike(
+  oid: oid,
+  dmid: dmid,
+  like: like,
+);
+
+/// Report a video danmaku (`POST /x/dm/report/add`).
+///
+/// - `cid`: part cid
+/// - `dmid`: danmaku id
+/// - `reason`: report reason code (0 → server `11` “其它” with optional `content`)
+/// - `block_user`: also request block
+/// - `content`: free text when reason is other
+///
+/// Returns server `data.block` business code (0 = submitted).
+Future<int> danmakuReport({
+  required PlatformInt64 cid,
+  required PlatformInt64 dmid,
+  required int reason,
+  required bool blockUser,
+  required String content,
+}) => RustLib.instance.api.crateApiSocialDanmakuReport(
+  cid: cid,
+  dmid: dmid,
+  reason: reason,
+  blockUser: blockUser,
+  content: content,
+);
+
 /// Single danmaku item on the player timeline.
 class DanmakuItemDto {
   final PlatformInt64 id;

@@ -9,6 +9,9 @@ pub struct DanmakuItem {
     pub color: u32,
     pub text: String,
     pub mid_hash: String,
+    /// Proto field 9 (AI / ranking weight). Higher = keep first under density cap.
+    #[serde(default)]
+    pub weight: i32,
 }
 
 /// Result of posting a video danmaku (`/x/v2/dm/post`).

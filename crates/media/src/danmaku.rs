@@ -1,7 +1,11 @@
 //! Danmaku segment protobuf (REST `seg.so` / gRPC DmSeg shape) → domain items.
+//!
+//! Indexing/render heuristics mirror PiliPlus (`PlDanmakuController`):
+//! weight-aware density cap, optional same-text merge.
 
 use crate::error::{Error, Result};
 use domain::DanmakuItem;
+use std::collections::HashMap;
 
 /// Approx. segment length used by Bilibili dm seg (6 minutes).
 pub const DANMAKU_SEGMENT_MS: i64 = 6 * 60 * 1000;
@@ -22,14 +26,47 @@ pub fn normalize_danmaku(mut items: Vec<DanmakuItem>) -> Vec<DanmakuItem> {
     items
 }
 
-/// Cap density: keep at most `max` items, preferring earlier progress then lower id.
+/// Cap density: keep at most `max` items.
+///
+/// Prefers higher `weight` (proto field 9 / AI ranking), then earlier progress,
+/// then lower id — closer to PiliPlus `danmakuWeight` drop behavior under load.
 pub fn limit_danmaku(items: Vec<DanmakuItem>, max: usize) -> Vec<DanmakuItem> {
-    if max == 0 || items.len() <= max {
+    if max == 0 {
+        return Vec::new();
+    }
+    if items.len() <= max {
         return items;
     }
     let mut items = items;
+    items.sort_by(|a, b| {
+        b.weight
+            .cmp(&a.weight)
+            .then_with(|| a.progress_ms.cmp(&b.progress_ms))
+            .then_with(|| a.id.cmp(&b.id))
+    });
     items.truncate(max);
+    items.sort_by_key(|d| d.progress_ms);
     items
+}
+
+/// Merge identical text within a short window (100ms) — PiliPlus `mergeDanmaku`.
+///
+/// Keeps first occurrence; drops later duplicates (display layer may show count).
+pub fn merge_duplicate_danmaku(items: Vec<DanmakuItem>) -> Vec<DanmakuItem> {
+    if items.len() < 2 {
+        return items;
+    }
+    let mut seen: HashMap<(i64, String), ()> = HashMap::with_capacity(items.len());
+    let mut out = Vec::with_capacity(items.len());
+    for item in items {
+        // Bucket by 100ms so near-simultaneous same text collapses.
+        let key = (item.progress_ms / 100, item.text.clone());
+        if seen.insert(key, ()).is_some() {
+            continue;
+        }
+        out.push(item);
+    }
+    out
 }
 
 /// Parse REST `/x/v2/dm/web/seg.so` body (`DmSegMobileReply` protobuf wire).
@@ -83,6 +120,7 @@ fn parse_danmaku_elem(bytes: &[u8]) -> Result<Option<DanmakuItem>> {
     let mut color: u32 = 0x00ff_ffff;
     let mut mid_hash = String::new();
     let mut text = String::new();
+    let mut weight: i32 = 0;
 
     let mut cursor = 0usize;
     while cursor < bytes.len() {
@@ -126,6 +164,12 @@ fn parse_danmaku_elem(bytes: &[u8]) -> Result<Option<DanmakuItem>> {
                 cursor = next;
                 text = s;
             }
+            // weight (AI ranking / priority)
+            (9, 0) => {
+                let (v, next) = read_varint(bytes, cursor)?;
+                cursor = next;
+                weight = v as i32;
+            }
             // idStr fallback when id is 0
             (12, 2) => {
                 let (s, next) = read_string(bytes, cursor)?;
@@ -153,6 +197,7 @@ fn parse_danmaku_elem(bytes: &[u8]) -> Result<Option<DanmakuItem>> {
         color,
         text,
         mid_hash,
+        weight,
     }))
 }
 
@@ -234,6 +279,19 @@ mod tests {
         mid_hash: &str,
         content: &str,
     ) -> Vec<u8> {
+        encode_elem_weight(id, progress, mode, fontsize, color, mid_hash, content, 0)
+    }
+
+    fn encode_elem_weight(
+        id: i64,
+        progress: i32,
+        mode: i32,
+        fontsize: i32,
+        color: u32,
+        mid_hash: &str,
+        content: &str,
+        weight: i32,
+    ) -> Vec<u8> {
         let mut out = Vec::new();
         write_key(&mut out, 1, 0);
         write_varint(&mut out, id as u64);
@@ -249,6 +307,10 @@ mod tests {
         write_string(&mut out, mid_hash);
         write_key(&mut out, 7, 2);
         write_string(&mut out, content);
+        if weight > 0 {
+            write_key(&mut out, 9, 0);
+            write_varint(&mut out, weight as u64);
+        }
         out
     }
 
@@ -296,6 +358,7 @@ mod tests {
         assert_eq!(items[0].text, "hello");
         assert_eq!(items[0].mid_hash, "abc");
         assert_eq!(items[0].color, 0xffffff);
+        assert_eq!(items[0].weight, 0);
     }
 
     #[test]
@@ -327,8 +390,65 @@ mod tests {
                 color: 0xffffff,
                 text: format!("t{i}"),
                 mid_hash: String::new(),
+                weight: 0,
             })
             .collect();
         assert_eq!(limit_danmaku(items, 3).len(), 3);
+    }
+
+    #[test]
+    fn parses_weight_and_limit_prefers_higher() {
+        let low = encode_elem_weight(1, 1000, 1, 25, 1, "a", "low", 1);
+        let high = encode_elem_weight(2, 2000, 1, 25, 1, "b", "high", 10);
+        let mid = encode_elem_weight(3, 1500, 1, 25, 1, "c", "mid", 5);
+        let items = parse_dm_seg_so(&wrap_seg(&[low, high, mid])).unwrap();
+        assert_eq!(items.len(), 3);
+        assert_eq!(items[1].weight, 5); // timeline order after normalize
+        let limited = limit_danmaku(items, 2);
+        assert_eq!(limited.len(), 2);
+        let texts: Vec<_> = limited.iter().map(|i| i.text.as_str()).collect();
+        assert!(texts.contains(&"high"));
+        assert!(texts.contains(&"mid"));
+        assert!(!texts.contains(&"low"));
+    }
+
+    #[test]
+    fn merge_duplicates_in_100ms_bucket() {
+        let items = vec![
+            DanmakuItem {
+                id: 1,
+                progress_ms: 1000,
+                mode: 1,
+                fontsize: 25,
+                color: 0xffffff,
+                text: "hello".into(),
+                mid_hash: String::new(),
+                weight: 0,
+            },
+            DanmakuItem {
+                id: 2,
+                progress_ms: 1050,
+                mode: 1,
+                fontsize: 25,
+                color: 0xffffff,
+                text: "hello".into(),
+                mid_hash: String::new(),
+                weight: 0,
+            },
+            DanmakuItem {
+                id: 3,
+                progress_ms: 2000,
+                mode: 1,
+                fontsize: 25,
+                color: 0xffffff,
+                text: "hello".into(),
+                mid_hash: String::new(),
+                weight: 0,
+            },
+        ];
+        let merged = merge_duplicate_danmaku(items);
+        assert_eq!(merged.len(), 2);
+        assert_eq!(merged[0].id, 1);
+        assert_eq!(merged[1].id, 3);
     }
 }

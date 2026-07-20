@@ -384,6 +384,33 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playerDanmakuEmpty => '请输入弹幕内容';
 
   @override
+  String get playerDanmakuLike => '点赞弹幕';
+
+  @override
+  String get playerDanmakuLiked => '已点赞';
+
+  @override
+  String get playerDanmakuReport => '举报弹幕';
+
+  @override
+  String get playerDanmakuReportOther => '补充说明';
+
+  @override
+  String get playerDanmakuReportOtherHint => '请描述问题（可选）';
+
+  @override
+  String get playerDanmakuReportSubmit => '提交举报';
+
+  @override
+  String get playerDanmakuReportOk => '举报已提交';
+
+  @override
+  String get playerDanmakuReportRateLimit => '操作过于频繁，请稍后再试';
+
+  @override
+  String get playerDanmakuReportDup => '已举报过这条弹幕';
+
+  @override
   String get playerQuality => '清晰度';
 
   @override
