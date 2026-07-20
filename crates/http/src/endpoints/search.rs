@@ -25,7 +25,7 @@ pub struct SearchVideoPage {
 
 #[derive(Debug, Deserialize, Default)]
 struct SuggestPayload {
-    #[serde(default)]
+    #[serde(default, deserialize_with = "crate::serde_util::null_as_default")]
     tag: Vec<SuggestTag>,
 }
 

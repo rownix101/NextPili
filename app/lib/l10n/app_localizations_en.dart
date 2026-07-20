@@ -239,6 +239,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeTabPopular => 'Popular';
 
   @override
+  String get homeTabRegion => 'Regions';
+
+  @override
   String get searchTitle => 'Search';
 
   @override
@@ -400,6 +403,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playerFullscreen => 'Fullscreen';
+
+  @override
+  String get playerFullscreenExit => 'Exit fullscreen';
+
+  @override
+  String get playerMini => 'Mini player';
+
+  @override
+  String get playerRestore => 'Back to player';
+
+  @override
+  String get playerClose => 'Close player';
 
   @override
   String get authTitle => 'Account & sign-in';

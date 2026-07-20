@@ -29,7 +29,7 @@ struct ViewData {
     duration: i64,
     #[serde(default)]
     owner: OwnerRaw,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "crate::serde_util::null_as_default")]
     pages: Vec<PageRaw>,
     #[serde(default)]
     stat: StatRaw,

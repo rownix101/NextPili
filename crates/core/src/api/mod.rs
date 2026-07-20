@@ -27,7 +27,8 @@ pub use engagement::{
     ArchiveRelationDto,
 };
 pub use feed::{
-    feed_popular, feed_recommend, FeedItemDto, PopularFeedDto, RecommendFeedDto,
+    feed_popular, feed_ranking, feed_regions, feed_recommend, FeedItemDto, PopularFeedDto,
+    RankingFeedDto, RecommendFeedDto, RegionDto,
 };
 pub use live::{
     live_dm_history, live_play_url, live_recommend, live_room, live_send_msg, LiveDanmakuItemDto,

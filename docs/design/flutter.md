@@ -39,7 +39,7 @@ app/lib/
   features/
     shell/                  # 导航脚手架（玻璃 Rail / 顶栏）
     auth/                   # 登录、账号
-    home/                   # 推荐、热门
+    home/                   # 推荐、热门、分区排行
     live/                   # 直播列表 + 房间播放（REST）
     pgc/                    # 番剧排行 + 季节详情/分集播放
     dynamics/               # 关注动态（只读）
@@ -169,7 +169,7 @@ feedProvider = AsyncNotifier
 | home | P2 | feed_recommend, feed_popular |
 | dynamics | P6 | dynamics_feed |
 | video | P2 | video_detail · engagement |
-| player | P3 | play_url, playback_start/stop, danmaku |
+| player | P3 | play_url, playback_start/stop, danmaku；`PlaybackSession` 单实例 surface（inline/fullscreen/mini） |
 | search | P5 | search_suggest, search_video |
 | user | P5 | history_list, toview_list, fav_folders, fav_resources |
 | settings | P1 起 | proxy, qn, slots |

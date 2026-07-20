@@ -73,8 +73,45 @@ GET https://app.bilibili.com/x/feed/dislike/cancel
 
 ### 排行榜
 
+#### 分区排行（UGC · 首页「分区」）
+
 ```
-GET /x/web-interface/ranking/v2 # WBI；rid=分区, type=all
+GET /x/web-interface/ranking/v2
+```
+
+| 参数 | 必要 | 说明 |
+|------|------|------|
+| `rid` | | 主分区 tid；`0` = 全站。仅主分区 |
+| `type` | | `all`（默认）· `rookie` · `origin` |
+| `web_location` | | 常用 `333.934` |
+| WBI | ✓ | `w_rid` / `wts` |
+
+返回约前 100 条，无分页。`data.list[]` 字段形状同稿件详情精简（`aid`/`bvid`/`title`/`pic`/`duration`/`owner`）。
+
+```json
+{
+  "code": 0,
+  "data": {
+    "note": "根据稿件内容质量、近期的数据综合展示，动态更新",
+    "list": [
+      {
+        "aid": 170001,
+        "bvid": "BV1xx411c7mD",
+        "title": "示例",
+        "pic": "http://i0.hdslb.com/bfs/archive/x.jpg",
+        "duration": 120,
+        "owner": { "mid": 1, "name": "UP" }
+      }
+    ]
+  }
+}
+```
+
+NextPili：`feed_regions`（静态主分区表）+ `feed_ranking(rid, rank_type)`。
+
+#### 其它排行入口
+
+```
 GET /pgc/web/rank/list # 番剧排行 WBI
 GET /pgc/season/rank/web/list # 剧场排行 WBI
 GET /x/web-interface/popular/series/list
@@ -320,14 +357,17 @@ GET /x/player/wbi/v2
 |------|------|
 | `lan` | 语言代码 |
 | `lan_doc` | 展示名 |
-| `subtitle_url` / `subtitle_url_v2` | 字幕 JSON 地址（常为 `//...`，请求时加 `https:`） |
+| `subtitle_url` | 字幕 JSON 地址（常为 `//aisubtitle…` / `//i0…`，请求时加 `https:`） |
+| `subtitle_url_v2` | 官方播放器内部用的不透明路径（`subtitle.bilibili.com` + 加密段）；**第三方客户端勿用**，会 TLS/网络失败 |
 | `type` | `1` = AI 字幕（可标「（AI）」） |
 
 字幕 JSON 体为 `body: [{from, to, content, ...}]`，客户端转 VTT/SRT：
 
 ```
-GET https:{subtitle_url} → SubtitleUtils.json2Vtt / json2Srt
+GET https:{subtitle_url}  (Referer: https://www.bilibili.com) → json → VTT/SRT
 ```
+
+实现约定：解析列表时**优先 `subtitle_url`**；仅当其为空且 `subtitle_url_v2` 形如可 GET 的 CDN 链接时才回退。
 
 与 **AI 原声音轨** 相互独立：可只开字幕、只换音轨、或同时使用。
 

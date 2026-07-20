@@ -3,6 +3,7 @@
 //! **No IO** — no HTTP, filesystem, or database dependencies.
 
 pub mod account;
+pub mod codec;
 pub mod danmaku;
 pub mod dynamics;
 pub mod engagement;
@@ -18,6 +19,10 @@ pub mod search;
 pub mod video;
 
 pub use account::AccountPublic;
+pub use codec::{
+    classify_video_codec, pick_best_codec_stream, video_codec_score, GpuVendor, HwDecodeCaps,
+    VideoCodecKind,
+};
 pub use danmaku::{DanmakuItem, DanmakuPostResult};
 pub use dynamics::{dynamic_is_archive, DynamicItem, DynamicPage};
 pub use engagement::{default_fav_folder_id, ArchiveRelation};
@@ -29,8 +34,9 @@ pub use library::{
     HistoryPage, ToViewItem, ToViewPage,
 };
 pub use live::{
-    live_quality_label, live_stream_preference_score, pick_live_stream, LiveDanmakuItem,
-    LivePlaySource, LiveRecommendPage, LiveRoomCard, LiveRoomInfo, LiveStreamOption,
+    live_quality_label, live_stream_preference_score, pick_live_stream, pick_live_stream_with_caps,
+    LiveDanmakuItem, LivePlaySource, LiveRecommendPage, LiveRoomCard, LiveRoomInfo,
+    LiveStreamOption,
 };
 pub use pgc::{
     pgc_season_type_label, PgcEpisode, PgcRankItem, PgcRankPage, PgcSeason, PGC_RANK_TYPES,

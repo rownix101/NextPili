@@ -37,7 +37,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.11.1";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1537352713;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1433449953;
 
 // Section: executor
 
@@ -385,6 +385,44 @@ fn wire__crate__api__feed__feed_popular_impl(
         },
     )
 }
+fn wire__crate__api__feed__feed_ranking_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "feed_ranking",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_rid = <i32>::sse_decode(&mut deserializer);
+            let api_rank_type = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, crate::error::AppError>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::feed::feed_ranking(api_rid, api_rank_type).await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crate__api__feed__feed_recommend_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -419,6 +457,38 @@ fn wire__crate__api__feed__feed_recommend_impl(
                     })()
                     .await,
                 )
+            }
+        },
+    )
+}
+fn wire__crate__api__feed__feed_regions_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "feed_regions",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, ()>((move || {
+                    let output_ok = Result::<_, ()>::Ok(crate::api::feed::feed_regions())?;
+                    Ok(output_ok)
+                })())
             }
         },
     )
@@ -2554,6 +2624,18 @@ impl SseDecode for Vec<u8> {
     }
 }
 
+impl SseDecode for Vec<crate::api::feed::RegionDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = vec![];
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::feed::RegionDto>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<crate::api::social::ReplyDto> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3080,6 +3162,18 @@ impl SseDecode for crate::auth_service::QrStatusKind {
     }
 }
 
+impl SseDecode for crate::api::feed::RankingFeedDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_items = <Vec<crate::api::feed::FeedItemDto>>::sse_decode(deserializer);
+        let mut var_note = <String>::sse_decode(deserializer);
+        return crate::api::feed::RankingFeedDto {
+            items: var_items,
+            note: var_note,
+        };
+    }
+}
+
 impl SseDecode for crate::api::feed::RecommendFeedDto {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3088,6 +3182,20 @@ impl SseDecode for crate::api::feed::RecommendFeedDto {
         return crate::api::feed::RecommendFeedDto {
             items: var_items,
             next_fresh_idx: var_nextFreshIdx,
+        };
+    }
+}
+
+impl SseDecode for crate::api::feed::RegionDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_rid = <i32>::sse_decode(deserializer);
+        let mut var_key = <String>::sse_decode(deserializer);
+        let mut var_name = <String>::sse_decode(deserializer);
+        return crate::api::feed::RegionDto {
+            rid: var_rid,
+            key: var_key,
+            name: var_name,
         };
     }
 }
@@ -3453,61 +3561,63 @@ fn pde_ffi_dispatcher_primary_impl(
         7 => wire__crate__api__user__fav_folders_impl(port, ptr, rust_vec_len, data_len),
         8 => wire__crate__api__user__fav_resources_impl(port, ptr, rust_vec_len, data_len),
         9 => wire__crate__api__feed__feed_popular_impl(port, ptr, rust_vec_len, data_len),
-        10 => wire__crate__api__feed__feed_recommend_impl(port, ptr, rust_vec_len, data_len),
-        12 => wire__crate__api__user__history_list_impl(port, ptr, rust_vec_len, data_len),
-        13 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
-        15 => wire__crate__api__live__live_dm_history_impl(port, ptr, rust_vec_len, data_len),
-        16 => wire__crate__api__live__live_play_url_impl(port, ptr, rust_vec_len, data_len),
-        17 => wire__crate__api__live__live_recommend_impl(port, ptr, rust_vec_len, data_len),
-        18 => wire__crate__api__live__live_room_impl(port, ptr, rust_vec_len, data_len),
-        19 => wire__crate__api__live__live_send_msg_impl(port, ptr, rust_vec_len, data_len),
-        20 => wire__crate__api__auth__login_captcha_impl(port, ptr, rust_vec_len, data_len),
-        21 => wire__crate__api__auth__login_password_impl(port, ptr, rust_vec_len, data_len),
-        22 => wire__crate__api__auth__login_password_risk_captcha_impl(
+        10 => wire__crate__api__feed__feed_ranking_impl(port, ptr, rust_vec_len, data_len),
+        11 => wire__crate__api__feed__feed_recommend_impl(port, ptr, rust_vec_len, data_len),
+        12 => wire__crate__api__feed__feed_regions_impl(port, ptr, rust_vec_len, data_len),
+        14 => wire__crate__api__user__history_list_impl(port, ptr, rust_vec_len, data_len),
+        15 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
+        17 => wire__crate__api__live__live_dm_history_impl(port, ptr, rust_vec_len, data_len),
+        18 => wire__crate__api__live__live_play_url_impl(port, ptr, rust_vec_len, data_len),
+        19 => wire__crate__api__live__live_recommend_impl(port, ptr, rust_vec_len, data_len),
+        20 => wire__crate__api__live__live_room_impl(port, ptr, rust_vec_len, data_len),
+        21 => wire__crate__api__live__live_send_msg_impl(port, ptr, rust_vec_len, data_len),
+        22 => wire__crate__api__auth__login_captcha_impl(port, ptr, rust_vec_len, data_len),
+        23 => wire__crate__api__auth__login_password_impl(port, ptr, rust_vec_len, data_len),
+        24 => wire__crate__api__auth__login_password_risk_captcha_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        23 => wire__crate__api__auth__login_password_risk_send_sms_impl(
+        25 => wire__crate__api__auth__login_password_risk_send_sms_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        24 => wire__crate__api__auth__login_password_risk_verify_impl(
+        26 => wire__crate__api__auth__login_password_risk_verify_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        25 => wire__crate__api__auth__login_qr_poll_impl(port, ptr, rust_vec_len, data_len),
-        26 => wire__crate__api__auth__login_qr_start_impl(port, ptr, rust_vec_len, data_len),
-        27 => wire__crate__api__auth__login_sms_impl(port, ptr, rust_vec_len, data_len),
-        28 => wire__crate__api__auth__login_sms_send_impl(port, ptr, rust_vec_len, data_len),
-        31 => wire__crate__api__pgc__pgc_play_url_impl(port, ptr, rust_vec_len, data_len),
-        32 => wire__crate__api__pgc__pgc_rank_impl(port, ptr, rust_vec_len, data_len),
-        33 => wire__crate__api__pgc__pgc_season_impl(port, ptr, rust_vec_len, data_len),
-        35 => wire__crate__api__video__play_url_impl(port, ptr, rust_vec_len, data_len),
-        36 => wire__crate__api__video__playback_start_impl(port, ptr, rust_vec_len, data_len),
-        38 => wire__crate__api__engagement__relation_follow_impl(port, ptr, rust_vec_len, data_len),
-        39 => wire__crate__api__social__reply_add_impl(port, ptr, rust_vec_len, data_len),
-        40 => wire__crate__api__social__reply_list_impl(port, ptr, rust_vec_len, data_len),
-        41 => wire__crate__api__search__search_suggest_impl(port, ptr, rust_vec_len, data_len),
-        42 => wire__crate__api__search__search_video_impl(port, ptr, rust_vec_len, data_len),
-        44 => wire__crate__api__video__subtitle_vtt_impl(port, ptr, rust_vec_len, data_len),
-        45 => wire__crate__api__user__toview_list_impl(port, ptr, rust_vec_len, data_len),
-        47 => wire__crate__api__engagement__video_coin_impl(port, ptr, rust_vec_len, data_len),
-        48 => wire__crate__api__video__video_detail_impl(port, ptr, rust_vec_len, data_len),
-        49 => wire__crate__api__engagement__video_favorite_impl(port, ptr, rust_vec_len, data_len),
-        50 => wire__crate__api__engagement__video_favorite_deal_impl(
+        27 => wire__crate__api__auth__login_qr_poll_impl(port, ptr, rust_vec_len, data_len),
+        28 => wire__crate__api__auth__login_qr_start_impl(port, ptr, rust_vec_len, data_len),
+        29 => wire__crate__api__auth__login_sms_impl(port, ptr, rust_vec_len, data_len),
+        30 => wire__crate__api__auth__login_sms_send_impl(port, ptr, rust_vec_len, data_len),
+        33 => wire__crate__api__pgc__pgc_play_url_impl(port, ptr, rust_vec_len, data_len),
+        34 => wire__crate__api__pgc__pgc_rank_impl(port, ptr, rust_vec_len, data_len),
+        35 => wire__crate__api__pgc__pgc_season_impl(port, ptr, rust_vec_len, data_len),
+        37 => wire__crate__api__video__play_url_impl(port, ptr, rust_vec_len, data_len),
+        38 => wire__crate__api__video__playback_start_impl(port, ptr, rust_vec_len, data_len),
+        40 => wire__crate__api__engagement__relation_follow_impl(port, ptr, rust_vec_len, data_len),
+        41 => wire__crate__api__social__reply_add_impl(port, ptr, rust_vec_len, data_len),
+        42 => wire__crate__api__social__reply_list_impl(port, ptr, rust_vec_len, data_len),
+        43 => wire__crate__api__search__search_suggest_impl(port, ptr, rust_vec_len, data_len),
+        44 => wire__crate__api__search__search_video_impl(port, ptr, rust_vec_len, data_len),
+        46 => wire__crate__api__video__subtitle_vtt_impl(port, ptr, rust_vec_len, data_len),
+        47 => wire__crate__api__user__toview_list_impl(port, ptr, rust_vec_len, data_len),
+        49 => wire__crate__api__engagement__video_coin_impl(port, ptr, rust_vec_len, data_len),
+        50 => wire__crate__api__video__video_detail_impl(port, ptr, rust_vec_len, data_len),
+        51 => wire__crate__api__engagement__video_favorite_impl(port, ptr, rust_vec_len, data_len),
+        52 => wire__crate__api__engagement__video_favorite_deal_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        51 => wire__crate__api__engagement__video_like_impl(port, ptr, rust_vec_len, data_len),
-        52 => wire__crate__api__engagement__video_relation_impl(port, ptr, rust_vec_len, data_len),
+        53 => wire__crate__api__engagement__video_like_impl(port, ptr, rust_vec_len, data_len),
+        54 => wire__crate__api__engagement__video_relation_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -3522,14 +3632,14 @@ fn pde_ffi_dispatcher_sync_impl(
     match func_id {
         1 => wire__crate__api__simple__api_version_impl(ptr, rust_vec_len, data_len),
         5 => wire__crate__api__auth__device_buvid3_impl(ptr, rust_vec_len, data_len),
-        11 => wire__crate__api__settings__get_settings_impl(ptr, rust_vec_len, data_len),
-        14 => wire__crate__api__auth__list_accounts_impl(ptr, rust_vec_len, data_len),
-        29 => wire__crate__api__auth__logout_impl(ptr, rust_vec_len, data_len),
-        30 => wire__crate__api__auth__new_login_session_id_impl(ptr, rust_vec_len, data_len),
-        34 => wire__crate__api__simple__ping_impl(ptr, rust_vec_len, data_len),
-        37 => wire__crate__api__video__playback_stop_impl(ptr, rust_vec_len, data_len),
-        43 => wire__crate__api__auth__set_account_slot_impl(ptr, rust_vec_len, data_len),
-        46 => wire__crate__api__settings__update_settings_impl(ptr, rust_vec_len, data_len),
+        13 => wire__crate__api__settings__get_settings_impl(ptr, rust_vec_len, data_len),
+        16 => wire__crate__api__auth__list_accounts_impl(ptr, rust_vec_len, data_len),
+        31 => wire__crate__api__auth__logout_impl(ptr, rust_vec_len, data_len),
+        32 => wire__crate__api__auth__new_login_session_id_impl(ptr, rust_vec_len, data_len),
+        36 => wire__crate__api__simple__ping_impl(ptr, rust_vec_len, data_len),
+        39 => wire__crate__api__video__playback_stop_impl(ptr, rust_vec_len, data_len),
+        45 => wire__crate__api__auth__set_account_slot_impl(ptr, rust_vec_len, data_len),
+        48 => wire__crate__api__settings__update_settings_impl(ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -4492,6 +4602,27 @@ impl flutter_rust_bridge::IntoIntoDart<crate::auth_service::QrStatusKind>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::feed::RankingFeedDto {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.items.into_into_dart().into_dart(),
+            self.note.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::feed::RankingFeedDto
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::feed::RankingFeedDto>
+    for crate::api::feed::RankingFeedDto
+{
+    fn into_into_dart(self) -> crate::api::feed::RankingFeedDto {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::feed::RecommendFeedDto {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -4509,6 +4640,25 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::feed::RecommendFeedDto>
     for crate::api::feed::RecommendFeedDto
 {
     fn into_into_dart(self) -> crate::api::feed::RecommendFeedDto {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::feed::RegionDto {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.rid.into_into_dart().into_dart(),
+            self.key.into_into_dart().into_dart(),
+            self.name.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::feed::RegionDto {}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::feed::RegionDto>
+    for crate::api::feed::RegionDto
+{
+    fn into_into_dart(self) -> crate::api::feed::RegionDto {
         self
     }
 }
@@ -5329,6 +5479,16 @@ impl SseEncode for Vec<u8> {
     }
 }
 
+impl SseEncode for Vec<crate::api::feed::RegionDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::feed::RegionDto>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<crate::api::social::ReplyDto> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5701,11 +5861,28 @@ impl SseEncode for crate::auth_service::QrStatusKind {
     }
 }
 
+impl SseEncode for crate::api::feed::RankingFeedDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Vec<crate::api::feed::FeedItemDto>>::sse_encode(self.items, serializer);
+        <String>::sse_encode(self.note, serializer);
+    }
+}
+
 impl SseEncode for crate::api::feed::RecommendFeedDto {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <Vec<crate::api::feed::FeedItemDto>>::sse_encode(self.items, serializer);
         <i32>::sse_encode(self.next_fresh_idx, serializer);
+    }
+}
+
+impl SseEncode for crate::api::feed::RegionDto {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.rid, serializer);
+        <String>::sse_encode(self.key, serializer);
+        <String>::sse_encode(self.name, serializer);
     }
 }
 

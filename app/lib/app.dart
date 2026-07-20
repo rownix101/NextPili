@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'features/player/player_overlays.dart';
 import 'l10n/l10n.dart';
 
 class NextPiliApp extends ConsumerWidget {
@@ -22,6 +23,11 @@ class NextPiliApp extends ConsumerWidget {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: _router,
+      builder: (context, child) {
+        return PlayerOverlayLayer(
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
   }
 }

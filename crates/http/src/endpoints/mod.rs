@@ -16,7 +16,7 @@ pub mod video;
 pub use danmaku::DanmakuApi;
 pub use dynamics::DynamicsApi;
 pub use engagement::EngagementApi;
-pub use feed::{FeedApi, PopularFeed, RecommendFeed};
+pub use feed::{FeedApi, PopularFeed, RankingFeed, RecommendFeed};
 pub use live::LiveApi;
 pub use login::{
     CaptchaParams, LoginApi, LoginSuccess, PasswordKey, PasswordLoginOutcome, PasswordLoginRequest,

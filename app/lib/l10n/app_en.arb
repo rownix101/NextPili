@@ -108,6 +108,7 @@
 
   "homeTabRecommend": "For you",
   "homeTabPopular": "Popular",
+  "homeTabRegion": "Regions",
 
   "searchTitle": "Search",
   "searchHint": "Search videos",
@@ -167,6 +168,10 @@
   "playerSubtitle": "Subtitles",
   "playerSubtitleOff": "Off",
   "playerFullscreen": "Fullscreen",
+  "playerFullscreenExit": "Exit fullscreen",
+  "playerMini": "Mini player",
+  "playerRestore": "Back to player",
+  "playerClose": "Close player",
 
   "authTitle": "Account & sign-in",
   "authTabSms": "Sign in / Register",

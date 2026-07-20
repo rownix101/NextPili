@@ -4,9 +4,10 @@ use crate::client::{BiliClient, RequestOptions};
 use crate::error::{Error, Result};
 use auth::{Account, LIVE_BASE, WbiSigner};
 use domain::live::{
-    live_quality_label, pick_live_stream, LiveDanmakuItem, LivePlaySource, LiveRecommendPage,
-    LiveRoomCard, LiveRoomInfo, LiveStreamOption,
+    live_quality_label, pick_live_stream_with_caps, LiveDanmakuItem, LivePlaySource,
+    LiveRecommendPage, LiveRoomCard, LiveRoomInfo, LiveStreamOption,
 };
+use domain::HwDecodeCaps;
 use serde::Deserialize;
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -16,7 +17,10 @@ use std::time::{SystemTime, UNIX_EPOCH};
 pub struct LiveApi;
 
 impl LiveApi {
-    /// Web recommend rooms: `GET /xlive/web-interface/v1/second/getUserRecommend`.
+    /// Live room list: `GET /room/v3/Area/getRoomList` (web; paginated by online).
+    ///
+    /// Prefer this over `getUserRecommend` / `second/getList`, which currently return
+    /// `code=-352` (risk control) for third-party clients.
     pub async fn recommend(
         client: &BiliClient,
         account: Option<&Account>,
@@ -31,11 +35,12 @@ impl LiveApi {
         params.insert("page".into(), page.to_string());
         params.insert("page_size".into(), page_size.to_string());
         params.insert("platform".into(), "web".into());
+        params.insert("parent_area_id".into(), "0".into());
+        params.insert("area_id".into(), "0".into());
+        params.insert("cate_id".into(), "0".into());
+        params.insert("sort_type".into(), "online".into());
 
-        let url = BiliClient::resolve_url(
-            LIVE_BASE,
-            "/xlive/web-interface/v1/second/getUserRecommend",
-        );
+        let url = BiliClient::resolve_url(LIVE_BASE, "/room/v3/Area/getRoomList");
         let opts = RequestOptions {
             account,
             device_buvid3,
@@ -56,7 +61,13 @@ impl LiveApi {
             .into_iter()
             .filter_map(parse_card)
             .collect::<Vec<_>>();
-        let has_more = !items.is_empty() && items.len() as u32 >= page_size;
+        let total = data.count.unwrap_or(0).max(0) as u64;
+        let loaded = (page as u64 - 1) * page_size as u64 + items.len() as u64;
+        let has_more = if total > 0 {
+            loaded < total && !items.is_empty()
+        } else {
+            !items.is_empty() && items.len() as u32 >= page_size
+        };
 
         Ok(LiveRecommendPage {
             items,
@@ -112,6 +123,28 @@ impl LiveApi {
         room_id: i64,
         qn: u32,
     ) -> Result<LivePlaySource> {
+        Self::play_url_with_caps(
+            client,
+            account,
+            device_buvid3,
+            wbi,
+            room_id,
+            qn,
+            HwDecodeCaps::default(),
+        )
+        .await
+    }
+
+    /// Play streams with host HW-decode caps for codec ranking.
+    pub async fn play_url_with_caps(
+        client: &BiliClient,
+        account: Option<&Account>,
+        device_buvid3: Option<&str>,
+        wbi: &WbiSigner,
+        room_id: i64,
+        qn: u32,
+        hw_caps: HwDecodeCaps,
+    ) -> Result<LivePlaySource> {
         if room_id <= 0 {
             return Err(Error::Domain(domain::Error::InvalidArgument {
                 msg: "room_id must be > 0".into(),
@@ -124,7 +157,8 @@ impl LiveApi {
         params.insert("room_id".into(), room_id.to_string());
         params.insert("protocol".into(), "0,1".into());
         params.insert("format".into(), "0,1,2".into());
-        params.insert("codec".into(), "0,1".into());
+        // 0=avc, 1=hevc, 2=av1 (request all; rank client-side by caps).
+        params.insert("codec".into(), "0,1,2".into());
         params.insert("qn".into(), qn.to_string());
         params.insert("platform".into(), "web".into());
         params.insert("ptype".into(), "8".into());
@@ -150,7 +184,7 @@ impl LiveApi {
 
         let resp = client.get_bili::<PlayInfoData>(&url, params, opts).await?;
         let data = resp.into_data()?;
-        parse_play_source(data, room_id, qn)
+        parse_play_source(data, room_id, qn, hw_caps)
     }
 
     /// Recent room chat: `GET /xlive/web-room/v1/dM/gethistory`.
@@ -264,6 +298,9 @@ struct HistoryData {
 struct RecommendData {
     #[serde(default)]
     list: Option<Vec<Value>>,
+    /// Total rooms when using `/room/v3/Area/getRoomList`.
+    #[serde(default)]
+    count: Option<i64>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -349,7 +386,12 @@ fn parse_room_info(data: H5InfoData, fallback_room_id: i64) -> Result<LiveRoomIn
     })
 }
 
-fn parse_play_source(data: PlayInfoData, fallback_room_id: i64, requested_qn: u32) -> Result<LivePlaySource> {
+fn parse_play_source(
+    data: PlayInfoData,
+    fallback_room_id: i64,
+    requested_qn: u32,
+    hw_caps: HwDecodeCaps,
+) -> Result<LivePlaySource> {
     let room_id = data.room_id.unwrap_or(fallback_room_id).max(fallback_room_id);
     if data.live_status == Some(0) {
         return Err(Error::Domain(domain::Error::Api {
@@ -439,7 +481,7 @@ fn parse_play_source(data: PlayInfoData, fallback_room_id: i64, requested_qn: u3
     streams.sort_by(|a, b| a.id.cmp(&b.id));
     streams.dedup_by(|a, b| a.id == b.id);
 
-    let default_id = pick_live_stream(&streams, Some(requested_qn))
+    let default_id = pick_live_stream_with_caps(&streams, Some(requested_qn), hw_caps)
         .map(|s| s.id.clone())
         .unwrap_or_else(|| streams[0].id.clone());
 
@@ -587,7 +629,7 @@ mod tests {
                 }
             })),
         };
-        let src = parse_play_source(data, 1, 10000).unwrap();
+        let src = parse_play_source(data, 1, 10000, HwDecodeCaps::default()).unwrap();
         assert_eq!(src.streams.len(), 2);
         assert!(src.default_stream_id.contains("http_hls"));
         assert!(src.streams.iter().any(|s| s.url.contains("d2.live-play")));
@@ -600,7 +642,7 @@ mod tests {
             live_status: Some(0),
             playurl_info: None,
         };
-        assert!(parse_play_source(data, 1, 10000).is_err());
+        assert!(parse_play_source(data, 1, 10000, HwDecodeCaps::default()).is_err());
     }
 
     #[test]

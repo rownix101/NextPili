@@ -1,4 +1,4 @@
-//! Feed-facing FFI API (recommend + popular).
+//! Feed-facing FFI API (recommend + popular + partition ranking).
 
 use crate::app::CoreApp;
 use crate::error::{AppError, ErrorKind};
@@ -31,6 +31,23 @@ pub struct PopularFeedDto {
     pub items: Vec<FeedItemDto>,
     pub next_pn: i32,
     pub no_more: bool,
+}
+
+/// Partition ranking payload (`ranking/v2`; typically ≤100 items, no paging).
+#[derive(Debug, Clone)]
+pub struct RankingFeedDto {
+    pub items: Vec<FeedItemDto>,
+    pub note: String,
+}
+
+/// One primary partition entry for home 分区导航 (text labels only).
+#[derive(Debug, Clone)]
+pub struct RegionDto {
+    pub rid: i32,
+    /// Stable key for l10n (e.g. `all`, `douga`, `music`). Empty for unknown.
+    pub key: String,
+    /// Chinese display name from taxonomy (Flutter may prefer ARB by `key`).
+    pub name: String,
 }
 
 /// Home recommend feed (WBI · recommend slot).
@@ -98,6 +115,81 @@ pub async fn feed_popular(pn: i32, ps: u32) -> Result<PopularFeedDto, AppError> 
         no_more: feed.no_more,
     })
 }
+
+/// Primary partition list for home 分区导航 (static main tids; ranking only).
+pub fn feed_regions() -> Vec<RegionDto> {
+    PRIMARY_REGIONS
+        .iter()
+        .map(|(rid, key, name)| RegionDto {
+            rid: *rid,
+            key: (*key).into(),
+            name: (*name).into(),
+        })
+        .collect()
+}
+
+/// Partition ranking (WBI · recommend slot).
+///
+/// `rid`: primary partition tid; `0` = site-wide.
+/// `rank_type`: `all` | `rookie` | `origin` (empty → `all`).
+pub async fn feed_ranking(rid: i32, rank_type: String) -> Result<RankingFeedDto, AppError> {
+    let app = CoreApp::global()?;
+    ensure_wbi(&app).await?;
+
+    let buvid = app.store.buvid3();
+    let account = {
+        let reg = app.accounts.read();
+        reg.account_for(AccountSlot::Recommend)
+            .or_else(|| reg.active_main())
+            .cloned()
+    };
+    let wbi = app.wbi.read().clone();
+    let rank_type = if rank_type.is_empty() {
+        "all".into()
+    } else {
+        rank_type
+    };
+
+    let http = app.http();
+    let feed = FeedApi::ranking(
+        &http,
+        account.as_ref(),
+        Some(buvid.as_str()),
+        &wbi,
+        rid,
+        &rank_type,
+    )
+    .await?;
+
+    Ok(RankingFeedDto {
+        items: feed.items.into_iter().map(map_item).collect(),
+        note: feed.note,
+    })
+}
+
+/// Main partitions supported by `ranking/v2` (`rid`).
+const PRIMARY_REGIONS: &[(i32, &str, &str)] = &[
+    (0, "all", "全站"),
+    (1, "douga", "动画"),
+    (3, "music", "音乐"),
+    (129, "dance", "舞蹈"),
+    (4, "game", "游戏"),
+    (36, "knowledge", "知识"),
+    (188, "tech", "科技"),
+    (234, "sports", "运动"),
+    (223, "car", "汽车"),
+    (160, "life", "生活"),
+    (211, "food", "美食"),
+    (217, "animal", "动物圈"),
+    (119, "kichiku", "鬼畜"),
+    (155, "fashion", "时尚"),
+    (5, "ent", "娱乐"),
+    (181, "cinephile", "影视"),
+    (177, "documentary", "纪录片"),
+    (23, "movie", "电影"),
+    (11, "tv", "电视剧"),
+    (202, "info", "资讯"),
+];
 
 fn map_item(item: domain::FeedItem) -> FeedItemDto {
     FeedItemDto {

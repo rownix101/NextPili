@@ -74,6 +74,8 @@ shutdown()
 |------|----------|
 | `feed_recommend` | recommend 槽 + WBI；过滤 `goto`；返回 DTO 列表 + next fresh_idx |
 | `feed_popular` | 热门分页 |
+| `feed_regions` | 主分区列表（静态 tid，首页分区导航） |
+| `feed_ranking` | `ranking/v2` WBI；`rid` + `type`；约 100 条无分页 |
 | `video_detail` | aid/bvid → 详情 + 分 P |
 
 ### P3 播放

@@ -10,7 +10,9 @@ Base：`https://api.live.bilibili.com`（除非另注）
 
 | 方法 | 路径 | 标记 | 说明 |
 |------|------|------|------|
-| GET | `/xlive/web-interface/v1/second/getUserRecommend` | | Web 推荐；`page`,`page_size` |
+| GET | `/room/v3/Area/getRoomList` | | **NextPili 直播列表**；`platform=web`,`parent_area_id`,`area_id`,`cate_id`,`sort_type=online`,`page`,`page_size`；响应 `data.list` + `data.count` |
+| GET | `/xlive/web-interface/v1/webMain/getList` | | Web 首页推荐块（无分页） |
+| GET | `/xlive/web-interface/v1/second/getUserRecommend` | | Web 推荐（易 `-352` 风控，勿作主路径） |
 | GET | `/xlive/app-interface/v2/index/feed` | AppSign | App 首页 |
 | GET | `/xlive/app-interface/v2/second/getList` | AppSign | 二级列表 |
 | GET | `/xlive/app-interface/v2/index/getAreaList` | AppSign | 分区 |
@@ -249,7 +251,7 @@ Body：UTF-8 JSON：
 
 **REST 可看（已落地）**
 
-- [x] `getUserRecommend` → `live_recommend`
+- [x] `getRoomList`（`/room/v3/Area/getRoomList`）→ `live_recommend`（替代易 `-352` 的 `getUserRecommend`）
 - [x] `getH5InfoByRoom` → `live_room`
 - [x] `getRoomPlayInfo`（WBI）→ `live_play_url`（FLV/HLS → `MediaSourceDto`）
 

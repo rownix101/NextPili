@@ -271,11 +271,24 @@ pub async fn subtitle_vtt(url: String) -> Result<String, AppError> {
     } else {
         url
     };
+    if !(normalized.starts_with("https://") || normalized.starts_with("http://")) {
+        return Err(AppError::new(
+            ErrorKind::InvalidArgument,
+            "subtitle url must be http(s)",
+        ));
+    }
+    // CDN may soft-block bare clients; mirror playurl Referer baseline.
     let raw = app
         .http()
-        .get_text(&normalized)
+        .get_text_with_referer(&normalized, auth::constants::WWW_BASE)
         .await
         .map_err(|e| AppError::new(ErrorKind::Network, e.to_string()))?;
+    if raw.trim_start().starts_with('<') {
+        return Err(AppError::new(
+            ErrorKind::Network,
+            "subtitle CDN rejected request",
+        ));
+    }
     media::bilibili_json_to_vtt(&raw)
         .map_err(|e| AppError::new(ErrorKind::Parse, e.to_string()))
 }

@@ -180,6 +180,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
+  List<RegionDto> dco_decode_list_region_dto(dynamic raw);
+
+  @protected
   List<ReplyDto> dco_decode_list_reply_dto(dynamic raw);
 
   @protected
@@ -278,7 +281,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   QrStatusKind dco_decode_qr_status_kind(dynamic raw);
 
   @protected
+  RankingFeedDto dco_decode_ranking_feed_dto(dynamic raw);
+
+  @protected
   RecommendFeedDto dco_decode_recommend_feed_dto(dynamic raw);
+
+  @protected
+  RegionDto dco_decode_region_dto(dynamic raw);
 
   @protected
   ReplyDto dco_decode_reply_dto(dynamic raw);
@@ -527,6 +536,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
+  List<RegionDto> sse_decode_list_region_dto(SseDeserializer deserializer);
+
+  @protected
   List<ReplyDto> sse_decode_list_reply_dto(SseDeserializer deserializer);
 
   @protected
@@ -649,7 +661,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   QrStatusKind sse_decode_qr_status_kind(SseDeserializer deserializer);
 
   @protected
+  RankingFeedDto sse_decode_ranking_feed_dto(SseDeserializer deserializer);
+
+  @protected
   RecommendFeedDto sse_decode_recommend_feed_dto(SseDeserializer deserializer);
+
+  @protected
+  RegionDto sse_decode_region_dto(SseDeserializer deserializer);
 
   @protected
   ReplyDto sse_decode_reply_dto(SseDeserializer deserializer);
@@ -962,6 +980,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_region_dto(
+    List<RegionDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_reply_dto(List<ReplyDto> self, SseSerializer serializer);
 
   @protected
@@ -1124,10 +1148,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_qr_status_kind(QrStatusKind self, SseSerializer serializer);
 
   @protected
+  void sse_encode_ranking_feed_dto(
+    RankingFeedDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_recommend_feed_dto(
     RecommendFeedDto self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_region_dto(RegionDto self, SseSerializer serializer);
 
   @protected
   void sse_encode_reply_dto(ReplyDto self, SseSerializer serializer);

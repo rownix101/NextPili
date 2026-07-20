@@ -19,6 +19,7 @@ abstract final class AppIcons {
   static const IconData playCircle = LucideIcons.circle_play;
   static const IconData fullscreen = LucideIcons.maximize;
   static const IconData fullscreenExit = LucideIcons.minimize;
+  static const IconData pictureInPicture = LucideIcons.picture_in_picture_2;
   static const IconData volume = LucideIcons.volume_2;
   static const IconData volumeMute = LucideIcons.volume_x;
   static const IconData danmaku = LucideIcons.message_square_text;

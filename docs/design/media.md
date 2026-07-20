@@ -82,6 +82,18 @@ raw playurl response
 3. 否则 available 最低档（保证能播）
 ```
 
+同 qn 多编码（DASH）：**可硬解优先**，硬解可用时 **AV1 > HEVC > AVC**；软解档整体低于任意可硬解档。
+
+```text
+例（AMD RX 5600：有 HEVC/AVC 硬解，无 AV1 硬解）
+  同 1080P：hev1 → 选；av01 仅软解 → 排后
+
+例（NVIDIA 5060+：AV1 硬解可用）
+  同 1080P：av01 → 选
+```
+
+探测：`core` 启动时读 DRM/PCI（Linux）等得到 `HwDecodeCaps`，注入 `MediaService`。策略纯函数在 `domain::codec`。
+
 音轨：用户语言偏好 → 匹配 `language`；否则默认第一条非 AI，或 API 默认。
 
 ### 3.2 Headers
@@ -148,8 +160,9 @@ class MediaKitPlayerAdapter implements PlayerAdapter { ... }
 
 - DASH：视频轨 + 音频轨 URL 组合（按插件 API 传双轨或 master）。
 - 自定义 header：打开时传入 `MediaSource.headers`。
-- 硬解：非 Linux 默认开启；**Linux 默认关闭**（Flutter 3.38+ EGL 与 media_kit 纹理共享易导致「有声无画 / 纯色画面」）。依赖建议：`media_kit_video` ≥ 2.0.1。
-- 生命周期：页面 dispose 必须 `dispose` 播放器并 `core.playback_stop()`。
+- 硬解：**全平台默认开启**（`enableHardwareAcceleration: true`，含 Linux）。依赖：`media_kit_video` ≥ 2.0.1（含 Linux Flutter 3.38+ H/W 修复）。若 Linux 仍出现「有声无画 / 纯色画面」（media-kit#1321 / #1404），可临时关硬解回退软解。
+- **单一会话**：`PlaybackSession`（Riverpod）持有唯一 `MediaKitPlayerAdapter`。画面附着点在 `inline` / `fullscreen` / `mini` 间切换，**禁止**为全屏或小窗新建解码器。
+- 生命周期：仅会话 `close()`（或应用退出）时 `dispose` 播放器并 `core.playback_stop()`。离开观看页且仍在播放 → 升为 `mini` 小窗，**保留进度与音频**。
 
 ### 5.2 清晰度切换
 

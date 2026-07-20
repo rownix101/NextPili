@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart'
-    show TargetPlatform, defaultTargetPlatform;
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
@@ -9,14 +7,13 @@ import '../../bridge/core_api.dart';
 class MediaKitPlayerAdapter {
   MediaKitPlayerAdapter() {
     player = Player();
-    // Flutter 3.38+ Linux changed EGL ownership; media_kit H/W texture often
-    // paints a solid color while audio still plays (media-kit#1321 / #1404).
-    // Prefer S/W path on Linux until upstream is solid on current Flutter.
-    final linux = defaultTargetPlatform == TargetPlatform.linux;
+    // Hardware decode on all platforms (incl. Linux). If you get audio-only /
+    // solid-color video on Linux (media-kit#1321 / #1404), fall back by setting
+    // enableHardwareAcceleration: false.
     controller = VideoController(
       player,
-      configuration: VideoControllerConfiguration(
-        enableHardwareAcceleration: !linux,
+      configuration: const VideoControllerConfiguration(
+        enableHardwareAcceleration: true,
       ),
     );
   }

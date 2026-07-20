@@ -4,7 +4,8 @@ use crate::error::{Error, Result};
 use crate::source::{MediaFormat, MediaSource, Stream, StreamId, SubtitleTrack};
 use domain::id::Cid;
 use domain::quality::pick_quality;
-use domain::QualityQn;
+use domain::classify_video_codec;
+use domain::{pick_best_codec_stream, video_codec_score, HwDecodeCaps, QualityQn};
 use serde::Deserialize;
 use serde_json::Value;
 use std::collections::HashMap;
@@ -84,9 +85,19 @@ pub fn parse_playurl_data(
     data: &Value,
     preferred_qn: Option<u32>,
 ) -> Result<MediaSource> {
+    parse_playurl_data_with_caps(cid, data, preferred_qn, HwDecodeCaps::default())
+}
+
+/// Parse playurl with host HW-decode capability for codec preference.
+pub fn parse_playurl_data_with_caps(
+    cid: Cid,
+    data: &Value,
+    preferred_qn: Option<u32>,
+    hw_caps: HwDecodeCaps,
+) -> Result<MediaSource> {
     let raw: PlayUrlData = serde_json::from_value(data.clone())
         .map_err(|e| Error::Invalid(format!("playurl deserialize: {e}")))?;
-    build_source(cid, raw, preferred_qn)
+    build_source(cid, raw, preferred_qn, hw_caps)
 }
 
 /// Parse full playurl JSON body or just the `data` object.
@@ -94,6 +105,16 @@ pub fn parse_playurl_json(
     cid: Cid,
     raw: &str,
     preferred_qn: Option<u32>,
+) -> Result<MediaSource> {
+    parse_playurl_json_with_caps(cid, raw, preferred_qn, HwDecodeCaps::default())
+}
+
+/// Parse playurl JSON with host HW-decode capability for codec preference.
+pub fn parse_playurl_json_with_caps(
+    cid: Cid,
+    raw: &str,
+    preferred_qn: Option<u32>,
+    hw_caps: HwDecodeCaps,
 ) -> Result<MediaSource> {
     let v: Value = serde_json::from_str(raw)
         .map_err(|e| Error::Invalid(format!("playurl json: {e}")))?;
@@ -104,10 +125,15 @@ pub fn parse_playurl_json(
     } else {
         v
     };
-    parse_playurl_data(cid, &data, preferred_qn)
+    parse_playurl_data_with_caps(cid, &data, preferred_qn, hw_caps)
 }
 
-fn build_source(cid: Cid, raw: PlayUrlData, preferred_qn: Option<u32>) -> Result<MediaSource> {
+fn build_source(
+    cid: Cid,
+    raw: PlayUrlData,
+    preferred_qn: Option<u32>,
+    hw_caps: HwDecodeCaps,
+) -> Result<MediaSource> {
     let mut headers = HashMap::new();
     headers.insert("Referer".into(), WEB_REFERER.into());
     headers.insert("User-Agent".into(), DEFAULT_UA.into());
@@ -142,6 +168,7 @@ fn build_source(cid: Cid, raw: PlayUrlData, preferred_qn: Option<u32>) -> Result
             headers,
             preferred_qn.or(Some(raw.quality)).filter(|q| *q > 0),
             &qn_desc,
+            hw_caps,
         );
     }
 
@@ -166,6 +193,7 @@ fn build_dash(
     headers: HashMap<String, String>,
     preferred_qn: Option<u32>,
     qn_desc: &HashMap<u32, String>,
+    hw_caps: HwDecodeCaps,
 ) -> Result<MediaSource> {
     let mut video_streams: Vec<Stream> = Vec::new();
     for (i, v) in dash.video.into_iter().enumerate() {
@@ -246,7 +274,10 @@ fn build_dash(
         return Err(Error::Invalid("dash has no playable streams".into()));
     }
 
-    let default_video = pick_default_video(&video_streams, preferred_qn);
+    // Best codec first per qn so UI "first of each qn" keeps HW-preferred track.
+    sort_video_streams_for_caps(&mut video_streams, hw_caps);
+
+    let default_video = pick_default_video(&video_streams, preferred_qn, hw_caps);
     let default_audio = pick_default_audio(&audio_streams);
 
     Ok(MediaSource {
@@ -315,7 +346,25 @@ fn build_durl(
     })
 }
 
-fn pick_default_video(streams: &[Stream], preferred_qn: Option<u32>) -> StreamId {
+fn sort_video_streams_for_caps(streams: &mut [Stream], hw_caps: HwDecodeCaps) {
+    streams.sort_by(|a, b| {
+        let qn = b.qn.unwrap_or(0).cmp(&a.qn.unwrap_or(0));
+        if qn != std::cmp::Ordering::Equal {
+            return qn;
+        }
+        let sa = video_codec_score(classify_video_codec(&a.codec), hw_caps);
+        let sb = video_codec_score(classify_video_codec(&b.codec), hw_caps);
+        sb.cmp(&sa)
+            .then_with(|| b.bandwidth.cmp(&a.bandwidth))
+            .then_with(|| a.id.cmp(&b.id))
+    });
+}
+
+fn pick_default_video(
+    streams: &[Stream],
+    preferred_qn: Option<u32>,
+    hw_caps: HwDecodeCaps,
+) -> StreamId {
     if streams.is_empty() {
         return String::new();
     }
@@ -325,16 +374,18 @@ fn pick_default_video(streams: &[Stream], preferred_qn: Option<u32>) -> StreamId
         .collect();
     let pref = preferred_qn.unwrap_or(80);
     if let Some(pick) = pick_quality(&qns, QualityQn(pref), None) {
-        // Prefer AVC when same qn has multiple codecs.
         let same: Vec<&Stream> = streams
             .iter()
             .filter(|x| x.qn == Some(pick.get()))
             .collect();
-        if let Some(avc) = same.iter().find(|s| s.codec.starts_with("avc")) {
-            return avc.id.clone();
-        }
-        if let Some(s) = same.first() {
-            return s.id.clone();
+        if let Some(best) = pick_best_codec_stream(
+            &same,
+            hw_caps,
+            |s| s.codec.as_str(),
+            |s| s.bandwidth,
+            |s| s.id.as_str(),
+        ) {
+            return best.id.clone();
         }
     }
     streams[0].id.clone()
@@ -470,6 +521,16 @@ fn parse_fps(s: Option<&str>) -> Option<u32> {
 
 // --- raw wire types ---
 
+/// Bilibili often emits `"field": null` for empty lists; bare `Vec` + `default` only
+/// covers *missing* keys, not null → "invalid type: null, expected a sequence".
+fn null_as_default<'de, D, T>(deserializer: D) -> std::result::Result<T, D::Error>
+where
+    D: serde::Deserializer<'de>,
+    T: Default + Deserialize<'de>,
+{
+    Ok(Option::<T>::deserialize(deserializer)?.unwrap_or_default())
+}
+
 #[derive(Debug, Deserialize)]
 struct PlayUrlData {
     #[serde(default)]
@@ -478,9 +539,9 @@ struct PlayUrlData {
     timelength: i64,
     #[serde(default)]
     dash: Option<DashRaw>,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "null_as_default")]
     durl: Vec<DurlRaw>,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "null_as_default")]
     support_formats: Vec<SupportFormatRaw>,
 }
 
@@ -498,9 +559,9 @@ struct SupportFormatRaw {
 struct DashRaw {
     #[serde(default)]
     duration: Option<i64>,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "null_as_default")]
     video: Vec<DashStreamRaw>,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "null_as_default")]
     audio: Vec<DashStreamRaw>,
     #[serde(default)]
     dolby: Option<DashDolbyRaw>,
@@ -510,7 +571,7 @@ struct DashRaw {
 
 #[derive(Debug, Deserialize)]
 struct DashDolbyRaw {
-    #[serde(default)]
+    #[serde(default, deserialize_with = "null_as_default")]
     audio: Vec<DashStreamRaw>,
 }
 
@@ -761,5 +822,106 @@ mod tests {
         assert_eq!(audio_label(30250, 0), "杜比全景声");
         assert_eq!(audio_label(30251, 0), "Hi-Res");
         assert_eq!(audio_role(30255), AUDIO_ROLE_DOLBY);
+    }
+
+    #[test]
+    fn null_lists_ok() {
+        // API often uses null instead of [] for empty arrays.
+        let data = json!({
+            "quality": 80,
+            "timelength": 1000,
+            "durl": null,
+            "support_formats": null,
+            "dash": {
+                "video": [{
+                    "id": 80,
+                    "baseUrl": "https://example.com/v.m4s",
+                    "bandwidth": 1,
+                    "codecs": "avc1",
+                    "backupUrl": null
+                }],
+                "audio": null,
+                "dolby": { "audio": null }
+            }
+        });
+        let src = parse_playurl_data(Cid(1), &data, Some(80)).unwrap();
+        assert_eq!(src.video_streams.len(), 1);
+        assert!(src.audio_streams.is_empty());
+    }
+
+    #[test]
+    fn picks_hw_hevc_over_soft_av1_on_rx580() {
+        let data = json!({
+            "quality": 80,
+            "timelength": 1000,
+            "dash": {
+                "video": [
+                    {
+                        "id": 80,
+                        "baseUrl": "https://example.com/av1.m4s",
+                        "bandwidth": 500000,
+                        "codecs": "av01.0.08M.08"
+                    },
+                    {
+                        "id": 80,
+                        "baseUrl": "https://example.com/hevc.m4s",
+                        "bandwidth": 600000,
+                        "codecs": "hev1.1.6.L150.90"
+                    },
+                    {
+                        "id": 80,
+                        "baseUrl": "https://example.com/avc.m4s",
+                        "bandwidth": 800000,
+                        "codecs": "avc1.640032"
+                    }
+                ],
+                "audio": [{
+                    "id": 30280,
+                    "baseUrl": "https://example.com/a.m4s",
+                    "bandwidth": 192000
+                }]
+            }
+        });
+        let caps = HwDecodeCaps::from_pci(0x1002, 0x6fdf);
+        let src = parse_playurl_data_with_caps(Cid(1), &data, Some(80), caps).unwrap();
+        let def = src
+            .video_streams
+            .iter()
+            .find(|s| s.id == src.default_video)
+            .unwrap();
+        assert!(def.codec.starts_with("hev"), "got {}", def.codec);
+    }
+
+    #[test]
+    fn picks_av1_when_hw_supports() {
+        let data = json!({
+            "quality": 80,
+            "timelength": 1000,
+            "dash": {
+                "video": [
+                    {
+                        "id": 80,
+                        "baseUrl": "https://example.com/avc.m4s",
+                        "bandwidth": 800000,
+                        "codecs": "avc1.640032"
+                    },
+                    {
+                        "id": 80,
+                        "baseUrl": "https://example.com/av1.m4s",
+                        "bandwidth": 500000,
+                        "codecs": "av01.0.08M.08"
+                    }
+                ],
+                "audio": []
+            }
+        });
+        let caps = HwDecodeCaps::from_pci(0x10de, 0x2204);
+        let src = parse_playurl_data_with_caps(Cid(1), &data, Some(80), caps).unwrap();
+        let def = src
+            .video_streams
+            .iter()
+            .find(|s| s.id == src.default_video)
+            .unwrap();
+        assert!(def.codec.starts_with("av01"), "got {}", def.codec);
     }
 }

@@ -11,7 +11,7 @@ import 'video.dart';
 // These functions are ignored because they are not marked as `pub`: `ensure_wbi`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`
 
-/// Web live recommend (`getUserRecommend`). Optional login.
+/// Web live room list (`/room/v3/Area/getRoomList`). Optional login.
 Future<LiveRecommendPageDto> liveRecommend({
   required int page,
   required int pageSize,

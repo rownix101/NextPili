@@ -8,7 +8,7 @@ import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `ensure_wbi`, `map_item`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 /// Home recommend feed (WBI · recommend slot).
 ///
@@ -25,6 +25,20 @@ Future<RecommendFeedDto> feedRecommend({
 /// `pn`: page number starting at 1; `ps`: page size (default 20 if 0).
 Future<PopularFeedDto> feedPopular({required int pn, required int ps}) =>
     RustLib.instance.api.crateApiFeedFeedPopular(pn: pn, ps: ps);
+
+/// Primary partition list for home 分区导航 (static main tids; ranking only).
+Future<List<RegionDto>> feedRegions() =>
+    RustLib.instance.api.crateApiFeedFeedRegions();
+
+/// Partition ranking (WBI · recommend slot).
+///
+/// `rid`: primary partition tid; `0` = site-wide.
+/// `rank_type`: `all` | `rookie` | `origin` (empty → `all`).
+Future<RankingFeedDto> feedRanking({
+  required int rid,
+  required String rankType,
+}) =>
+    RustLib.instance.api.crateApiFeedFeedRanking(rid: rid, rankType: rankType);
 
 /// Single card in home feed.
 class FeedItemDto {
@@ -95,6 +109,25 @@ class PopularFeedDto {
           noMore == other.noMore;
 }
 
+/// Partition ranking payload (`ranking/v2`; typically ≤100 items, no paging).
+class RankingFeedDto {
+  final List<FeedItemDto> items;
+  final String note;
+
+  const RankingFeedDto({required this.items, required this.note});
+
+  @override
+  int get hashCode => items.hashCode ^ note.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RankingFeedDto &&
+          runtimeType == other.runtimeType &&
+          items == other.items &&
+          note == other.note;
+}
+
 /// Recommend page payload.
 class RecommendFeedDto {
   final List<FeedItemDto> items;
@@ -114,4 +147,29 @@ class RecommendFeedDto {
           runtimeType == other.runtimeType &&
           items == other.items &&
           nextFreshIdx == other.nextFreshIdx;
+}
+
+/// One primary partition entry for home 分区导航 (text labels only).
+class RegionDto {
+  final int rid;
+
+  /// Stable key for l10n (e.g. `all`, `douga`, `music`). Empty for unknown.
+  final String key;
+
+  /// Chinese display name from taxonomy (Flutter may prefer ARB by `key`).
+  final String name;
+
+  const RegionDto({required this.rid, required this.key, required this.name});
+
+  @override
+  int get hashCode => rid.hashCode ^ key.hashCode ^ name.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RegionDto &&
+          runtimeType == other.runtimeType &&
+          rid == other.rid &&
+          key == other.key &&
+          name == other.name;
 }

@@ -238,6 +238,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeTabPopular => '热门';
 
   @override
+  String get homeTabRegion => '分区';
+
+  @override
   String get searchTitle => '搜索';
 
   @override
@@ -397,6 +400,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get playerFullscreen => '全屏';
+
+  @override
+  String get playerFullscreenExit => '退出全屏';
+
+  @override
+  String get playerMini => '小窗播放';
+
+  @override
+  String get playerRestore => '返回播放页';
+
+  @override
+  String get playerClose => '关闭播放';
 
   @override
   String get authTitle => '账号与登录';

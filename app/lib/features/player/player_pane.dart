@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../../bridge/core_api.dart';
@@ -10,13 +11,14 @@ import '../../core/widgets/loading.dart';
 import '../../core/widgets/np_button.dart';
 import '../../l10n/l10n.dart';
 import 'danmaku_overlay.dart';
+import 'playback_session.dart';
 import 'player_adapter.dart';
 
-/// Video surface + chrome + danmaku for one cid.
+/// Inline (or host-bound) video surface + chrome for one cid.
 ///
-/// Use inside a sized parent (e.g. [AspectRatio] 16:9) for watch page,
-/// or expand to fill for immersive `/play`.
-class PlayerPane extends StatefulWidget {
+/// Uses [playbackSessionProvider] so fullscreen / mini never remount the
+/// decoder — progress and audio stay continuous.
+class PlayerPane extends ConsumerStatefulWidget {
   const PlayerPane({
     super.key,
     required this.videoId,
@@ -26,10 +28,10 @@ class PlayerPane extends StatefulWidget {
     this.title = '',
     this.qn = 0,
     this.epId = 0,
+    this.host = PlayerSurfaceHost.inline,
     this.immersive = false,
     this.showBack = false,
     this.onBack,
-    this.onRequestFullscreen,
   });
 
   final String videoId;
@@ -42,30 +44,43 @@ class PlayerPane extends StatefulWidget {
   /// When > 0, fetch stream via PGC playurl (`ep_id` + `cid`).
   final int epId;
 
-  /// Full-bleed black chrome (route `/play`).
+  /// Which surface host this pane claims when active.
+  final PlayerSurfaceHost host;
+
+  /// Full-bleed chrome (fullscreen overlay).
   final bool immersive;
 
   final bool showBack;
+
   final VoidCallback? onBack;
-  final VoidCallback? onRequestFullscreen;
 
   @override
-  State<PlayerPane> createState() => _PlayerPaneState();
+  ConsumerState<PlayerPane> createState() => _PlayerPaneState();
 }
 
-class _PlayerPaneState extends State<PlayerPane> {
-  late final MediaKitPlayerAdapter _adapter;
-  bool _loading = true;
-  String? _error;
+class _PlayerPaneState extends ConsumerState<PlayerPane> {
   bool _showChrome = true;
-  bool _danmakuOn = true;
-  int _resolvedAid = 0;
+
+  PlaybackTarget get _target => PlaybackTarget(
+        videoId: widget.videoId,
+        cid: widget.cid,
+        aid: widget.aid,
+        bvid: widget.bvid,
+        title: widget.title,
+        qn: widget.qn,
+        epId: widget.epId,
+      );
 
   @override
   void initState() {
     super.initState();
-    _adapter = MediaKitPlayerAdapter();
-    _load();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(playbackSessionProvider.notifier).open(
+            _target,
+            host: widget.host,
+          );
+    });
   }
 
   @override
@@ -74,83 +89,27 @@ class _PlayerPaneState extends State<PlayerPane> {
     if (oldWidget.cid != widget.cid ||
         oldWidget.videoId != widget.videoId ||
         oldWidget.qn != widget.qn ||
-        oldWidget.epId != widget.epId) {
-      _load();
+        oldWidget.epId != widget.epId ||
+        oldWidget.host != widget.host) {
+      ref.read(playbackSessionProvider.notifier).open(
+            _target,
+            host: widget.host,
+          );
     }
   }
 
-  Future<MediaSourceDto> _fetchSource(int qn) {
-    if (widget.epId > 0) {
-      return CoreApi.instance.pgcPlayUrl(
-        epId: widget.epId,
-        cid: widget.cid,
-        qn: qn,
-      );
+  @override
+  void deactivate() {
+    // Only the inline host auto-promotes to mini on leave; overlays manage exit.
+    if (widget.host == PlayerSurfaceHost.inline) {
+      ref.read(playbackSessionProvider.notifier).releaseInline(_target);
     }
-    return CoreApi.instance.playUrl(
-      id: widget.videoId,
-      cid: widget.cid,
-      qn: qn,
-    );
-  }
-
-  Future<void> _load({int? qn}) async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      final source = await _fetchSource(qn ?? widget.qn);
-      if (!mounted) return;
-      await _adapter.open(source);
-      final aid = widget.aid != 0 ? widget.aid : i64(source.aid);
-      final bvid = widget.bvid.isNotEmpty ? widget.bvid : source.bvid;
-      await CoreApi.instance.playbackStart(
-        aid: aid,
-        bvid: bvid,
-        cid: widget.cid,
-      );
-      if (!mounted) return;
-      setState(() {
-        _resolvedAid = aid;
-        _loading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _loading = false;
-        _error = errorMessage(e, context.l10n);
-      });
-    }
+    super.deactivate();
   }
 
   Future<void> _switchQuality(StreamDto stream) async {
     try {
-      final prevSub = _adapter.currentSubtitle;
-      if (stream.qn != null) {
-        final pos = _adapter.player.state.position;
-        final rate = _adapter.rate;
-        final source = await _fetchSource(stream.qn!);
-        if (!mounted) return;
-        await _adapter.open(source);
-        if (rate != 1.0) {
-          await _adapter.setRate(rate);
-        }
-        if (pos > Duration.zero) {
-          await _adapter.seek(pos);
-        }
-        // Re-apply subtitle if still listed after refresh.
-        if (prevSub != null) {
-          final match = source.subtitles
-              .where((t) => t.id == prevSub.id || t.url == prevSub.url)
-              .toList();
-          if (match.isNotEmpty) {
-            await _switchSubtitle(match.first);
-          }
-        }
-      } else {
-        await _adapter.setQuality(stream.id);
-      }
+      await ref.read(playbackSessionProvider.notifier).switchQuality(stream);
       await Haptics.selection();
       if (mounted) setState(() {});
     } catch (e) {
@@ -163,7 +122,7 @@ class _PlayerPaneState extends State<PlayerPane> {
 
   Future<void> _switchAudio(StreamDto stream) async {
     try {
-      await _adapter.setAudio(stream.id);
+      await ref.read(playbackSessionProvider.notifier).switchAudio(stream);
       await Haptics.selection();
       if (mounted) setState(() {});
     } catch (e) {
@@ -176,7 +135,7 @@ class _PlayerPaneState extends State<PlayerPane> {
 
   Future<void> _switchSpeed(double rate) async {
     try {
-      await _adapter.setRate(rate);
+      await ref.read(playbackSessionProvider.notifier).switchSpeed(rate);
       await Haptics.selection();
       if (mounted) setState(() {});
     } catch (e) {
@@ -189,18 +148,7 @@ class _PlayerPaneState extends State<PlayerPane> {
 
   Future<void> _switchSubtitle(SubtitleTrackDto? track) async {
     try {
-      if (track == null) {
-        await _adapter.setSubtitle();
-      } else {
-        final vtt = await CoreApi.instance.subtitleVtt(track.url);
-        if (!mounted) return;
-        await _adapter.setSubtitle(
-          id: track.id,
-          vtt: vtt,
-          title: track.label,
-          language: track.lang,
-        );
-      }
+      await ref.read(playbackSessionProvider.notifier).switchSubtitle(track);
       await Haptics.selection();
       if (mounted) setState(() {});
     } catch (e) {
@@ -214,23 +162,43 @@ class _PlayerPaneState extends State<PlayerPane> {
   }
 
   @override
-  void dispose() {
-    CoreApi.instance.playbackStop();
-    _adapter.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final session = ref.watch(playbackSessionProvider);
+    final notifier = ref.read(playbackSessionProvider.notifier);
+    final adapter = notifier.adapterOrNull;
     final player = PlayerColors.of(context);
     final l10n = context.l10n;
+
+    final ownsSurface = session.host == widget.host &&
+        session.target != null &&
+        session.target!.sameMedia(_target);
+
+    // Another host owns the surface (e.g. fullscreen while inline is mounted).
+    if (!ownsSurface &&
+        session.target != null &&
+        session.target!.sameMedia(_target) &&
+        !session.loading) {
+      return ColoredBox(
+        color: Colors.black,
+        child: Center(
+          child: Icon(
+            AppIcons.playCircle,
+            color: player.controlFgMuted,
+            size: 40,
+          ),
+        ),
+      );
+    }
+
+    final error = ownsSurface ? session.error : null;
+    final loading = ownsSurface && (session.loading || adapter == null);
 
     return ColoredBox(
       color: Colors.black,
       child: Stack(
         fit: StackFit.expand,
         children: [
-          if (_error != null)
+          if (error != null)
             Center(
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.lg),
@@ -238,44 +206,46 @@ class _PlayerPaneState extends State<PlayerPane> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      _error!,
+                      errorMessage(error, l10n),
                       textAlign: TextAlign.center,
                       style: TextStyle(color: player.controlFg),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     FilledButton(
-                      onPressed: _load,
+                      onPressed: () => notifier.retry(),
                       child: Text(l10n.retry),
                     ),
                   ],
                 ),
               ),
             )
-          else if (_loading)
+          else if (loading)
             const AppLoading()
-          else
+          else if (ownsSurface && adapter != null)
             GestureDetector(
               onTap: () => setState(() => _showChrome = !_showChrome),
               child: Stack(
                 fit: StackFit.expand,
                 children: [
                   Video(
-                    controller: _adapter.controller,
+                    controller: adapter.controller,
                     controls: NoVideoControls,
                     fill: Colors.black,
                   ),
-                  if (_resolvedAid > 0)
+                  if (session.resolvedAid > 0)
                     DanmakuOverlay(
-                      aid: _resolvedAid,
+                      aid: session.resolvedAid,
                       cid: widget.cid,
-                      position: _adapter.player.stream.position,
-                      playing: _adapter.player.stream.playing,
-                      initialPlaying: _adapter.player.state.playing,
-                      enabled: _danmakuOn,
+                      position: adapter.player.stream.position,
+                      playing: adapter.player.stream.playing,
+                      initialPlaying: adapter.player.state.playing,
+                      enabled: session.danmakuOn,
                     ),
                 ],
               ),
-            ),
+            )
+          else
+            const AppLoading(),
           if (_showChrome) ...[
             Positioned(
               top: 0,
@@ -287,21 +257,29 @@ class _PlayerPaneState extends State<PlayerPane> {
                 showBack: widget.showBack,
                 colors: player,
                 onBack: widget.onBack,
-                danmakuOn: _danmakuOn,
-                onToggleDanmaku: () =>
-                    setState(() => _danmakuOn = !_danmakuOn),
-                onFullscreen: widget.onRequestFullscreen,
+                danmakuOn: session.danmakuOn,
+                onToggleDanmaku: () => notifier.toggleDanmaku(),
+                onFullscreen: widget.host == PlayerSurfaceHost.fullscreen
+                    ? () => notifier.exitFullscreen()
+                    : () => notifier.enterFullscreen(),
+                fullscreenExit: widget.host == PlayerSurfaceHost.fullscreen,
+                onMini: widget.host == PlayerSurfaceHost.inline
+                    ? () => notifier.enterMini()
+                    : null,
               ),
             ),
-            if (!_loading && _error == null)
+            if (!loading && error == null && ownsSurface && adapter != null)
               Positioned(
                 left: 0,
                 right: 0,
                 bottom: 0,
                 child: _BottomChrome(
-                  adapter: _adapter,
+                  adapter: adapter,
                   colors: player,
-                  onFullscreen: widget.onRequestFullscreen,
+                  onFullscreen: widget.host == PlayerSurfaceHost.fullscreen
+                      ? () => notifier.exitFullscreen()
+                      : () => notifier.enterFullscreen(),
+                  fullscreenExit: widget.host == PlayerSurfaceHost.fullscreen,
                   onQuality: _switchQuality,
                   onAudio: _switchAudio,
                   onSpeed: _switchSpeed,
@@ -325,6 +303,8 @@ class _TopBar extends StatelessWidget {
     required this.danmakuOn,
     required this.onToggleDanmaku,
     this.onFullscreen,
+    this.fullscreenExit = false,
+    this.onMini,
   });
 
   final String title;
@@ -335,6 +315,8 @@ class _TopBar extends StatelessWidget {
   final bool danmakuOn;
   final VoidCallback onToggleDanmaku;
   final VoidCallback? onFullscreen;
+  final bool fullscreenExit;
+  final VoidCallback? onMini;
 
   @override
   Widget build(BuildContext context) {
@@ -367,12 +349,23 @@ class _TopBar extends StatelessWidget {
             onPressed: onToggleDanmaku,
             tooltip: danmakuOn ? l10n.playerDanmakuOff : l10n.playerDanmakuOn,
           ),
+          if (onMini != null)
+            NpIconButton(
+              icon: AppIcons.pictureInPicture,
+              color: colors.controlFg,
+              onPressed: onMini,
+              tooltip: l10n.playerMini,
+            ),
           if (onFullscreen != null)
             NpIconButton(
-              icon: AppIcons.fullscreen,
+              icon: fullscreenExit
+                  ? AppIcons.fullscreenExit
+                  : AppIcons.fullscreen,
               color: colors.controlFg,
               onPressed: onFullscreen,
-              tooltip: l10n.playerFullscreen,
+              tooltip: fullscreenExit
+                  ? l10n.playerFullscreenExit
+                  : l10n.playerFullscreen,
             ),
         ],
       ),
@@ -389,6 +382,7 @@ class _BottomChrome extends StatelessWidget {
     required this.onSpeed,
     required this.onSubtitle,
     this.onFullscreen,
+    this.fullscreenExit = false,
   });
 
   final MediaKitPlayerAdapter adapter;
@@ -398,6 +392,7 @@ class _BottomChrome extends StatelessWidget {
   final ValueChanged<double> onSpeed;
   final ValueChanged<SubtitleTrackDto?> onSubtitle;
   final VoidCallback? onFullscreen;
+  final bool fullscreenExit;
 
   @override
   Widget build(BuildContext context) {
@@ -458,133 +453,154 @@ class _BottomChrome extends StatelessWidget {
                             },
                           ),
                         ),
-                        Row(
-                          children: [
-                            NpIconButton(
-                              icon: playing ? AppIcons.pause : AppIcons.play,
-                              color: colors.controlFg,
-                              onPressed: () {
-                                if (playing) {
-                                  adapter.pause();
-                                } else {
-                                  adapter.play();
-                                }
-                              },
-                              tooltip: playing ? l10n.pause : l10n.play,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${_fmt(pos)} / ${_fmt(dur)}',
-                              style: TextStyle(
-                                color: colors.controlFgMuted,
-                                fontSize: 12,
-                                fontFeatures: const [
-                                  FontFeature.tabularFigures(),
-                                ],
-                              ),
-                            ),
-                            const Spacer(),
-                            // design-system §7.7 — quality / speed as text menus.
-                            if (qualities.isNotEmpty)
-                              _TextMenuButton(
-                                label: currentQ?.qualityLabel ??
-                                    l10n.playerQuality,
-                                tooltip: l10n.playerQuality,
-                                colors: colors,
-                                items: [
-                                  for (final q in qualities)
-                                    PopupMenuItem(
-                                      value: q.id,
-                                      child: Text(q.qualityLabel),
-                                    ),
-                                ],
-                                onSelected: (id) {
-                                  final q = qualities.firstWhere(
-                                    (e) => e.id == id,
-                                    orElse: () => qualities.first,
-                                  );
-                                  onQuality(q);
-                                },
-                              ),
-                            // Show when ≥2 options, or a single Dolby/Hi-Res special track.
-                            if (audios.length > 1 ||
-                                (audios.length == 1 &&
-                                    (audios.first.role == 'dolby' ||
-                                        audios.first.role == 'hires')))
-                              _TextMenuButton(
-                                label: currentA?.qualityLabel ??
-                                    l10n.playerAudio,
-                                tooltip: l10n.playerAudio,
-                                colors: colors,
-                                items: [
-                                  for (final a in audios)
-                                    PopupMenuItem(
-                                      value: a.id,
-                                      child: Text(a.qualityLabel),
-                                    ),
-                                ],
-                                onSelected: (id) {
-                                  final a = audios.firstWhere(
-                                    (e) => e.id == id,
-                                    orElse: () => audios.first,
-                                  );
-                                  onAudio(a);
-                                },
-                              ),
-                            _TextMenuButton(
-                              label: _speedLabel(rate),
-                              tooltip: l10n.playerSpeed,
-                              colors: colors,
-                              items: [
-                                for (final r
-                                    in MediaKitPlayerAdapter.speedOptions)
-                                  PopupMenuItem(
-                                    value: r.toString(),
-                                    child: Text(_speedLabel(r)),
+                        LayoutBuilder(
+                          builder: (context, rowConstraints) {
+                            final controls = Row(
+                              children: [
+                                NpIconButton(
+                                  icon:
+                                      playing ? AppIcons.pause : AppIcons.play,
+                                  color: colors.controlFg,
+                                  onPressed: () {
+                                    if (playing) {
+                                      adapter.pause();
+                                    } else {
+                                      adapter.play();
+                                    }
+                                  },
+                                  tooltip: playing ? l10n.pause : l10n.play,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${_fmt(pos)} / ${_fmt(dur)}',
+                                  style: TextStyle(
+                                    color: colors.controlFgMuted,
+                                    fontSize: 12,
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                  ),
+                                ),
+                                const Spacer(),
+                                if (qualities.isNotEmpty)
+                                  _TextMenuButton(
+                                    label: currentQ?.qualityLabel ??
+                                        l10n.playerQuality,
+                                    tooltip: l10n.playerQuality,
+                                    colors: colors,
+                                    items: [
+                                      for (final q in qualities)
+                                        PopupMenuItem(
+                                          value: q.id,
+                                          child: Text(q.qualityLabel),
+                                        ),
+                                    ],
+                                    onSelected: (id) {
+                                      final q = qualities.firstWhere(
+                                        (e) => e.id == id,
+                                        orElse: () => qualities.first,
+                                      );
+                                      onQuality(q);
+                                    },
+                                  ),
+                                if (audios.length > 1 ||
+                                    (audios.length == 1 &&
+                                        (audios.first.role == 'dolby' ||
+                                            audios.first.role == 'hires')))
+                                  _TextMenuButton(
+                                    label: currentA?.qualityLabel ??
+                                        l10n.playerAudio,
+                                    tooltip: l10n.playerAudio,
+                                    colors: colors,
+                                    items: [
+                                      for (final a in audios)
+                                        PopupMenuItem(
+                                          value: a.id,
+                                          child: Text(a.qualityLabel),
+                                        ),
+                                    ],
+                                    onSelected: (id) {
+                                      final a = audios.firstWhere(
+                                        (e) => e.id == id,
+                                        orElse: () => audios.first,
+                                      );
+                                      onAudio(a);
+                                    },
+                                  ),
+                                _TextMenuButton(
+                                  label: _speedLabel(rate),
+                                  tooltip: l10n.playerSpeed,
+                                  colors: colors,
+                                  items: [
+                                    for (final r in MediaKitPlayerAdapter
+                                        .speedOptions)
+                                      PopupMenuItem(
+                                        value: r.toString(),
+                                        child: Text(_speedLabel(r)),
+                                      ),
+                                  ],
+                                  onSelected: (v) {
+                                    final r = double.tryParse(v);
+                                    if (r != null) onSpeed(r);
+                                  },
+                                ),
+                                if (subs.isNotEmpty)
+                                  _TextMenuButton(
+                                    label: currentSub?.label ??
+                                        l10n.playerSubtitleOff,
+                                    tooltip: l10n.playerSubtitle,
+                                    colors: colors,
+                                    items: [
+                                      PopupMenuItem(
+                                        value: '',
+                                        child: Text(l10n.playerSubtitleOff),
+                                      ),
+                                      for (final t in subs)
+                                        PopupMenuItem(
+                                          value: t.id,
+                                          child: Text(t.label),
+                                        ),
+                                    ],
+                                    onSelected: (id) {
+                                      if (id.isEmpty) {
+                                        onSubtitle(null);
+                                        return;
+                                      }
+                                      final t = subs.firstWhere(
+                                        (e) => e.id == id,
+                                        orElse: () => subs.first,
+                                      );
+                                      onSubtitle(t);
+                                    },
+                                  ),
+                                if (onFullscreen != null)
+                                  NpIconButton(
+                                    icon: fullscreenExit
+                                        ? AppIcons.fullscreenExit
+                                        : AppIcons.fullscreen,
+                                    color: colors.controlFg,
+                                    onPressed: onFullscreen,
+                                    tooltip: fullscreenExit
+                                        ? l10n.playerFullscreenExit
+                                        : l10n.playerFullscreen,
                                   ),
                               ],
-                              onSelected: (v) {
-                                final r = double.tryParse(v);
-                                if (r != null) onSpeed(r);
-                              },
-                            ),
-                            if (subs.isNotEmpty)
-                              _TextMenuButton(
-                                label: currentSub?.label ??
-                                    l10n.playerSubtitleOff,
-                                tooltip: l10n.playerSubtitle,
-                                colors: colors,
-                                items: [
-                                  PopupMenuItem(
-                                    value: '',
-                                    child: Text(l10n.playerSubtitleOff),
+                            );
+                            // Narrow / short-height player: allow horizontal scroll
+                            // instead of RenderFlex overflow.
+                            if (rowConstraints.maxWidth < 520) {
+                              return SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    minWidth: rowConstraints.maxWidth,
                                   ),
-                                  for (final t in subs)
-                                    PopupMenuItem(
-                                      value: t.id,
-                                      child: Text(t.label),
-                                    ),
-                                ],
-                                onSelected: (id) {
-                                  if (id.isEmpty) {
-                                    onSubtitle(null);
-                                    return;
-                                  }
-                                  final t = subs.firstWhere(
-                                    (e) => e.id == id,
-                                    orElse: () => subs.first,
-                                  );
-                                  onSubtitle(t);
-                                },
-                              ),
-                            if (onFullscreen != null)
-                              NpIconButton(
-                                icon: AppIcons.fullscreen,
-                                color: colors.controlFg,
-                                onPressed: onFullscreen,
-                                tooltip: l10n.playerFullscreen,
-                              ),
-                          ],
+                                  child: controls,
+                                ),
+                              );
+                            }
+                            return controls;
+                          },
                         ),
                       ],
                     ),
@@ -599,7 +615,6 @@ class _BottomChrome extends StatelessWidget {
   }
 }
 
-/// Compact text popup control for player chrome (quality / speed / audio / sub).
 class _TextMenuButton extends StatelessWidget {
   const _TextMenuButton({
     required this.label,

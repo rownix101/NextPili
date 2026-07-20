@@ -68,7 +68,8 @@ impl CoreApp {
             client_cfg.proxy = Some(proxy);
         }
         let http = BiliClient::new(client_cfg).map_err(AppError::from)?;
-        let media = MediaService::new();
+        let hw_caps = crate::hw_decode::hw_decode_caps();
+        let media = MediaService::with_hw_caps(hw_caps);
         let wbi = WbiSigner::new();
         let heartbeat = HeartbeatSupervisor::new();
 
@@ -86,6 +87,10 @@ impl CoreApp {
         tracing::info!(
             data_dir = %config.data_dir,
             buvid3 = %app.store.buvid3(),
+            vendor = ?hw_caps.vendor,
+            avc = hw_caps.avc,
+            hevc = hw_caps.hevc,
+            av1 = hw_caps.av1,
             "NextPili core bootstrapped"
         );
 

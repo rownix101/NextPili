@@ -1,6 +1,7 @@
 use crate::error::Result;
 use crate::playurl;
 use domain::id::Cid;
+use domain::HwDecodeCaps;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -53,12 +54,30 @@ pub struct MediaSource {
 }
 
 /// Playurl normalization entrypoint.
-#[derive(Debug, Default, Clone)]
-pub struct MediaService;
+#[derive(Debug, Clone)]
+pub struct MediaService {
+    hw_caps: HwDecodeCaps,
+}
+
+impl Default for MediaService {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl MediaService {
     pub fn new() -> Self {
-        Self
+        Self {
+            hw_caps: HwDecodeCaps::default(),
+        }
+    }
+
+    pub fn with_hw_caps(hw_caps: HwDecodeCaps) -> Self {
+        Self { hw_caps }
+    }
+
+    pub fn hw_caps(&self) -> HwDecodeCaps {
+        self.hw_caps
     }
 
     /// Parse raw playurl JSON (full body or `data` object) into [`MediaSource`].
@@ -68,7 +87,7 @@ impl MediaService {
         raw: &str,
         preferred_qn: Option<u32>,
     ) -> Result<MediaSource> {
-        playurl::parse_playurl_json(cid, raw, preferred_qn)
+        playurl::parse_playurl_json_with_caps(cid, raw, preferred_qn, self.hw_caps)
     }
 
     /// Parse already-decoded playurl `data` value.
@@ -78,6 +97,6 @@ impl MediaService {
         data: &serde_json::Value,
         preferred_qn: Option<u32>,
     ) -> Result<MediaSource> {
-        playurl::parse_playurl_data(cid, data, preferred_qn)
+        playurl::parse_playurl_data_with_caps(cid, data, preferred_qn, self.hw_caps)
     }
 }

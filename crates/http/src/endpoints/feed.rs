@@ -26,6 +26,13 @@ pub struct PopularFeed {
     pub no_more: bool,
 }
 
+/// Partition ranking result (`ranking/v2`; typically top 100, no paging).
+#[derive(Debug, Clone)]
+pub struct RankingFeed {
+    pub items: Vec<FeedItem>,
+    pub note: String,
+}
+
 #[derive(Debug, Deserialize)]
 struct RecommendData {
     #[serde(default)]
@@ -36,10 +43,18 @@ struct RecommendData {
 
 #[derive(Debug, Deserialize)]
 struct PopularData {
-    #[serde(default)]
+    #[serde(default, deserialize_with = "crate::serde_util::null_as_default")]
     list: Vec<Value>,
     #[serde(default)]
     no_more: bool,
+}
+
+#[derive(Debug, Deserialize)]
+struct RankingData {
+    #[serde(default, deserialize_with = "crate::serde_util::null_as_default")]
+    list: Vec<Value>,
+    #[serde(default)]
+    note: String,
 }
 
 #[derive(Debug, Deserialize, Default)]
@@ -148,6 +163,56 @@ impl FeedApi {
             items,
             next_pn: pn.saturating_add(1),
             no_more: data.no_more,
+        })
+    }
+
+    /// Partition ranking: `GET /x/web-interface/ranking/v2` (WBI).
+    ///
+    /// `rid`: primary partition tid; `0` = site-wide. Only main partitions are supported.
+    /// `rank_type`: `all` | `rookie` | `origin` (default `all`).
+    pub async fn ranking(
+        client: &BiliClient,
+        account: Option<&Account>,
+        device_buvid3: Option<&str>,
+        wbi: &WbiSigner,
+        rid: i32,
+        rank_type: &str,
+    ) -> Result<RankingFeed> {
+        let rid = rid.max(0);
+        let rank_type = match rank_type {
+            "rookie" | "origin" => rank_type,
+            _ => "all",
+        };
+
+        let mut params = BTreeMap::new();
+        params.insert("rid".into(), rid.to_string());
+        params.insert("type".into(), rank_type.to_string());
+        params.insert("web_location".into(), "333.934".into());
+
+        let url = BiliClient::resolve_url(API_BASE, "/x/web-interface/ranking/v2");
+        let mut opts = RequestOptions {
+            account,
+            device_buvid3,
+            auth: if account.is_some() {
+                crate::middleware::AuthMode::Cookie
+            } else {
+                crate::middleware::AuthMode::OptionalLogin
+            },
+            ..RequestOptions::default()
+        };
+        opts = opts.with_wbi(wbi);
+
+        let resp = client.get_bili::<RankingData>(&url, params, opts).await?;
+        let data = resp.into_data()?;
+        let items = data
+            .list
+            .into_iter()
+            .filter_map(|v| parse_archive_item(v).ok().flatten())
+            .collect();
+
+        Ok(RankingFeed {
+            items,
+            note: data.note,
         })
     }
 }
@@ -318,5 +383,21 @@ mod tests {
             normalize_cover("http://cdn.example/a.jpg"),
             "https://cdn.example/a.jpg"
         );
+    }
+
+    #[test]
+    fn parse_ranking_archive() {
+        let v = json!({
+            "aid": 3,
+            "bvid": "BV3",
+            "title": "rank",
+            "pic": "//i0.hdslb.com/x.jpg",
+            "duration": 42,
+            "owner": { "name": "UP" }
+        });
+        let item = parse_archive_item(v).unwrap().unwrap();
+        assert_eq!(item.aid, 3);
+        assert_eq!(item.duration_ms.get(), 42_000);
+        assert!(item.cover.starts_with("https://"));
     }
 }

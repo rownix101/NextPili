@@ -28,7 +28,7 @@ class _HomePageState extends ConsumerState<HomePage>
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 2, vsync: this);
+    _tabs = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -57,6 +57,7 @@ class _HomePageState extends ConsumerState<HomePage>
           tabs: [
             Tab(text: l10n.homeTabRecommend),
             Tab(text: l10n.homeTabPopular),
+            Tab(text: l10n.homeTabRegion),
           ],
         ),
       ),
@@ -65,6 +66,7 @@ class _HomePageState extends ConsumerState<HomePage>
         children: const [
           _RecommendFeedTab(),
           _PopularFeedTab(),
+          _RegionFeedTab(),
         ],
       ),
     );
@@ -266,6 +268,142 @@ class _PopularFeedTabState extends State<_PopularFeedTab> {
   }
 }
 
+class _RegionFeedTab extends StatefulWidget {
+  const _RegionFeedTab();
+
+  @override
+  State<_RegionFeedTab> createState() => _RegionFeedTabState();
+}
+
+class _RegionFeedTabState extends State<_RegionFeedTab> {
+  final _items = <FeedItemDto>[];
+  final _scroll = ScrollController();
+  List<RegionDto> _regions = const [];
+  int _rid = 0;
+  bool _loadingRegions = true;
+  bool _loading = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRegions();
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadRegions() async {
+    setState(() {
+      _loadingRegions = true;
+      _error = null;
+    });
+    try {
+      final regions = await CoreApi.instance.feedRegions();
+      if (!mounted) return;
+      final rid = regions.isNotEmpty ? regions.first.rid : 0;
+      setState(() {
+        _regions = regions;
+        _rid = rid;
+        _loadingRegions = false;
+      });
+      await _reload();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loadingRegions = false;
+        _error = errorMessage(e, context.l10n);
+      });
+    }
+  }
+
+  Future<void> _selectRid(int rid) async {
+    if (rid == _rid && _items.isNotEmpty) return;
+    setState(() => _rid = rid);
+    await _reload();
+  }
+
+  Future<void> _reload() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final page = await CoreApi.instance.feedRanking(rid: _rid);
+      if (!mounted) return;
+      setState(() {
+        _items
+          ..clear()
+          ..addAll(page.items);
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = errorMessage(e, context.l10n);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = AppColors.of(context);
+
+    if (_loadingRegions && _regions.isEmpty) {
+      return const Center(child: AppLoading());
+    }
+    if (_error != null && _regions.isEmpty) {
+      return EmptyState.error(message: _error!, onRetry: _loadRegions);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          height: 48,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            itemCount: _regions.length,
+            separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
+            itemBuilder: (context, index) {
+              final region = _regions[index];
+              final selected = region.rid == _rid;
+              return FilterChip(
+                selected: selected,
+                label: Text(region.name),
+                onSelected: (_) => _selectRid(region.rid),
+                selectedColor: colors.accent.withValues(alpha: 0.22),
+                checkmarkColor: colors.accent,
+              );
+            },
+          ),
+        ),
+        Expanded(
+          child: _FeedBody(
+            items: _items,
+            scrollController: _scroll,
+            loading: _loading,
+            loadingMore: false,
+            error: _error,
+            onRetry: _reload,
+            onRefresh: _reload,
+            emptyMessage: l10n.emptyContent,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _FeedBody extends StatelessWidget {
   const _FeedBody({
     required this.items,
@@ -275,6 +413,7 @@ class _FeedBody extends StatelessWidget {
     required this.error,
     required this.onRetry,
     required this.onRefresh,
+    this.emptyMessage,
   });
 
   final List<FeedItemDto> items;
@@ -284,6 +423,7 @@ class _FeedBody extends StatelessWidget {
   final String? error;
   final Future<void> Function() onRetry;
   final Future<void> Function() onRefresh;
+  final String? emptyMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -364,7 +504,7 @@ class _FeedBody extends StatelessWidget {
               if (!loadingMore && items.isEmpty)
                 SliverFillRemaining(
                   hasScrollBody: false,
-                  child: EmptyState(message: l10n.emptyContent),
+                  child: EmptyState(message: emptyMessage ?? l10n.emptyContent),
                 ),
             ],
           );

@@ -86,15 +86,40 @@ impl BiliClient {
     }
 
     pub async fn get_text(&self, url: &str) -> Result<String> {
+        self.get_text_with_referer(url, constants::WWW_BASE).await
+    }
+
+    /// GET raw text with Web baseline UA + Referer (subtitle CDN, etc.).
+    pub async fn get_text_with_referer(&self, url: &str, referer: &str) -> Result<String> {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            USER_AGENT,
+            HeaderValue::from_str(self.config.user_agent.as_str())
+                .map_err(|e| Error::Network(e.to_string()))?,
+        );
+        headers.insert(
+            REFERER,
+            HeaderValue::from_str(referer).map_err(|e| Error::Network(e.to_string()))?,
+        );
         let resp = self
             .inner
             .get(url)
+            .headers(headers)
             .send()
             .await
             .map_err(|e| Error::Network(e.to_string()))?;
-        resp.text()
+        let status = resp.status();
+        let text = resp
+            .text()
             .await
-            .map_err(|e| Error::Network(e.to_string()))
+            .map_err(|e| Error::Network(e.to_string()))?;
+        if !status.is_success() {
+            return Err(Error::Network(format!(
+                "HTTP {} for GET text",
+                status.as_u16()
+            )));
+        }
+        Ok(text)
     }
 
     /// Execute a signed/authenticated form POST and parse BiliResponse.

@@ -115,21 +115,6 @@ class _WatchBody extends StatefulWidget {
 }
 
 class _WatchBodyState extends State<_WatchBody> {
-  /// Hide embedded player while immersive `/play` is open (one decoder).
-  bool _immersiveOpen = false;
-
-  Future<void> _openFullscreen() async {
-    final detail = widget.detail;
-    final title = Uri.encodeComponent(detail.title);
-    final bvid = Uri.encodeComponent(detail.bvid);
-    setState(() => _immersiveOpen = true);
-    await context.push(
-      '/play/${Uri.encodeComponent(widget.videoId)}'
-      '?cid=${widget.currentCid}&aid=${i64(detail.aid)}&bvid=$bvid&title=$title',
-    );
-    if (mounted) setState(() => _immersiveOpen = false);
-  }
-
   @override
   Widget build(BuildContext context) {
     final detail = widget.detail;
@@ -141,13 +126,13 @@ class _WatchBodyState extends State<_WatchBody> {
     return LayoutBuilder(
       builder: (context, constraints) {
         // interaction §4.0 — dual column when content ≥ 960.
+        // Player stays sticky above the scroll region so comments never tear
+        // down the surface (progress/audio keep running).
         final wide = constraints.maxWidth >= 960;
         final player = _PlayerBlock(
           detail: detail,
           videoId: videoId,
           cid: currentCid,
-          suspended: _immersiveOpen,
-          onFullscreen: _openFullscreen,
         );
         final rail = _RightRail(
           detail: detail,
@@ -164,10 +149,10 @@ class _WatchBodyState extends State<_WatchBody> {
               children: [
                 Expanded(
                   flex: 7,
-                  child: ListView(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.xl),
-                    children: [
-                      player,
+                  child: _StickyPlayerColumn(
+                    maxHeight: constraints.maxHeight - AppSpacing.md,
+                    player: player,
+                    body: [
                       EngagementBar(
                         aid: i64(detail.aid),
                         bvid: detail.bvid,
@@ -193,25 +178,71 @@ class _WatchBodyState extends State<_WatchBody> {
           );
         }
 
-        // Narrow stack: player → engagement → title → rail → desc/comments.
-        return ListView(
-          padding: EdgeInsets.fromLTRB(padH, AppSpacing.md, padH, AppSpacing.xl),
-          children: [
-            player,
-            EngagementBar(
-              aid: i64(detail.aid),
-              bvid: detail.bvid,
-              stat: detail.stat,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _TitleBlock(detail: detail),
-            const SizedBox(height: AppSpacing.md),
-            rail,
-            const SizedBox(height: AppSpacing.lg),
-            below,
-          ],
+        // Narrow: sticky player + scroll body (engagement → title → rail → comments).
+        return Padding(
+          padding: EdgeInsets.fromLTRB(padH, AppSpacing.md, padH, 0),
+          child: _StickyPlayerColumn(
+            maxHeight: constraints.maxHeight - AppSpacing.md,
+            player: player,
+            body: [
+              EngagementBar(
+                aid: i64(detail.aid),
+                bvid: detail.bvid,
+                stat: detail.stat,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              _TitleBlock(detail: detail),
+              const SizedBox(height: AppSpacing.md),
+              rail,
+              const SizedBox(height: AppSpacing.lg),
+              below,
+            ],
+          ),
         );
       },
+    );
+  }
+}
+
+/// Sticky 16:9 player + scrollable body; shrinks player when height is tight
+/// (multi-platform §3.1 short windows).
+class _StickyPlayerColumn extends StatelessWidget {
+  const _StickyPlayerColumn({
+    required this.maxHeight,
+    required this.player,
+    required this.body,
+  });
+
+  final double maxHeight;
+  final Widget player;
+  final List<Widget> body;
+
+  @override
+  Widget build(BuildContext context) {
+    // Leave room for engagement/title so the Column never overflows.
+    // multi-platform §3.1: short windows shrink the player, keep body scrollable.
+    double playerMaxH = double.infinity;
+    if (maxHeight.isFinite && maxHeight > 0) {
+      final reserve = maxHeight < 280 ? 72.0 : 96.0;
+      final upper = (maxHeight - reserve).clamp(120.0, maxHeight);
+      final preferred = maxHeight * 0.62;
+      playerMaxH = preferred.clamp(120.0, upper);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: playerMaxH),
+          child: player,
+        ),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+            children: body,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -221,51 +252,47 @@ class _PlayerBlock extends StatelessWidget {
     required this.detail,
     required this.videoId,
     required this.cid,
-    required this.suspended,
-    required this.onFullscreen,
   });
 
   final VideoDetailDto detail;
   final String videoId;
   final int cid;
-  final bool suspended;
-  final VoidCallback onFullscreen;
 
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
 
-    Widget cover() => ColoredBox(
-          color: colors.sunken,
-          child: detail.cover.isEmpty
-              ? Icon(AppIcons.imageBroken, color: colors.fgMuted, size: 40)
-              : Image.network(detail.cover, fit: BoxFit.cover),
-        );
-
-    // Outer container may round; immersive surface itself is 0 radius.
-    if (cid <= 0 || suspended) {
+    if (cid <= 0) {
       return AspectRatio(
         aspectRatio: 16 / 9,
         child: ClipRRect(
           borderRadius: AppShapes.borderMd,
-          child: cover(),
+          child: ColoredBox(
+            color: colors.sunken,
+            child: detail.cover.isEmpty
+                ? Icon(AppIcons.imageBroken, color: colors.fgMuted, size: 40)
+                : Image.network(detail.cover, fit: BoxFit.cover),
+          ),
         ),
       );
     }
 
+    // Align letterboxes when height is capped by [_StickyPlayerColumn].
     return ClipRRect(
       borderRadius: AppShapes.borderMd,
-      child: AspectRatio(
-        aspectRatio: 16 / 9,
-        child: PlayerPane(
-          key: ValueKey('pane-$videoId-$cid'),
-          videoId: videoId,
-          cid: cid,
-          aid: i64(detail.aid),
-          bvid: detail.bvid,
-          title: detail.title,
-          immersive: false,
-          onRequestFullscreen: onFullscreen,
+      child: ColoredBox(
+        color: colors.sunken,
+        child: AspectRatio(
+          aspectRatio: 16 / 9,
+          child: PlayerPane(
+            key: ValueKey('pane-$videoId-$cid'),
+            videoId: videoId,
+            cid: cid,
+            aid: i64(detail.aid),
+            bvid: detail.bvid,
+            title: detail.title,
+            immersive: false,
+          ),
         ),
       ),
     );
@@ -544,63 +571,73 @@ class _WatchSkeleton extends StatelessWidget {
             borderRadius: AppShapes.borderMd,
           ),
         );
-        final leftMeta = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SkeletonBox(height: 40, width: double.infinity),
-            const SizedBox(height: AppSpacing.md),
-            const SkeletonBox(height: 22, width: 280),
-            const SizedBox(height: AppSpacing.sm),
-            const SkeletonBox(height: 14, width: 200),
-            const SizedBox(height: AppSpacing.lg),
-            const SkeletonBox(height: 14, width: 64),
-            const SizedBox(height: AppSpacing.sm),
-            const SkeletonBox(height: 48, width: double.infinity),
-            const SizedBox(height: AppSpacing.sm),
-            const SkeletonBox(height: 48, width: double.infinity),
-          ],
-        );
+        final leftMeta = <Widget>[
+          const SkeletonBox(height: 40, width: double.infinity),
+          const SizedBox(height: AppSpacing.md),
+          const SkeletonBox(height: 22, width: 280),
+          const SizedBox(height: AppSpacing.sm),
+          const SkeletonBox(height: 14, width: 200),
+          const SizedBox(height: AppSpacing.lg),
+          const SkeletonBox(height: 14, width: 64),
+          const SizedBox(height: AppSpacing.sm),
+          const SkeletonBox(height: 48, width: double.infinity),
+          const SizedBox(height: AppSpacing.sm),
+          const SkeletonBox(height: 48, width: double.infinity),
+        ];
         final rail = Column(
           children: [
-            SkeletonBox(height: 72, width: double.infinity, borderRadius: AppShapes.borderMd),
+            SkeletonBox(
+              height: 72,
+              width: double.infinity,
+              borderRadius: AppShapes.borderMd,
+            ),
             const SizedBox(height: AppSpacing.md),
-            SkeletonBox(height: 160, width: double.infinity, borderRadius: AppShapes.borderMd),
+            SkeletonBox(
+              height: 160,
+              width: double.infinity,
+              borderRadius: AppShapes.borderMd,
+            ),
           ],
         );
 
         if (wide) {
           return Padding(
-            padding: EdgeInsets.fromLTRB(padH, AppSpacing.md, padH, AppSpacing.xl),
+            padding: EdgeInsets.fromLTRB(padH, AppSpacing.md, padH, 0),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   flex: 7,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      player,
-                      const SizedBox(height: AppSpacing.md),
-                      leftMeta,
-                    ],
+                  child: _StickyPlayerColumn(
+                    maxHeight: constraints.maxHeight - AppSpacing.md,
+                    player: player,
+                    body: leftMeta,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.lg),
-                SizedBox(width: 360, child: rail),
+                SizedBox(
+                  width: 360,
+                  child: ListView(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+                    children: [rail],
+                  ),
+                ),
               ],
             ),
           );
         }
 
-        return ListView(
-          padding: EdgeInsets.fromLTRB(padH, AppSpacing.md, padH, AppSpacing.xl),
-          children: [
-            player,
-            const SizedBox(height: AppSpacing.md),
-            leftMeta,
-            const SizedBox(height: AppSpacing.lg),
-            rail,
-          ],
+        return Padding(
+          padding: EdgeInsets.fromLTRB(padH, AppSpacing.md, padH, 0),
+          child: _StickyPlayerColumn(
+            maxHeight: constraints.maxHeight - AppSpacing.md,
+            player: player,
+            body: [
+              ...leftMeta,
+              const SizedBox(height: AppSpacing.lg),
+              rail,
+            ],
+          ),
         );
       },
     );

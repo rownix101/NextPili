@@ -14,8 +14,9 @@ pub use danmaku::{
 };
 pub use error::{Error, Result};
 pub use playurl::{
-    audio_label, audio_role, parse_playurl_data, parse_playurl_json, quality_label, AUDIO_QN_192K,
-    AUDIO_ROLE_DOLBY, AUDIO_ROLE_HIRES, AUDIO_ROLE_STANDARD,
+    audio_label, audio_role, parse_playurl_data, parse_playurl_data_with_caps, parse_playurl_json,
+    parse_playurl_json_with_caps, quality_label, AUDIO_QN_192K, AUDIO_ROLE_DOLBY, AUDIO_ROLE_HIRES,
+    AUDIO_ROLE_STANDARD,
 };
 pub use source::{MediaFormat, MediaService, MediaSource, Stream, StreamId, SubtitleTrack};
 pub use subtitle::{bilibili_json_to_vtt, parse_player_v2_subtitles};

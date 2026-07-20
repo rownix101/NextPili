@@ -536,6 +536,12 @@ abstract class AppLocalizations {
   /// **'热门'**
   String get homeTabPopular;
 
+  /// No description provided for @homeTabRegion.
+  ///
+  /// In zh, this message translates to:
+  /// **'分区'**
+  String get homeTabRegion;
+
   /// No description provided for @searchTitle.
   ///
   /// In zh, this message translates to:
@@ -829,6 +835,30 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'全屏'**
   String get playerFullscreen;
+
+  /// No description provided for @playerFullscreenExit.
+  ///
+  /// In zh, this message translates to:
+  /// **'退出全屏'**
+  String get playerFullscreenExit;
+
+  /// No description provided for @playerMini.
+  ///
+  /// In zh, this message translates to:
+  /// **'小窗播放'**
+  String get playerMini;
+
+  /// No description provided for @playerRestore.
+  ///
+  /// In zh, this message translates to:
+  /// **'返回播放页'**
+  String get playerRestore;
+
+  /// No description provided for @playerClose.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭播放'**
+  String get playerClose;
 
   /// No description provided for @authTitle.
   ///

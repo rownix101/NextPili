@@ -63,7 +63,7 @@ Flutter main()
 ```text
 sys:       api_version, ping, bootstrap, set_proxy, shutdown
 auth:      login_sms_*, login_password, login_qr_* (desktop/tablet UI), logout, list_accounts, set_slot
-feed:      feed_recommend, feed_popular
+feed:      feed_recommend, feed_popular, feed_regions, feed_ranking
 video:     video_detail, play_url, video_related
 social:    reply_list, reply_add, danmaku_segments, danmaku_post
 user:      history_list, toview_list, fav_folders, fav_resources

@@ -86,8 +86,13 @@ pub fn live_quality_label(qn: u32) -> String {
     }
 }
 
-/// Prefer HLS (ts/fmp4) then FLV; avc over hevc for broader playback.
-pub fn live_stream_preference_score(protocol: &str, format: &str, codec: &str) -> i32 {
+/// Prefer HLS (ts/fmp4) then FLV; codec via [`crate::video_codec_score`].
+pub fn live_stream_preference_score(
+    protocol: &str,
+    format: &str,
+    codec: &str,
+    caps: crate::HwDecodeCaps,
+) -> i32 {
     let mut score = 0;
     match protocol {
         "http_hls" => score += 100,
@@ -100,12 +105,7 @@ pub fn live_stream_preference_score(protocol: &str, format: &str, codec: &str) -
         "flv" => score += 10,
         _ => {}
     }
-    match codec {
-        "avc" => score += 5,
-        "hevc" => score += 2,
-        "av1" => score += 1,
-        _ => {}
-    }
+    score += crate::video_codec_score(crate::classify_video_codec(codec), caps);
     score
 }
 
@@ -114,6 +114,15 @@ pub fn pick_live_stream<'a>(
     streams: &'a [LiveStreamOption],
     preferred_qn: Option<u32>,
 ) -> Option<&'a LiveStreamOption> {
+    pick_live_stream_with_caps(streams, preferred_qn, crate::HwDecodeCaps::default())
+}
+
+/// Pick default live stream using host HW-decode caps for codec ranking.
+pub fn pick_live_stream_with_caps<'a>(
+    streams: &'a [LiveStreamOption],
+    preferred_qn: Option<u32>,
+    caps: crate::HwDecodeCaps,
+) -> Option<&'a LiveStreamOption> {
     if streams.is_empty() {
         return None;
     }
@@ -121,22 +130,17 @@ pub fn pick_live_stream<'a>(
         let same_qn: Vec<_> = streams.iter().filter(|s| s.qn == qn).collect();
         if !same_qn.is_empty() {
             return same_qn.into_iter().max_by_key(|s| {
-                live_stream_preference_score(&s.protocol, &s.format, &s.codec)
+                live_stream_preference_score(&s.protocol, &s.format, &s.codec, caps)
             });
         }
     }
     // Highest qn, then preference score.
     streams.iter().max_by(|a, b| {
-        a.qn
-            .cmp(&b.qn)
-            .then_with(|| {
-                live_stream_preference_score(&a.protocol, &a.format, &a.codec)
-                    .cmp(&live_stream_preference_score(
-                        &b.protocol,
-                        &b.format,
-                        &b.codec,
-                    ))
-            })
+        a.qn.cmp(&b.qn).then_with(|| {
+            live_stream_preference_score(&a.protocol, &a.format, &a.codec, caps).cmp(
+                &live_stream_preference_score(&b.protocol, &b.format, &b.codec, caps),
+            )
+        })
     })
 }
 
@@ -175,5 +179,33 @@ mod tests {
         let streams = [flv, hls];
         let pick = pick_live_stream(&streams, Some(10000)).unwrap();
         assert_eq!(pick.id, "b");
+    }
+
+    #[test]
+    fn prefers_hw_hevc_over_soft_av1() {
+        let caps = crate::HwDecodeCaps::from_pci(0x1002, 0x6fdf); // RX 580
+        let av1 = LiveStreamOption {
+            id: "av1".into(),
+            protocol: "http_hls".into(),
+            format: "fmp4".into(),
+            codec: "av1".into(),
+            qn: 10000,
+            quality_label: "原画".into(),
+            url: "u1".into(),
+            backup_urls: vec![],
+        };
+        let hevc = LiveStreamOption {
+            id: "hevc".into(),
+            protocol: "http_hls".into(),
+            format: "fmp4".into(),
+            codec: "hevc".into(),
+            qn: 10000,
+            quality_label: "原画".into(),
+            url: "u2".into(),
+            backup_urls: vec![],
+        };
+        let streams = [av1, hevc];
+        let pick = pick_live_stream_with_caps(&streams, Some(10000), caps).unwrap();
+        assert_eq!(pick.id, "hevc");
     }
 }

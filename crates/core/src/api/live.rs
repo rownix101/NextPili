@@ -52,7 +52,7 @@ pub struct LiveDanmakuItemDto {
     pub timeline_ms: i64,
 }
 
-/// Web live recommend (`getUserRecommend`). Optional login.
+/// Web live room list (`/room/v3/Area/getRoomList`). Optional login.
 pub async fn live_recommend(page: i32, page_size: u32) -> Result<LiveRecommendPageDto, AppError> {
     let app = CoreApp::global()?;
     let buvid = app.store.buvid3();
@@ -155,13 +155,14 @@ pub async fn live_play_url(room_id: i64, qn: u32) -> Result<MediaSourceDto, AppE
     let wbi = app.wbi.read().clone();
     let http = app.http();
 
-    let source = LiveApi::play_url(
+    let source = LiveApi::play_url_with_caps(
         &http,
         account.as_ref(),
         Some(buvid.as_str()),
         &wbi,
         room_id,
         preferred,
+        app.media.hw_caps(),
     )
     .await?;
 

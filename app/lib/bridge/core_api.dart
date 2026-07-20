@@ -22,7 +22,7 @@ import 'frb/frb_generated.dart';
 export 'frb/api/simple.dart' show ApiVersion, BootstrapConfig;
 export 'frb/api/dynamics.dart' show DynamicItemDto, DynamicPageDto;
 export 'frb/api/feed.dart'
-    show FeedItemDto, PopularFeedDto, RecommendFeedDto;
+    show FeedItemDto, PopularFeedDto, RankingFeedDto, RecommendFeedDto, RegionDto;
 export 'frb/api/live.dart'
     show
         LiveDanmakuItemDto,
@@ -173,6 +173,16 @@ class CoreApi {
 
   Future<frb_feed.PopularFeedDto> feedPopular({int pn = 1, int ps = 20}) =>
       frb_feed.feedPopular(pn: pn, ps: ps);
+
+  /// Primary partitions for home 分区导航.
+  Future<List<frb_feed.RegionDto>> feedRegions() => frb_feed.feedRegions();
+
+  /// Partition ranking (`rid=0` site-wide; `rankType`: all / rookie / origin).
+  Future<frb_feed.RankingFeedDto> feedRanking({
+    int rid = 0,
+    String rankType = 'all',
+  }) =>
+      frb_feed.feedRanking(rid: rid, rankType: rankType);
 
   /// Follow dynamics. First page: `offset = ''`.
   /// `typeFilter`: `all` / `video` / `pgc` / `article`.

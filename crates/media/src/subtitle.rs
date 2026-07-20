@@ -37,11 +37,18 @@ pub fn parse_player_v2_subtitles(data: &Value) -> Vec<SubtitleTrack> {
         if ty == 1 && !label.contains("AI") {
             label = format!("{label}（AI）");
         }
+        // Prefer `subtitle_url` (plain CDN JSON). `subtitle_url_v2` is an opaque /
+        // encrypted path on subtitle.bilibili.com — not a fetchable HTTP resource
+        // for third-party clients; using it yields network/TLS failures.
         let url = item
-            .get("subtitle_url_v2")
+            .get("subtitle_url")
             .and_then(|v| v.as_str())
             .filter(|s| !s.is_empty())
-            .or_else(|| item.get("subtitle_url").and_then(|v| v.as_str()))
+            .or_else(|| {
+                item.get("subtitle_url_v2")
+                    .and_then(|v| v.as_str())
+                    .filter(|s| !s.is_empty() && is_fetchable_subtitle_url(s))
+            })
             .unwrap_or("")
             .to_string();
         if url.is_empty() {
@@ -100,6 +107,23 @@ fn normalize_url(url: &str) -> String {
     }
 }
 
+/// True when the string looks like a normal https CDN subtitle JSON URL.
+fn is_fetchable_subtitle_url(url: &str) -> bool {
+    let normalized = normalize_url(url);
+    if !(normalized.starts_with("https://") || normalized.starts_with("http://")) {
+        return false;
+    }
+    // Reject control / non-printable bytes (seen in encrypted subtitle_url_v2).
+    if normalized.bytes().any(|b| b < 0x20 || b == 0x7f) {
+        return false;
+    }
+    // Known opaque host — not usable as a plain GET.
+    if normalized.contains("://subtitle.bilibili.com/") {
+        return false;
+    }
+    true
+}
+
 fn format_vtt_ts(sec: f64) -> String {
     let ms_total = (sec.max(0.0) * 1000.0).round() as u64;
     let h = ms_total / 3_600_000;
@@ -156,6 +180,54 @@ mod tests {
         assert_eq!(tracks.len(), 2);
         assert!(tracks[0].url.starts_with("https://"));
         assert!(tracks[1].label.contains("AI"));
+    }
+
+    #[test]
+    fn prefers_plain_subtitle_url_over_opaque_v2() {
+        // Real player/wbi/v2 payload often ships both: usable CDN url + opaque v2.
+        let data = json!({
+            "subtitle": {
+                "subtitles": [
+                    {
+                        "id": 1621313484639830784u64,
+                        "id_str": "1621313484639830784",
+                        "lan": "ai-zh",
+                        "lan_doc": "中文（自动生成）",
+                        "subtitle_url": "//aisubtitle.hdslb.com/bfs/ai_subtitle/prod/abc?auth_key=1-2-3-4",
+                        "subtitle_url_v2": "//subtitle.bilibili.com/\u{0000}opaque?auth_key=1-2-3-4",
+                        "type": 1
+                    }
+                ]
+            }
+        });
+        let tracks = parse_player_v2_subtitles(&data);
+        assert_eq!(tracks.len(), 1);
+        assert!(
+            tracks[0].url.contains("aisubtitle.hdslb.com"),
+            "got {}",
+            tracks[0].url
+        );
+        assert!(!tracks[0].url.contains("subtitle.bilibili.com"));
+    }
+
+    #[test]
+    fn skips_track_when_only_opaque_v2_present() {
+        let data = json!({
+            "subtitle": {
+                "subtitles": [
+                    {
+                        "id": 1,
+                        "lan": "ai-zh",
+                        "lan_doc": "中文（自动生成）",
+                        "subtitle_url": "",
+                        "subtitle_url_v2": "//subtitle.bilibili.com/not-a-real-path",
+                        "type": 1
+                    }
+                ]
+            }
+        });
+        let tracks = parse_player_v2_subtitles(&data);
+        assert!(tracks.is_empty());
     }
 
     #[test]

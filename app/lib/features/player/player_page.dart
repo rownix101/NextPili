@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'player_pane.dart';
+import 'playback_session.dart';
 
-/// Immersive full-window player route for a single cid.
-class PlayerPage extends StatelessWidget {
+/// Deep-link immersive route `/play/:id`.
+///
+/// Watch-page fullscreen uses [PlaybackSession.enterFullscreen] (overlay only)
+/// and does **not** push this route. This page only seeds the shared session;
+/// the surface is drawn by [PlayerOverlayLayer].
+class PlayerPage extends ConsumerStatefulWidget {
   const PlayerPage({
     super.key,
     required this.videoId,
@@ -23,27 +27,42 @@ class PlayerPage extends StatelessWidget {
   final int qn;
 
   @override
+  ConsumerState<PlayerPage> createState() => _PlayerPageState();
+}
+
+class _PlayerPageState extends ConsumerState<PlayerPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(playbackSessionProvider.notifier).open(
+            PlaybackTarget(
+              videoId: widget.videoId,
+              cid: widget.cid,
+              aid: widget.aid,
+              bvid: widget.bvid,
+              title: widget.title,
+              qn: widget.qn,
+            ),
+            host: PlayerSurfaceHost.fullscreen,
+          );
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        child: PlayerPane(
-          videoId: videoId,
-          cid: cid,
-          aid: aid,
-          bvid: bvid,
-          title: title,
-          qn: qn,
-          immersive: true,
-          showBack: true,
-          onBack: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/home');
-            }
-          },
-        ),
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, _) {
+        if (ref.read(playbackSessionProvider).host ==
+            PlayerSurfaceHost.fullscreen) {
+          ref.read(playbackSessionProvider.notifier).exitFullscreen();
+        }
+      },
+      child: const Scaffold(
+        backgroundColor: Colors.black,
+        body: SizedBox.expand(),
       ),
     );
   }

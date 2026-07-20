@@ -36,9 +36,15 @@ pub fn map_bili_code(code: i32, message: &str) -> Result<()> {
         -101 => Err(Error::Unauthenticated),
         -111 => Err(Error::Csrf),
         -404 => Err(Error::NotFound),
-        -412 => Err(Error::RiskControl {
-            message: message.to_string(),
-        }),
+        // -352: wind-controlled JSON body ("风控校验失败"); -412: HTTP/gateway block.
+        -352 | -412 => {
+            let message = if message.is_empty() || message == "-352" || message == "-412" {
+                "风控校验失败".to_string()
+            } else {
+                message.to_string()
+            };
+            Err(Error::RiskControl { message })
+        }
         -509 => Err(Error::RateLimited),
         other => Err(Error::Api {
             code: other,
@@ -65,6 +71,10 @@ mod tests {
         assert!(matches!(
             map_bili_code(-412, "风控"),
             Err(Error::RiskControl { message }) if message == "风控"
+        ));
+        assert!(matches!(
+            map_bili_code(-352, "-352"),
+            Err(Error::RiskControl { message }) if message == "风控校验失败"
         ));
         assert!(matches!(
             map_bili_code(-400, "bad"),

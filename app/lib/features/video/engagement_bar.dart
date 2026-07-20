@@ -357,56 +357,72 @@ class _EngagementBarState extends ConsumerState<EngagementBar> {
         ),
         child: Padding(
           padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-          child: Row(
-            children: [
-              _EngagementAction(
-                icon: AppIcons.like,
-                countLabel: formatCount(_likeCount, locale: locale),
-                tooltip: l10n.statLike,
-                active: rel?.liked ?? false,
-                enabled: !_busy,
-                bounceOnActivate: true,
-                onTap: () => _onLike(rel),
-              ),
-              _EngagementAction(
-                icon: AppIcons.coin,
-                countLabel: formatCount(_coinCount, locale: locale),
-                tooltip: l10n.statCoin,
-                active: (rel?.coin ?? 0) > 0,
-                enabled: !_busy,
-                onTap: () => _onCoin(rel),
-              ),
-              _EngagementAction(
-                icon: AppIcons.star,
-                countLabel: formatCount(_favCount, locale: locale),
-                tooltip:
-                    '${l10n.statFavorite} · ${l10n.statFavoriteLongPress}',
-                active: rel?.favorited ?? false,
-                enabled: !_busy,
-                bounceOnActivate: true,
-                onTap: () => _onFavorite(rel),
-                onLongPress: () => _onFavoriteLongPress(rel),
-              ),
-              _EngagementAction(
-                icon: AppIcons.share,
-                countLabel: formatCount(_shareCount, locale: locale),
-                tooltip: l10n.statShare,
-                active: false,
-                enabled: true,
-                onTap: _onShare,
-              ),
-              const Spacer(),
-              Semantics(
-                label:
-                    '${l10n.statReply} ${formatCount(i64(widget.stat.reply), locale: locale)}',
-                child: Text(
-                  '${l10n.statReply} ${formatCount(i64(widget.stat.reply), locale: locale)}',
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: colors.fgSecondary,
-                      ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final row = Row(
+                children: [
+                  _EngagementAction(
+                    icon: AppIcons.like,
+                    countLabel: formatCount(_likeCount, locale: locale),
+                    tooltip: l10n.statLike,
+                    active: rel?.liked ?? false,
+                    enabled: !_busy,
+                    bounceOnActivate: true,
+                    onTap: () => _onLike(rel),
+                  ),
+                  _EngagementAction(
+                    icon: AppIcons.coin,
+                    countLabel: formatCount(_coinCount, locale: locale),
+                    tooltip: l10n.statCoin,
+                    active: (rel?.coin ?? 0) > 0,
+                    enabled: !_busy,
+                    onTap: () => _onCoin(rel),
+                  ),
+                  _EngagementAction(
+                    icon: AppIcons.star,
+                    countLabel: formatCount(_favCount, locale: locale),
+                    tooltip:
+                        '${l10n.statFavorite} · ${l10n.statFavoriteLongPress}',
+                    active: rel?.favorited ?? false,
+                    enabled: !_busy,
+                    bounceOnActivate: true,
+                    onTap: () => _onFavorite(rel),
+                    onLongPress: () => _onFavoriteLongPress(rel),
+                  ),
+                  _EngagementAction(
+                    icon: AppIcons.share,
+                    countLabel: formatCount(_shareCount, locale: locale),
+                    tooltip: l10n.statShare,
+                    active: false,
+                    enabled: true,
+                    onTap: _onShare,
+                  ),
+                  const Spacer(),
+                  Semantics(
+                    label:
+                        '${l10n.statReply} ${formatCount(i64(widget.stat.reply), locale: locale)}',
+                    child: Text(
+                      '${l10n.statReply} ${formatCount(i64(widget.stat.reply), locale: locale)}',
+                      style:
+                          Theme.of(context).textTheme.labelMedium?.copyWith(
+                                color: colors.fgSecondary,
+                              ),
+                    ),
+                  ),
+                ],
+              );
+              if (!constraints.maxWidth.isFinite ||
+                  constraints.maxWidth >= 360) {
+                return row;
+              }
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                  child: row,
                 ),
-              ),
-            ],
+              );
+            },
           ),
         ),
       ),
