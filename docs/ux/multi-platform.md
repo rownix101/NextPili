@@ -198,7 +198,7 @@ expanded+:   [ Rail + Body + (optional secondary) ]
 | 关注点 | 约定 |
 |--------|------|
 | 内核 | 由媒体层选型（与 UX 无关），UI 只消费状态 |
-| 全屏 API | 各桌面后端差异交给插件；UI 统一 `isFullscreen` 状态 |
+| 全屏 API | `DesktopOsFullscreen` → `window_manager.setFullScreen`；UI 以 `PlayerSurfaceHost.fullscreen` 为源，系统退出全屏时 host 回 `inline` |
 | 解码失败 | 引导检查系统解码器/关闭硬解（设置） |
 | 高分屏 | 控件与字幕按逻辑像素；位图封面用合适分辨率缓存 |
 

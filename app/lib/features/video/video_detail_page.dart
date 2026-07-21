@@ -10,7 +10,6 @@ import '../../core/theme/shapes.dart';
 import '../../core/theme/spacing.dart';
 import '../../core/theme/text_themes.dart';
 import '../../core/utils/format.dart';
-import '../../core/widgets/content_surface.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/loading.dart';
 import '../../core/widgets/page_header.dart';
@@ -19,6 +18,7 @@ import '../player/player_pane.dart';
 import 'engagement_bar.dart';
 import 'owner_card.dart';
 import 'parts_panel.dart';
+import 'related_panel.dart';
 import 'reply_section.dart';
 
 final videoDetailProvider =
@@ -149,6 +149,7 @@ class _WatchBodyState extends State<_WatchBody> {
         );
         final rail = _RightRail(
           detail: detail,
+          videoId: videoId,
           currentCid: currentCid,
           onSelect: (p) => onSelectCid(i64(p.cid)),
         );
@@ -411,11 +412,13 @@ class _MetaItem extends StatelessWidget {
 class _RightRail extends StatelessWidget {
   const _RightRail({
     required this.detail,
+    required this.videoId,
     required this.currentCid,
     required this.onSelect,
   });
 
   final VideoDetailDto detail;
+  final String videoId;
   final int currentCid;
   final ValueChanged<VideoPageDto> onSelect;
 
@@ -432,36 +435,8 @@ class _RightRail extends StatelessWidget {
           onSelect: onSelect,
         ),
         const SizedBox(height: AppSpacing.md),
-        const _RelatedPlaceholder(),
+        RelatedPanel(videoId: videoId),
       ],
-    );
-  }
-}
-
-/// Related list shell — interaction §4.0 placeholder until `video_related`.
-class _RelatedPlaceholder extends StatelessWidget {
-  const _RelatedPlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = AppColors.of(context);
-    final l10n = context.l10n;
-    return ContentSurface(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(l10n.videoRelated, style: theme.textTheme.titleSmall),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            l10n.actionComingSoon,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: colors.fgMuted,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -52,6 +52,7 @@ pub use user::{
     ToViewPageDto,
 };
 pub use video::{
-    play_url, playback_start, playback_stop, subtitle_vtt, video_detail, HeaderDto, MediaFormatDto,
-    MediaSourceDto, StreamDto, SubtitleTrackDto, VideoDetailDto, VideoPageDto, VideoStatDto,
+    play_url, playback_start, playback_stop, subtitle_vtt, video_detail, video_related, HeaderDto,
+    MediaFormatDto, MediaSourceDto, StreamDto, SubtitleTrackDto, VideoDetailDto, VideoPageDto,
+    VideoStatDto,
 };

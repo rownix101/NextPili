@@ -14,12 +14,14 @@ import '../../features/shell/app_shell.dart';
 import '../../features/user/user_page.dart';
 import '../../features/video/video_detail_page.dart';
 import '../motion/app_motion.dart';
+import 'route_observer.dart';
 
 GoRouter createAppRouter() {
   return GoRouter(
     initialLocation: '/home',
     routes: [
       ShellRoute(
+        observers: [appRouteObserver],
         builder: (context, state, child) => AppShell(child: child),
         routes: [
           GoRoute(

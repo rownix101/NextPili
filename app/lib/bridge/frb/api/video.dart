@@ -5,6 +5,7 @@
 
 import '../error.dart';
 import '../frb_generated.dart';
+import 'feed.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `ensure_wbi`, `map_source`, `map_stream`
@@ -13,6 +14,12 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 /// Fetch video detail by bvid or aid string (e.g. `BV1…` / `av170001` / `170001`).
 Future<VideoDetailDto> videoDetail({required String id}) =>
     RustLib.instance.api.crateApiVideoVideoDetail(id: id);
+
+/// Related archives for a video (`GET /x/web-interface/archive/related`).
+///
+/// `id`: bvid / aid string (same as [`video_detail`]).
+Future<List<FeedItemDto>> videoRelated({required String id}) =>
+    RustLib.instance.api.crateApiVideoVideoRelated(id: id);
 
 /// Resolve playurl → normalized [`MediaSourceDto`].
 ///

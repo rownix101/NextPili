@@ -420,6 +420,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playerAudio => '音轨';
 
   @override
+  String get playerAudioDolbyOn => '已为您开启杜比全景声';
+
+  @override
+  String get playerAudioHiresOn => '已为您开启 Hi-Res';
+
+  @override
   String get playerSubtitle => '字幕';
 
   @override

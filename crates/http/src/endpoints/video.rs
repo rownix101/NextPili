@@ -1,8 +1,9 @@
-//! Video detail + playurl + heartbeat endpoints.
+//! Video detail + playurl + related + heartbeat endpoints.
 
 use crate::client::{BiliClient, RequestOptions};
 use crate::error::{Error, Result};
 use auth::{Account, API_BASE, WbiSigner};
+use domain::feed::FeedItem;
 use domain::id::{Cid, DurationMs, UserMid, VideoId};
 use domain::video::{Owner, VideoDetail, VideoPage, VideoStat};
 use serde::Deserialize;
@@ -136,6 +137,45 @@ impl VideoApi {
         let resp = client.get_bili::<ViewData>(&url, params, opts).await?;
         let data = resp.into_data()?;
         map_view(data)
+    }
+
+    /// `GET /x/web-interface/archive/related` — related archives for a video.
+    ///
+    /// Wire `data` is a JSON array of archive objects (not a `{list:…}` envelope).
+    pub async fn related(
+        client: &BiliClient,
+        account: Option<&Account>,
+        device_buvid3: Option<&str>,
+        id: &VideoId,
+    ) -> Result<Vec<FeedItem>> {
+        let mut params = BTreeMap::new();
+        match id {
+            VideoId::Bvid(b) => {
+                params.insert("bvid".into(), b.clone());
+            }
+            VideoId::Aid(a) => {
+                params.insert("aid".into(), a.to_string());
+            }
+        }
+
+        let url = BiliClient::resolve_url(API_BASE, "/x/web-interface/archive/related");
+        let opts = RequestOptions {
+            account,
+            device_buvid3,
+            auth: if account.is_some() {
+                crate::middleware::AuthMode::Cookie
+            } else {
+                crate::middleware::AuthMode::OptionalLogin
+            },
+            ..RequestOptions::default()
+        };
+
+        let resp = client.get_bili::<Vec<Value>>(&url, params, opts).await?;
+        let raw = resp.into_data_opt()?.unwrap_or_default();
+        Ok(raw
+            .into_iter()
+            .filter_map(|v| parse_related_item(v).ok().flatten())
+            .collect())
     }
 
     /// `GET /x/player/wbi/v2` — playback page meta (subtitles, viewpoints, …).
@@ -302,6 +342,49 @@ impl VideoApi {
     }
 }
 
+fn parse_related_item(v: Value) -> Result<Option<FeedItem>> {
+    let aid = v.get("aid").and_then(|x| x.as_i64()).unwrap_or(0);
+    let bvid = v
+        .get("bvid")
+        .and_then(|x| x.as_str())
+        .unwrap_or("")
+        .to_string();
+    if aid <= 0 && bvid.is_empty() {
+        return Ok(None);
+    }
+    let title = v
+        .get("title")
+        .and_then(|x| x.as_str())
+        .unwrap_or("")
+        .to_string();
+    if title.is_empty() {
+        return Ok(None);
+    }
+    let cover = normalize_cover(v.get("pic").and_then(|x| x.as_str()).unwrap_or(""));
+    let owner_name = v
+        .get("owner")
+        .and_then(|o| serde_json::from_value::<RelatedOwnerRaw>(o.clone()).ok())
+        .map(|o| o.name)
+        .unwrap_or_default();
+    let duration_sec = v.get("duration").and_then(|x| x.as_i64()).unwrap_or(0);
+
+    Ok(Some(FeedItem {
+        aid,
+        bvid,
+        title,
+        cover,
+        owner_name,
+        duration_ms: DurationMs(duration_sec.saturating_mul(1000)),
+        goto: "av".into(),
+    }))
+}
+
+#[derive(Debug, Deserialize, Default)]
+struct RelatedOwnerRaw {
+    #[serde(default)]
+    name: String,
+}
+
 fn map_view(data: ViewData) -> Result<VideoDetail> {
     if data.bvid.is_empty() && data.aid <= 0 {
         return Err(Error::Parse("video view missing aid/bvid".into()));
@@ -404,5 +487,30 @@ mod tests {
         assert_eq!(d.duration_ms.get(), 120_000);
         assert!(d.cover.starts_with("https://"));
         assert_eq!(d.stat.like, 7);
+    }
+
+    #[test]
+    fn parse_related_archive() {
+        let v = json!({
+            "aid": 42,
+            "bvid": "BV1xx411c7mD",
+            "title": "related",
+            "pic": "//i0.hdslb.com/bfs/archive/a.jpg",
+            "duration": 90,
+            "owner": { "mid": 1, "name": "UP", "face": "" }
+        });
+        let item = parse_related_item(v).unwrap().unwrap();
+        assert_eq!(item.aid, 42);
+        assert_eq!(item.bvid, "BV1xx411c7mD");
+        assert_eq!(item.duration_ms.get(), 90_000);
+        assert_eq!(item.owner_name, "UP");
+        assert!(item.cover.starts_with("https://"));
+        assert_eq!(item.goto, "av");
+    }
+
+    #[test]
+    fn drops_related_without_identity() {
+        let v = json!({ "title": "orphan", "pic": "", "duration": 1 });
+        assert!(parse_related_item(v).unwrap().is_none());
     }
 }

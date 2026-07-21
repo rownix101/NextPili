@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/adaptive/desktop_backdrop_sync.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'features/player/player_os_fullscreen_sync.dart';
 import 'features/player/player_overlays.dart';
 import 'l10n/l10n.dart';
 
@@ -26,8 +27,10 @@ class NextPiliApp extends ConsumerWidget {
       routerConfig: _router,
       builder: (context, child) {
         return DesktopBackdropSync(
-          child: PlayerOverlayLayer(
-            child: child ?? const SizedBox.shrink(),
+          child: PlayerOsFullscreenSync(
+            child: PlayerOverlayLayer(
+              child: child ?? const SizedBox.shrink(),
+            ),
           ),
         );
       },

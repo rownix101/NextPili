@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +9,7 @@ import '../../bridge/core_api.dart';
 import '../../core/haptics/haptics.dart';
 import '../../core/icons/app_icons.dart';
 import '../../core/motion/app_motion.dart';
+import '../../core/router/route_observer.dart';
 import '../../core/theme/player_colors.dart';
 import '../../core/theme/spacing.dart';
 import '../../core/widgets/loading.dart';
@@ -18,7 +20,9 @@ import 'danmaku_overlay.dart';
 import 'playback_session.dart';
 import 'player_adapter.dart';
 import 'player_bottom_chrome.dart';
+import 'player_premium_audio_toast.dart';
 import 'player_top_bar.dart';
+import 'subtitle_overlay.dart';
 
 /// Inline (or host-bound) video surface + chrome for one cid.
 ///
@@ -67,7 +71,7 @@ class PlayerPane extends ConsumerStatefulWidget {
   ConsumerState<PlayerPane> createState() => _PlayerPaneState();
 }
 
-class _PlayerPaneState extends ConsumerState<PlayerPane> {
+class _PlayerPaneState extends ConsumerState<PlayerPane> with RouteAware {
   bool _showChrome = true;
   bool _chromeHeld = false;
   Timer? _chromeHideTimer;
@@ -75,6 +79,14 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> {
       GlobalKey<DanmakuOverlayState>();
   final TextEditingController _dmComposer = TextEditingController();
   bool _sendingDm = false;
+  String? _premiumToastKey;
+  String? _premiumToastRole;
+  bool _premiumToastVisible = false;
+  Timer? _premiumToastTimer;
+  Uint8List? _premiumFrostFrame;
+
+  /// True when subscribed to [appRouteObserver] (inline watch-page only).
+  bool _routeSubscribed = false;
 
   PlaybackTarget get _target => PlaybackTarget(
         videoId: widget.videoId,
@@ -91,19 +103,124 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ref.read(playbackSessionProvider.notifier).open(
-            _target,
-            host: widget.host,
-          );
+      _claimSession();
       _scheduleChromeHide();
     });
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Inline watch slots live under ShellRoute → need cover/pop events so a
+    // related push does not leave the previous video owning the decoder, and
+    // pop restores the previous page's session. Overlay hosts (fullscreen /
+    // mini) manage host themselves and skip RouteAware.
+    if (widget.host != PlayerSurfaceHost.inline) return;
+    final route = ModalRoute.of(context);
+    if (_routeSubscribed || route is! PageRoute) return;
+    appRouteObserver.subscribe(this, route);
+    _routeSubscribed = true;
+  }
+
+  @override
   void dispose() {
+    if (_routeSubscribed) {
+      appRouteObserver.unsubscribe(this);
+      _routeSubscribed = false;
+    }
     _chromeHideTimer?.cancel();
+    _premiumToastTimer?.cancel();
     _dmComposer.dispose();
     super.dispose();
+  }
+
+  void _claimSession() {
+    ref.read(playbackSessionProvider.notifier).open(
+          _target,
+          host: widget.host,
+        );
+  }
+
+  void _releaseInline({required bool preferMini}) {
+    if (widget.host != PlayerSurfaceHost.inline) return;
+    ref.read(playbackSessionProvider.notifier).releaseInline(
+          _target,
+          preferMini: preferMini,
+        );
+  }
+
+  @override
+  void didPush() {
+    // First frame may race with initState post-frame; sameMedia short-circuits.
+    _claimSession();
+  }
+
+  @override
+  void didPopNext() {
+    // Route above us was popped (e.g. related video → back to this watch page).
+    _claimSession();
+  }
+
+  @override
+  void didPushNext() {
+    // Covered by another *page* route (related push). Detach without mini so
+    // the new watch page can open cleanly; mini is for leaving the watch stack.
+    // PopupMenu/showMenu must NOT reach here — appRouteObserver is PageRoute-only.
+    _releaseInline(preferMini: false);
+  }
+
+  @override
+  void didPop() {
+    // This watch page left the stack. Mini if still owning and playing.
+    _releaseInline(preferMini: true);
+  }
+
+  void _syncPremiumAudioToast(MediaKitPlayerAdapter adapter) {
+    final audio = adapter.currentAudio;
+    final role = audio?.role;
+    if (!PlayerPremiumAudioToast.isPremiumRole(role) || audio == null) {
+      if (_premiumToastVisible || _premiumToastRole != null) {
+        _premiumToastTimer?.cancel();
+        setState(() {
+          _premiumToastVisible = false;
+          _premiumToastRole = null;
+          _premiumToastKey = null;
+          _premiumFrostFrame = null;
+        });
+      }
+      return;
+    }
+    final key = '${widget.videoId}:${widget.cid}:${audio.id}';
+    if (_premiumToastKey == key) return;
+    _premiumToastTimer?.cancel();
+    setState(() {
+      _premiumToastKey = key;
+      _premiumToastRole = role;
+      _premiumToastVisible = true;
+      _premiumFrostFrame = null;
+    });
+    unawaited(_capturePremiumFrost(adapter, key));
+    _premiumToastTimer = Timer(const Duration(milliseconds: 2500), () {
+      if (!mounted) return;
+      setState(() => _premiumToastVisible = false);
+    });
+  }
+
+  /// Snapshot current frame so the toast can blur real video pixels.
+  ///
+  /// [BackdropFilter] cannot sample media_kit HW textures on desktop.
+  Future<void> _capturePremiumFrost(
+    MediaKitPlayerAdapter adapter,
+    String toastKey,
+  ) async {
+    try {
+      final bytes = await adapter.player.screenshot(format: 'image/jpeg');
+      if (!mounted || bytes == null || bytes.isEmpty) return;
+      if (_premiumToastKey != toastKey) return;
+      setState(() => _premiumFrostFrame = bytes);
+    } catch (_) {
+      // Keep gradient plate fallback.
+    }
   }
 
   Future<void> _sendDanmaku(MediaKitPlayerAdapter adapter) async {
@@ -198,18 +315,18 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> {
         oldWidget.qn != widget.qn ||
         oldWidget.epId != widget.epId ||
         oldWidget.host != widget.host) {
-      ref.read(playbackSessionProvider.notifier).open(
-            _target,
-            host: widget.host,
-          );
+      _claimSession();
     }
   }
 
   @override
   void deactivate() {
-    // Only the inline host auto-promotes to mini on leave; overlays manage exit.
-    if (widget.host == PlayerSurfaceHost.inline) {
-      ref.read(playbackSessionProvider.notifier).releaseInline(_target);
+    // Fallback when RouteAware is not subscribed (non-PageRoute parent).
+    // Stacked `/video` cover/pop is handled by didPushNext / didPop instead —
+    // deactivate alone never runs on a mere push cover, which was the related
+    // bug (previous video kept playing; new page never owned the surface).
+    if (!_routeSubscribed && widget.host == PlayerSurfaceHost.inline) {
+      _releaseInline(preferMini: true);
     }
     super.deactivate();
   }
@@ -217,19 +334,6 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> {
   Future<void> _switchQuality(StreamDto stream) async {
     try {
       await ref.read(playbackSessionProvider.notifier).switchQuality(stream);
-      await Haptics.selection();
-      if (mounted) setState(() {});
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage(e, context.l10n))),
-      );
-    }
-  }
-
-  Future<void> _switchAudio(StreamDto stream) async {
-    try {
-      await ref.read(playbackSessionProvider.notifier).switchAudio(stream);
       await Haptics.selection();
       if (mounted) setState(() {});
     } catch (e) {
@@ -300,6 +404,13 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> {
     final error = ownsSurface ? session.error : null;
     final loading = ownsSurface && (session.loading || adapter == null);
 
+    if (ownsSurface && !loading && error == null && adapter != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _syncPremiumAudioToast(adapter);
+      });
+    }
+
     return ColoredBox(
       color: Colors.black,
       child: Stack(
@@ -340,7 +451,17 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> {
                       controller: adapter.controller,
                       controls: NoVideoControls,
                       fill: Colors.black,
+                      // CC is drawn by [SubtitleOverlay] — disable media_kit
+                      // SubtitleView so we never hit mpv sub-add mid-playback.
+                      subtitleViewConfiguration:
+                          const SubtitleViewConfiguration(visible: false),
                     ),
+                    if (adapter.subtitleCues.isNotEmpty)
+                      SubtitleOverlay(
+                        position: adapter.player.stream.position,
+                        cues: adapter.subtitleCues,
+                        initialPosition: adapter.player.state.position,
+                      ),
                     if (session.resolvedAid > 0)
                       DanmakuOverlay(
                         key: _danmakuKey,
@@ -439,10 +560,6 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> {
                             _bumpChrome();
                             unawaited(_switchQuality(s));
                           },
-                          onAudio: (s) {
-                            _bumpChrome();
-                            unawaited(_switchAudio(s));
-                          },
                           onSpeed: (r) {
                             _bumpChrome();
                             unawaited(_switchSpeed(r));
@@ -460,6 +577,18 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> {
               ),
             ),
           ),
+          if (ownsSurface &&
+              !loading &&
+              error == null &&
+              adapter != null &&
+              _premiumToastRole != null)
+            Positioned.fill(
+              child: PlayerPremiumAudioToast(
+                role: _premiumToastRole!,
+                visible: _premiumToastVisible,
+                frostFrame: _premiumFrostFrame,
+              ),
+            ),
         ],
       ),
     );

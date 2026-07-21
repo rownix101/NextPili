@@ -15,7 +15,7 @@ import 'api/simple.dart';
 import 'api/social.dart';
 import 'api/user.dart';
 import 'api/video.dart';
-import 'auth_service.dart';
+import 'auth_dto.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'error.dart';
@@ -79,7 +79,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => 3557542;
+  int get rustContentHash => 692438710;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -326,6 +326,8 @@ abstract class RustLibApi extends BaseApi {
     required String bvid,
     required bool like,
   });
+
+  Future<List<FeedItemDto>> crateApiVideoVideoRelated({required String id});
 
   Future<ArchiveRelationDto> crateApiEngagementVideoRelation({
     required PlatformInt64 aid,
@@ -2084,6 +2086,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<List<FeedItemDto>> crateApiVideoVideoRelated({required String id}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(id, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 56,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_feed_item_dto,
+          decodeErrorData: sse_decode_app_error,
+        ),
+        constMeta: kCrateApiVideoVideoRelatedConstMeta,
+        argValues: [id],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiVideoVideoRelatedConstMeta =>
+      const TaskConstMeta(debugName: "video_related", argNames: ["id"]);
+
+  @override
   Future<ArchiveRelationDto> crateApiEngagementVideoRelation({
     required PlatformInt64 aid,
     required String bvid,
@@ -2097,7 +2127,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 56,
+            funcId: 57,
             port: port_,
           );
         },

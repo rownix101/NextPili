@@ -5,9 +5,9 @@ import 'playback_session.dart';
 
 /// Deep-link immersive route `/play/:id`.
 ///
-/// Watch-page fullscreen uses [PlaybackSession.enterFullscreen] (overlay only)
-/// and does **not** push this route. This page only seeds the shared session;
-/// the surface is drawn by [PlayerOverlayLayer].
+/// Watch-page fullscreen uses [PlaybackSession.enterFullscreen] (OS window
+/// fullscreen + app overlay) and does **not** push this route. This page only
+/// seeds the shared session; the surface is drawn by [PlayerOverlayLayer].
 class PlayerPage extends ConsumerStatefulWidget {
   const PlayerPage({
     super.key,

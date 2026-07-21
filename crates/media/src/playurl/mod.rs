@@ -221,7 +221,7 @@ mod tests {
     }
 
     #[test]
-    fn default_audio_prefers_192k() {
+    fn default_audio_prefers_dolby_over_standard_and_hires() {
         let data = json!({
             "quality": 80,
             "timelength": 1000,
@@ -277,16 +277,52 @@ mod tests {
             .iter()
             .find(|s| s.id == src.default_audio)
             .unwrap();
-        assert_eq!(def.qn, Some(AUDIO_QN_192K));
-        assert_eq!(def.role.as_deref(), Some(AUDIO_ROLE_STANDARD));
-        assert!(src
-            .audio_streams
-            .iter()
-            .any(|s| s.role.as_deref() == Some(AUDIO_ROLE_DOLBY)));
+        assert_eq!(def.qn, Some(30250));
+        assert_eq!(def.role.as_deref(), Some(AUDIO_ROLE_DOLBY));
         assert!(src
             .audio_streams
             .iter()
             .any(|s| s.role.as_deref() == Some(AUDIO_ROLE_HIRES)));
+    }
+
+    #[test]
+    fn default_audio_prefers_hires_when_no_dolby() {
+        let data = json!({
+            "quality": 80,
+            "timelength": 1000,
+            "dash": {
+                "video": [{
+                    "id": 80,
+                    "baseUrl": "https://example.com/v.m4s",
+                    "bandwidth": 1,
+                    "codecs": "avc1"
+                }],
+                "audio": [
+                    {
+                        "id": 30280,
+                        "baseUrl": "https://example.com/a192.m4s",
+                        "bandwidth": 192000,
+                        "codecs": "mp4a"
+                    }
+                ],
+                "flac": {
+                    "audio": {
+                        "id": 30251,
+                        "baseUrl": "https://example.com/hires.m4s",
+                        "bandwidth": 900000,
+                        "codecs": "fLaC"
+                    }
+                }
+            }
+        });
+        let src = parse_playurl_data(Cid(1), &data, None).unwrap();
+        let def = src
+            .audio_streams
+            .iter()
+            .find(|s| s.id == src.default_audio)
+            .unwrap();
+        assert_eq!(def.qn, Some(30251));
+        assert_eq!(def.role.as_deref(), Some(AUDIO_ROLE_HIRES));
     }
 
     #[test]
@@ -314,15 +350,7 @@ mod tests {
                         "bandwidth": 132000,
                         "codecs": "mp4a"
                     }
-                ],
-                "dolby": {
-                    "audio": [{
-                        "id": 30250,
-                        "baseUrl": "https://example.com/dolby.m4s",
-                        "bandwidth": 768000,
-                        "codecs": "ec-3"
-                    }]
-                }
+                ]
             }
         });
         let src = parse_playurl_data(Cid(1), &data, None).unwrap();
@@ -331,7 +359,6 @@ mod tests {
             .iter()
             .find(|s| s.id == src.default_audio)
             .unwrap();
-        // No 192K → 132K is highest standard (not Dolby).
         assert_eq!(def.qn, Some(30232));
         assert_eq!(def.role.as_deref(), Some(AUDIO_ROLE_STANDARD));
     }

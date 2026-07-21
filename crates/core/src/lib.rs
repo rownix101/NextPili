@@ -25,7 +25,8 @@ pub use api::{
     new_login_session_id, pgc_play_url, pgc_rank, pgc_season, ping, play_url, playback_start,
     playback_stop, relation_follow, reply_add, reply_list, search_suggest, search_video,
     set_account_slot, subtitle_vtt, toview_list, update_settings, video_coin, video_detail,
-    video_favorite, video_favorite_deal, video_like, video_relation, AccountPublicDto, ApiVersion,
+    video_favorite, video_favorite_deal, video_like, video_related, video_relation, AccountPublicDto,
+    ApiVersion,
     ArchiveRelationDto, BootstrapConfig, CaptchaDto, DanmakuItemDto, DanmakuSegmentDto,
     DynamicItemDto, DynamicPageDto, FavFolderDto, FavFolderListDto, FavResourceItemDto,
     FavResourcePageDto, FeedItemDto, HeaderDto, HistoryItemDto, HistoryPageDto, LiveDanmakuItemDto,
@@ -46,6 +47,6 @@ pub const CORE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// FFI API compatibility version (major bumps on breaking changes).
 pub const API_MAJOR: u32 = 0;
-/// minor … · 17: feed_ranking / feed_regions · 18: danmaku_like / danmaku_report
-pub const API_MINOR: u32 = 18;
+/// minor … · 17: feed_ranking / feed_regions · 18: danmaku_like / danmaku_report · 19: video_related
+pub const API_MINOR: u32 = 19;
 pub const API_PATCH: u32 = 0;

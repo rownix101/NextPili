@@ -1,7 +1,27 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../bridge/core_api.dart';
+import '../../core/adaptive/desktop_os_fullscreen.dart';
 import 'player_adapter.dart';
+
+/// Pure host policy for [PlaybackSession.releaseInline] (related push/pop).
+///
+/// Returns `null` when the release should no-op; otherwise the next host.
+@visibleForTesting
+PlayerSurfaceHost? releaseInlineNextHost({
+  required bool ownsTarget,
+  required PlayerSurfaceHost host,
+  required bool loading,
+  required bool playing,
+  required bool preferMini,
+}) {
+  if (!ownsTarget) return null;
+  if (host != PlayerSurfaceHost.inline) return null;
+  if (loading) return null;
+  if (playing && preferMini) return PlayerSurfaceHost.mini;
+  return PlayerSurfaceHost.idle;
+}
 
 /// Where the single [Video] surface is attached.
 ///
@@ -14,7 +34,7 @@ enum PlayerSurfaceHost {
   /// Watch-page / season-page inline slot.
   inline,
 
-  /// App-level immersive overlay (not a new player instance).
+  /// OS window fullscreen + app immersive overlay (same decoder instance).
   fullscreen,
 
   /// Floating mini window while the inline slot is gone or covered.
@@ -43,11 +63,14 @@ class PlaybackTarget {
   /// When > 0, stream via PGC playurl (`ep_id` + `cid`).
   final int epId;
 
+  /// Identity of the playing archive (UGC/PGC + page), **not** stream preference.
+  ///
+  /// [qn] is excluded: clarity is a source preference mutated by
+  /// [PlaybackSession.switchQuality]. Inline [PlayerPane] often keeps default
+  /// `qn: 0` while session holds the selected qn — comparing qn would drop
+  /// [ownsSurface] and tear down the media_kit [Video] after a quality pick.
   bool sameMedia(PlaybackTarget other) =>
-      videoId == other.videoId &&
-      cid == other.cid &&
-      epId == other.epId &&
-      qn == other.qn;
+      videoId == other.videoId && cid == other.cid && epId == other.epId;
 
   PlaybackTarget copyWith({
     String? videoId,
@@ -136,6 +159,11 @@ class PlaybackSession extends Notifier<PlaybackSessionState> {
   }
 
   /// Open (or reuse) media for [target] and attach surface to [host].
+  ///
+  /// Always re-asserts [host] on success so a mid-flight [releaseInline]
+  /// (stacked `/video` routes, hero/offstage) cannot leave the surface stuck
+  /// on [PlayerSurfaceHost.mini] / [PlayerSurfaceHost.idle] while the new
+  /// watch page never paints [Video].
   Future<void> open(
     PlaybackTarget target, {
     PlayerSurfaceHost host = PlayerSurfaceHost.inline,
@@ -146,7 +174,16 @@ class PlaybackSession extends Notifier<PlaybackSessionState> {
         _adapter != null &&
         !state.loading &&
         state.error == null) {
-      state = state.copyWith(target: target);
+      // Reclaim host without re-open. Preserve session qn/aid when the claimer
+      // still carries defaults (inline watch page never tracks selected qn).
+      state = state.copyWith(
+        target: existing.copyWith(
+          aid: target.aid != 0 ? target.aid : existing.aid,
+          bvid: target.bvid.isNotEmpty ? target.bvid : existing.bvid,
+          title: target.title.isNotEmpty ? target.title : existing.title,
+          qn: target.qn != 0 ? target.qn : existing.qn,
+        ),
+      );
       setHost(host);
       return;
     }
@@ -159,6 +196,7 @@ class PlaybackSession extends Notifier<PlaybackSessionState> {
       loading: true,
       clearError: true,
     );
+    _syncOsFullscreen(host);
 
     try {
       final source = await _fetchSource(target);
@@ -172,12 +210,16 @@ class PlaybackSession extends Notifier<PlaybackSessionState> {
         cid: target.cid,
       );
       if (gen != _openGen) return;
+      // Re-assert host: releaseInline may have demoted to mini/idle while the
+      // playurl was in flight (previous video page still mounted under push).
       state = state.copyWith(
         target: target.copyWith(aid: aid, bvid: bvid),
+        host: host,
         loading: false,
         resolvedAid: aid,
         clearError: true,
       );
+      _syncOsFullscreen(host);
     } catch (e) {
       if (gen != _openGen) return;
       state = state.copyWith(
@@ -205,11 +247,16 @@ class PlaybackSession extends Notifier<PlaybackSessionState> {
 
   /// Move the single media_kit surface. Briefly parks on [idle] so two
   /// [Video] widgets never share one controller in the same frame.
+  ///
+  /// OS fullscreen tracks the **destination** host immediately (including during
+  /// the idle park) so the window does not lag one frame behind the overlay.
   void setHost(PlayerSurfaceHost host) {
     if (state.target == null) return;
     if (state.host == host) return;
     final from = state.host;
     if (from != PlayerSurfaceHost.idle && host != PlayerSurfaceHost.idle) {
+      // Destination OS state first — leave FS before shell can paint under it.
+      _syncOsFullscreen(host);
       state = state.copyWith(host: PlayerSurfaceHost.idle);
       Future.microtask(() {
         if (state.target == null) return;
@@ -219,6 +266,7 @@ class PlaybackSession extends Notifier<PlaybackSessionState> {
       return;
     }
     state = state.copyWith(host: host);
+    _syncOsFullscreen(host);
   }
 
   void enterFullscreen() => setHost(PlayerSurfaceHost.fullscreen);
@@ -229,27 +277,43 @@ class PlaybackSession extends Notifier<PlaybackSessionState> {
     setHost(PlayerSurfaceHost.inline);
   }
 
+  /// Drive native window fullscreen when [host] is [PlayerSurfaceHost.fullscreen].
+  void _syncOsFullscreen(PlayerSurfaceHost host) {
+    // ignore: discarded_futures
+    DesktopOsFullscreen.setEnabled(host == PlayerSurfaceHost.fullscreen);
+  }
+
   void enterMini() {
     if (state.target == null) return;
     if (state.host == PlayerSurfaceHost.fullscreen) return;
     setHost(PlayerSurfaceHost.mini);
   }
 
-  /// Inline slot left the tree: keep session if still playing → mini.
+  /// Inline slot left the tree (route covered or popped).
   ///
-  /// Deferred one microtask so a same-frame cid switch can [open] first
-  /// without falsely demoting the surface to mini.
-  void releaseInline(PlaybackTarget forTarget) {
+  /// Deferred one microtask so a same-frame [open] (cid switch / new watch
+  /// page) can claim first without falsely demoting the surface.
+  ///
+  /// - [preferMini] true (route popped / leave watch): playing → mini.
+  /// - [preferMini] false (covered by another route): detach to idle so the
+  ///   incoming watch page can [open] without a mini flash of the old video.
+  /// - No-ops when [state.loading] — an in-flight [open] owns host lifecycle.
+  /// - No-ops when [state.target] is already a different media (new page won).
+  void releaseInline(
+    PlaybackTarget forTarget, {
+    bool preferMini = true,
+  }) {
     Future.microtask(() {
       final t = state.target;
-      if (t == null || !t.sameMedia(forTarget)) return;
-      if (state.host != PlayerSurfaceHost.inline) return;
-      final playing = _adapter?.player.state.playing ?? false;
-      if (playing) {
-        setHost(PlayerSurfaceHost.mini);
-      } else {
-        setHost(PlayerSurfaceHost.idle);
-      }
+      final next = releaseInlineNextHost(
+        ownsTarget: t != null && t.sameMedia(forTarget),
+        host: state.host,
+        loading: state.loading,
+        playing: _adapter?.player.state.playing ?? false,
+        preferMini: preferMini,
+      );
+      if (next == null) return;
+      setHost(next);
     });
   }
 
@@ -325,6 +389,7 @@ class PlaybackSession extends Notifier<PlaybackSessionState> {
   /// Hard stop: heartbeat off + dispose decoder.
   Future<void> close() async {
     _openGen++;
+    await DesktopOsFullscreen.setEnabled(false);
     await _teardown();
     state = const PlaybackSessionState();
   }

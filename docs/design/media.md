@@ -94,7 +94,7 @@ raw playurl response
 
 探测：`core` 启动时读 DRM/PCI（Linux）等得到 `HwDecodeCaps`，注入 `MediaService`。策略纯函数在 `domain::codec`。
 
-音轨：用户语言偏好 → 匹配 `language`；否则默认第一条非 AI，或 API 默认。
+音轨默认：`Dolby`（若有）→ `Hi-Res`（若有）→ 标准 192K / 最高标准档。播放器 UI **不展示**音轨菜单；杜比 / Hi-Res 激活时左下角短暂提示（彩虹渐变文案）。
 
 ### 3.2 Headers
 
@@ -147,6 +147,7 @@ DanmakuItem {
 
 - 列表：`/x/player/wbi/v2` → `subtitle.subtitles`（优先 `subtitle_url`）。
 - JSON body → WebVTT；`location` 2/默认底、5 顶，写出 VTT `line`/`position` 设置（高级位置字幕）。
+- **渲染**：Flutter `SubtitleOverlay` 按 `position` 选中 cue；**不**经 media_kit `SubtitleTrack.data` / mpv `sub-add`（避免播放中断与临时文件无 `.vtt` 扩展导致加载失败）。
 
 gRPC 弹幕：后续可选，同一 `DanmakuItem` 出口。
 
@@ -175,7 +176,7 @@ class MediaKitPlayerAdapter implements PlayerAdapter { ... }
 - DASH：视频轨 + 音频轨 URL 组合（按插件 API 传双轨或 master）。
 - 自定义 header：打开时传入 `MediaSource.headers`。
 - 硬解：**全平台默认开启**（`enableHardwareAcceleration: true`，含 Linux）。依赖：`media_kit_video` ≥ 2.0.1（含 Linux Flutter 3.38+ H/W 修复）。若 Linux 仍出现「有声无画 / 纯色画面」（media-kit#1321 / #1404），可临时关硬解回退软解。
-- **单一会话**：`PlaybackSession`（Riverpod）持有唯一 `MediaKitPlayerAdapter`。画面附着点在 `inline` / `fullscreen` / `mini` 间切换，**禁止**为全屏或小窗新建解码器。
+- **单一会话**：`PlaybackSession`（Riverpod）持有唯一 `MediaKitPlayerAdapter`。画面附着点在 `inline` / `fullscreen` / `mini` 间切换，**禁止**为全屏或小窗新建解码器。`fullscreen` 同时驱动 OS 窗口全屏（`DesktopOsFullscreen` / `window_manager`）；系统退出全屏时 host 回 `inline`。
 - 生命周期：仅会话 `close()`（或应用退出）时 `dispose` 播放器并 `core.playback_stop()`。离开观看页且仍在播放 → 升为 `mini` 小窗，**保留进度与音频**。
 
 ### 5.2 清晰度切换

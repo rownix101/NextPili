@@ -1,5 +1,6 @@
-//! Video-facing FFI API (detail + playurl).
+//! Video-facing FFI API (detail + playurl + related).
 
+use crate::api::feed::FeedItemDto;
 use crate::app::CoreApp;
 use crate::error::{AppError, ErrorKind};
 use auth::AccountSlot;
@@ -154,6 +155,44 @@ pub async fn video_detail(id: String) -> Result<VideoDetailDto, AppError> {
         },
         duration_ms: detail.duration_ms.get(),
     })
+}
+
+/// Related archives for a video (`GET /x/web-interface/archive/related`).
+///
+/// `id`: bvid / aid string (same as [`video_detail`]).
+pub async fn video_related(id: String) -> Result<Vec<FeedItemDto>, AppError> {
+    let app = CoreApp::global()?;
+    let video_id = VideoId::parse(&id).map_err(AppError::from)?;
+
+    let buvid = app.store.buvid3();
+    let account = {
+        let reg = app.accounts.read();
+        reg.account_for(AccountSlot::Video)
+            .or_else(|| reg.active_main())
+            .cloned()
+    };
+
+    let http = app.http();
+    let items = VideoApi::related(
+        &http,
+        account.as_ref(),
+        Some(buvid.as_str()),
+        &video_id,
+    )
+    .await?;
+
+    Ok(items
+        .into_iter()
+        .map(|item| FeedItemDto {
+            aid: item.aid,
+            bvid: item.bvid,
+            title: item.title,
+            cover: item.cover,
+            owner_name: item.owner_name,
+            duration_ms: item.duration_ms.get(),
+            goto: item.goto,
+        })
+        .collect())
 }
 
 /// Resolve playurl → normalized [`MediaSourceDto`].

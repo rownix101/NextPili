@@ -183,8 +183,45 @@ GET /x/web-interface/archive/relation
 ### 相关推荐
 
 ```
-GET /x/web-interface/archive/related?bvid=
+GET /x/web-interface/archive/related
 ```
+
+| 参数 | 必要 | 说明 |
+|------|------|------|
+| `aid` 或 `bvid` | ✓ | 与详情一致，二选一 |
+
+`data` 为**数组**（不是 `{list:…}` 信封）。每项字段与热门列表 archive 同形；客户端映射到 feed 卡片：
+
+| 字段 | 用途 |
+|------|------|
+| `aid` / `bvid` | 跳转 id |
+| `title` | 标题 |
+| `pic` | 封面（`//` → `https:`） |
+| `duration` | 秒 → 毫秒 |
+| `owner.name` | UP 名 |
+
+**成功 example**
+
+```json
+{
+  "code": 0,
+  "message": "0",
+  "ttl": 1,
+  "data": [
+    {
+      "aid": 170001,
+      "bvid": "BV1xx411c7mD",
+      "title": "示例相关稿件",
+      "pic": "//i0.hdslb.com/bfs/archive/a.jpg",
+      "duration": 90,
+      "owner": { "mid": 1, "name": "UP", "face": "" },
+      "stat": { "view": 1000, "danmaku": 10, "reply": 1, "favorite": 2, "coin": 3, "share": 0, "like": 20 }
+    }
+  ]
+}
+```
+
+FRB：`video_related(id)` → `Vec<FeedItemDto>`。
 
 ### 分 P 列表（avid/bvid → cid）
 

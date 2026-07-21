@@ -2,6 +2,7 @@ import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 import '../../bridge/core_api.dart';
+import 'subtitle_cues.dart';
 
 /// Thin media_kit adapter over [MediaSourceDto] — design/media §5.
 class MediaKitPlayerAdapter {
@@ -28,11 +29,15 @@ class MediaKitPlayerAdapter {
   String? _subtitleVtt;
   String? _subtitleTitle;
   String? _subtitleLang;
+  List<SubtitleCue> _subtitleCues = const [];
   double _rate = 1.0;
 
   MediaSourceDto? get source => _source;
   double get rate => _rate;
   String? get subtitleId => _subtitleId;
+
+  /// Active CC cues for [SubtitleOverlay] (empty when off).
+  List<SubtitleCue> get subtitleCues => _subtitleCues;
 
   StreamDto? get currentVideo {
     final s = _source;
@@ -82,9 +87,7 @@ class MediaKitPlayerAdapter {
     return out;
   }
 
-  /// Audio menu: standard ladder (192K/132K/64K…) + Dolby/Hi-Res only when present.
-  ///
-  /// Ordered standard high→low, then Dolby, then Hi-Res. One entry per audio qn.
+  /// Available audio streams ordered standard high→low, then Dolby, then Hi-Res.
   List<StreamDto> get audioOptions {
     final s = _source;
     if (s == null || s.audios.isEmpty) return const [];
@@ -154,10 +157,7 @@ class MediaKitPlayerAdapter {
         ? null
         : source.recommendedAudioId;
     // Fresh source — drop external subtitle session.
-    _subtitleId = null;
-    _subtitleVtt = null;
-    _subtitleTitle = null;
-    _subtitleLang = null;
+    _clearSubtitleState();
     await _openCurrent(position: Duration.zero, restoreSubtitle: false);
   }
 
@@ -188,7 +188,11 @@ class MediaKitPlayerAdapter {
     await player.setRate(rate);
   }
 
-  /// Load external WebVTT data, or clear when [id]/[vtt] empty.
+  /// Load external WebVTT as Flutter-rendered cues, or clear when empty.
+  ///
+  /// Does **not** call media_kit `SubtitleTrack.data` / mpv `sub-add`: that path
+  /// writes a no-extension temp file, often fails to demux WebVTT, and can
+  /// stall or interrupt the active demuxer mid-playback.
   Future<void> setSubtitle({
     String? id,
     String? vtt,
@@ -196,24 +200,27 @@ class MediaKitPlayerAdapter {
     String? language,
   }) async {
     if (id == null || id.isEmpty || vtt == null || vtt.isEmpty) {
-      _subtitleId = null;
-      _subtitleVtt = null;
-      _subtitleTitle = null;
-      _subtitleLang = null;
-      await player.setSubtitleTrack(SubtitleTrack.no());
+      _clearSubtitleState();
       return;
+    }
+    final cues = parseWebVtt(vtt);
+    if (cues.isEmpty) {
+      _clearSubtitleState();
+      throw StateError('subtitle track has no cues');
     }
     _subtitleId = id;
     _subtitleVtt = vtt;
     _subtitleTitle = title;
     _subtitleLang = language;
-    await player.setSubtitleTrack(
-      SubtitleTrack.data(
-        vtt,
-        title: title,
-        language: language,
-      ),
-    );
+    _subtitleCues = cues;
+  }
+
+  void _clearSubtitleState() {
+    _subtitleId = null;
+    _subtitleVtt = null;
+    _subtitleTitle = null;
+    _subtitleLang = null;
+    _subtitleCues = const [];
   }
 
   Future<void> _openCurrent({
@@ -273,19 +280,17 @@ class MediaKitPlayerAdapter {
       await player.setRate(_rate);
     }
 
+    // Keep mpv subtitles off — CC is drawn by [SubtitleOverlay].
+    await player.setSubtitleTrack(SubtitleTrack.no());
+
     if (restoreSubtitle &&
         _subtitleId != null &&
         _subtitleVtt != null &&
         _subtitleVtt!.isNotEmpty) {
-      await player.setSubtitleTrack(
-        SubtitleTrack.data(
-          _subtitleVtt!,
-          title: _subtitleTitle,
-          language: _subtitleLang,
-        ),
-      );
-    } else {
-      await player.setSubtitleTrack(SubtitleTrack.no());
+      // Re-parse after quality/audio reopen (cues list is pure; no demuxer).
+      _subtitleCues = parseWebVtt(_subtitleVtt!);
+    } else if (!restoreSubtitle) {
+      _clearSubtitleState();
     }
 
     if (position > Duration.zero) {

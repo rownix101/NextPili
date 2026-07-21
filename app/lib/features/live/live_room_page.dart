@@ -14,6 +14,7 @@ import '../../core/widgets/loading.dart';
 import '../../core/widgets/np_button.dart';
 import '../../l10n/l10n.dart';
 import '../player/player_adapter.dart';
+import '../player/player_subtitle_config.dart';
 import '../video/engagement_bar.dart';
 
 /// Live room watch page: metadata + media_kit stream + chat.
@@ -219,9 +220,17 @@ class _LiveRoomPageState extends State<LiveRoomPage> {
                         ),
                       )
                     else
-                      Video(
-                        controller: _adapter.controller,
-                        controls: NoVideoControls,
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          return Video(
+                            controller: _adapter.controller,
+                            controls: NoVideoControls,
+                            subtitleViewConfiguration:
+                                playerSubtitleViewConfiguration(
+                              constraints.biggest,
+                            ),
+                          );
+                        },
                       ),
                     if (_showChrome)
                       Positioned(

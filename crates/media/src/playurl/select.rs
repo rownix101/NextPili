@@ -54,21 +54,26 @@ pub(super) fn pick_default_video(
     streams[0].id.clone()
 }
 
-/// Default audio: **192K if present**, else highest **standard** track.
-/// Dolby / Hi-Res are never auto-selected (opt-in menu only).
+/// Default audio: Dolby, else Hi-Res, else 192K / highest standard.
 pub(super) fn pick_default_audio(streams: &[Stream]) -> StreamId {
     if streams.is_empty() {
         return String::new();
     }
 
-    // Exact 192K.
+    if let Some(s) = best_by_role(streams, AUDIO_ROLE_DOLBY) {
+        return s.id.clone();
+    }
+    if let Some(s) = best_by_role(streams, AUDIO_ROLE_HIRES) {
+        return s.id.clone();
+    }
+
     if let Some(s) = streams.iter().find(|s| {
-        s.qn == Some(AUDIO_QN_192K) && s.role.as_deref() != Some(AUDIO_ROLE_DOLBY)
+        s.qn == Some(AUDIO_QN_192K)
+            && s.role.as_deref().unwrap_or(AUDIO_ROLE_STANDARD) == AUDIO_ROLE_STANDARD
     }) {
         return s.id.clone();
     }
 
-    // Highest standard (non-dolby, non-hires).
     let mut standard: Vec<&Stream> = streams
         .iter()
         .filter(|s| {
@@ -84,8 +89,14 @@ pub(super) fn pick_default_audio(streams: &[Stream]) -> StreamId {
         return standard[0].id.clone();
     }
 
-    // Only special tracks available — pick first (rare).
     streams[0].id.clone()
+}
+
+fn best_by_role<'a>(streams: &'a [Stream], role: &str) -> Option<&'a Stream> {
+    streams
+        .iter()
+        .filter(|s| s.role.as_deref() == Some(role))
+        .max_by_key(|s| s.bandwidth)
 }
 
 pub(super) fn dedupe_audio_streams(streams: Vec<Stream>) -> Vec<Stream> {

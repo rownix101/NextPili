@@ -15,7 +15,7 @@ import 'api/simple.dart';
 import 'api/social.dart';
 import 'api/user.dart';
 import 'api/video.dart';
-import 'auth_service.dart';
+import 'auth_dto.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi' as ffi;

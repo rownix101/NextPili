@@ -15,7 +15,7 @@ import 'frb/api/simple.dart' as frb;
 import 'frb/api/social.dart' as frb_social;
 import 'frb/api/user.dart' as frb_user;
 import 'frb/api/video.dart' as frb_video;
-import 'frb/auth_service.dart';
+import 'frb/auth_dto.dart';
 import 'frb/error.dart';
 import 'frb/frb_generated.dart';
 
@@ -57,7 +57,7 @@ export 'frb/api/video.dart'
         VideoDetailDto,
         VideoPageDto,
         VideoStatDto;
-export 'frb/auth_service.dart'
+export 'frb/auth_dto.dart'
     show
         AccountPublicDto,
         CaptchaDto,
@@ -303,6 +303,9 @@ class CoreApi {
 
   Future<frb_video.VideoDetailDto> videoDetail(String id) =>
       frb_video.videoDetail(id: id);
+
+  Future<List<frb_feed.FeedItemDto>> videoRelated(String id) =>
+      frb_video.videoRelated(id: id);
 
   Future<frb_video.MediaSourceDto> playUrl({
     required String id,

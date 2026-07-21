@@ -14,7 +14,6 @@ class PlayerBottomChrome extends StatelessWidget {
     required this.adapter,
     required this.colors,
     required this.onQuality,
-    required this.onAudio,
     required this.onSpeed,
     required this.onSubtitle,
     required this.danmakuOn,
@@ -31,7 +30,6 @@ class PlayerBottomChrome extends StatelessWidget {
   final MediaKitPlayerAdapter adapter;
   final PlayerColors colors;
   final ValueChanged<StreamDto> onQuality;
-  final ValueChanged<StreamDto> onAudio;
   final ValueChanged<double> onSpeed;
   final ValueChanged<SubtitleTrackDto?> onSubtitle;
   final bool danmakuOn;
@@ -68,10 +66,8 @@ class PlayerBottomChrome extends StatelessWidget {
                     pos.inMilliseconds.toDouble().clamp(0.0, maxMs).toDouble();
 
                 final qualities = adapter.qualityOptions;
-                final audios = adapter.audioOptions;
                 final subs = adapter.subtitleOptions;
                 final currentQ = adapter.currentVideo;
-                final currentA = adapter.currentAudio;
                 final currentSub = adapter.currentSubtitle;
                 final rate = adapter.rate;
 
@@ -224,32 +220,6 @@ class PlayerBottomChrome extends StatelessWidget {
                                         orElse: () => qualities.first,
                                       );
                                       onQuality(q);
-                                    },
-                                  ),
-                                if (audios.length > 1 ||
-                                    (audios.length == 1 &&
-                                        (audios.first.role == 'dolby' ||
-                                            audios.first.role == 'hires')))
-                                  PlayerTextMenuButton(
-                                    label: currentA?.qualityLabel ??
-                                        l10n.playerAudio,
-                                    tooltip: l10n.playerAudio,
-                                    colors: colors,
-                                    onOpened: () => onHoldChrome?.call(true),
-                                    onClosed: () => onHoldChrome?.call(false),
-                                    items: [
-                                      for (final a in audios)
-                                        PopupMenuItem(
-                                          value: a.id,
-                                          child: Text(a.qualityLabel),
-                                        ),
-                                    ],
-                                    onSelected: (id) {
-                                      final a = audios.firstWhere(
-                                        (e) => e.id == id,
-                                        orElse: () => audios.first,
-                                      );
-                                      onAudio(a);
                                     },
                                   ),
                                 PlayerTextMenuButton(

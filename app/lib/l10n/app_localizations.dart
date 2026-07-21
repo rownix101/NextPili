@@ -866,11 +866,23 @@ abstract class AppLocalizations {
   /// **'倍速'**
   String get playerSpeed;
 
-  /// 播放器音轨菜单
+  /// 播放器音轨菜单（保留；界面默认不展示）
   ///
   /// In zh, this message translates to:
   /// **'音轨'**
   String get playerAudio;
+
+  /// 播放开始时杜比音轨提示
+  ///
+  /// In zh, this message translates to:
+  /// **'已为您开启杜比全景声'**
+  String get playerAudioDolbyOn;
+
+  /// 播放开始时 Hi-Res 音轨提示
+  ///
+  /// In zh, this message translates to:
+  /// **'已为您开启 Hi-Res'**
+  String get playerAudioHiresOn;
 
   /// 播放器字幕菜单
   ///

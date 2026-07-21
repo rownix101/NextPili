@@ -69,42 +69,69 @@ class _OverlayHost extends StatelessWidget {
   }
 }
 
-class _FullscreenHost extends ConsumerWidget {
+class _FullscreenHost extends ConsumerStatefulWidget {
   const _FullscreenHost({required this.target});
 
   final PlaybackTarget target;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_FullscreenHost> createState() => _FullscreenHostState();
+}
+
+class _FullscreenHostState extends ConsumerState<_FullscreenHost> {
+  late final FocusNode _focusNode = FocusNode(debugLabel: 'player.fullscreen');
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  /// True when primary focus is inside an [EditableText] (TextField, etc.).
+  ///
+  /// Fullscreen media shortcuts must not steal keys while composing / typing
+  /// (Latin, digits, Backspace, IME).
+  bool get _editingText {
+    final ctx = FocusManager.instance.primaryFocus?.context;
+    if (ctx == null) return false;
+    return ctx.findAncestorStateOfType<EditableTextState>() != null;
+  }
+
+  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+    if (_editingText) return KeyEventResult.ignored;
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+    final key = event.logicalKey;
+    if (key == LogicalKeyboardKey.escape || key == LogicalKeyboardKey.keyF) {
+      ref.read(playbackSessionProvider.notifier).exitFullscreen();
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final target = widget.target;
     return Material(
       color: Colors.black,
-      child: CallbackShortcuts(
-        bindings: {
-          const SingleActivator(LogicalKeyboardKey.escape): () {
-            ref.read(playbackSessionProvider.notifier).exitFullscreen();
-          },
-          const SingleActivator(LogicalKeyboardKey.keyF): () {
-            ref.read(playbackSessionProvider.notifier).exitFullscreen();
-          },
-        },
-        child: Focus(
-          autofocus: true,
-          child: SafeArea(
-            child: PlayerPane(
-              videoId: target.videoId,
-              cid: target.cid,
-              aid: target.aid,
-              bvid: target.bvid,
-              title: target.title,
-              qn: target.qn,
-              epId: target.epId,
-              host: PlayerSurfaceHost.fullscreen,
-              immersive: true,
-              showBack: true,
-              onBack: () {
-                ref.read(playbackSessionProvider.notifier).exitFullscreen();
-              },
-            ),
+      child: Focus(
+        focusNode: _focusNode,
+        autofocus: true,
+        onKeyEvent: _onKey,
+        child: SafeArea(
+          child: PlayerPane(
+            videoId: target.videoId,
+            cid: target.cid,
+            aid: target.aid,
+            bvid: target.bvid,
+            title: target.title,
+            qn: target.qn,
+            epId: target.epId,
+            host: PlayerSurfaceHost.fullscreen,
+            immersive: true,
+            showBack: true,
+            onBack: () {
+              ref.read(playbackSessionProvider.notifier).exitFullscreen();
+            },
           ),
         ),
       ),
@@ -155,26 +182,31 @@ class _MiniHostState extends ConsumerState<_MiniHost> {
     final x = _offset.dx.clamp(padding.left, maxX);
     final y = _offset.dy.clamp(padding.top, maxY);
 
+    // ExcludeFocus: mini's nested Navigator must never hold primary keyboard
+    // focus, or main-shell TextFields (search / settings / auth) stop receiving
+    // Latin digits / Backspace while mini is open.
     return Positioned(
       left: x,
       top: y,
       width: _size.width,
       height: _size.height,
-      child: _OverlayHost(
-        child: GestureDetector(
-          onPanUpdate: (d) {
-            setState(() {
-              _offset = Offset(
-                (_offset.dx + d.delta.dx).clamp(padding.left, maxX),
-                (_offset.dy + d.delta.dy).clamp(padding.top, maxY),
-              );
-            });
-          },
-          onDoubleTap: () => _restore(context, ref, widget.target),
-          child: _MiniChrome(
-            target: widget.target,
-            onExpand: () => _restore(context, ref, widget.target),
-            onClose: () => ref.read(playbackSessionProvider.notifier).close(),
+      child: ExcludeFocus(
+        child: _OverlayHost(
+          child: GestureDetector(
+            onPanUpdate: (d) {
+              setState(() {
+                _offset = Offset(
+                  (_offset.dx + d.delta.dx).clamp(padding.left, maxX),
+                  (_offset.dy + d.delta.dy).clamp(padding.top, maxY),
+                );
+              });
+            },
+            onDoubleTap: () => _restore(context, ref, widget.target),
+            child: _MiniChrome(
+              target: widget.target,
+              onExpand: () => _restore(context, ref, widget.target),
+              onClose: () => ref.read(playbackSessionProvider.notifier).close(),
+            ),
           ),
         ),
       ),

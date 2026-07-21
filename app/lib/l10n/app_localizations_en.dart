@@ -424,6 +424,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerAudio => 'Audio';
 
   @override
+  String get playerAudioDolbyOn => 'Dolby Atmos is on';
+
+  @override
+  String get playerAudioHiresOn => 'Hi-Res audio is on';
+
+  @override
   String get playerSubtitle => 'Subtitles';
 
   @override
