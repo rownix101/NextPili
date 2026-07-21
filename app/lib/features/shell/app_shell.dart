@@ -125,35 +125,18 @@ class AppShell extends StatelessWidget {
         backgroundColor: colors.canvas,
         extendBody: true,
         body: child,
-        bottomNavigationBar: SafeArea(
-          top: false,
-          minimum: const EdgeInsets.fromLTRB(
-            AppSpacing.md,
-            0,
-            AppSpacing.md,
-            AppSpacing.sm,
-          ),
-          child: GlassTabBar.bottom(
-            tabs: [
-              for (final d in dests)
-                GlassTab(
-                  icon: Icon(d.icon),
-                  label: d.label,
-                  semanticLabel: d.label,
-                  glowColor: colors.accent,
-                ),
-            ],
-            selectedIndex: index,
-            onTabSelected: (i) => _goIndex(context, i),
-            selectedIconColor: colors.accent,
-            unselectedIconColor: colors.fgSecondary,
-            selectedLabelColor: colors.accent,
-            unselectedLabelColor: colors.fgSecondary,
-            quality: GlassQuality.standard,
-            barHeight: 64,
-            horizontalPadding: 12,
-            verticalPadding: 10,
-          ),
+        bottomNavigationBar: MobileGlassTabBar(
+          selectedIndex: index,
+          onTabSelected: (i) => _goIndex(context, i),
+          tabs: [
+            for (final d in dests)
+              GlassTab(
+                icon: Icon(d.icon),
+                label: d.label,
+                semanticLabel: d.label,
+                glowColor: colors.accent,
+              ),
+          ],
         ),
       );
     }

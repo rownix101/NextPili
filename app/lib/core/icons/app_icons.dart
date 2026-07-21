@@ -26,6 +26,16 @@ abstract final class AppIcons {
   static const IconData movie = LucideIcons.clapperboard;
   static const IconData imageBroken = LucideIcons.image_off;
   static const IconData highQuality = LucideIcons.hd;
+  static const IconData sliders = LucideIcons.sliders_horizontal;
+  static const IconData captions = LucideIcons.captions;
+  static const IconData captionsOff = LucideIcons.captions_off;
+  static const IconData autoPlay = LucideIcons.list_video;
+  static const IconData theater = LucideIcons.gallery_horizontal;
+  static const IconData theaterExit = LucideIcons.gallery_thumbnails;
+  static const IconData audioLines = LucideIcons.audio_lines;
+  static const IconData sparkles = LucideIcons.sparkles;
+  static const IconData timer = LucideIcons.timer;
+  static const IconData gauge = LucideIcons.gauge;
 
   // Actions
   static const IconData like = LucideIcons.thumbs_up;
@@ -47,6 +57,7 @@ abstract final class AppIcons {
   static const IconData close = LucideIcons.x;
   static const IconData more = LucideIcons.ellipsis;
   static const IconData plus = LucideIcons.plus;
+  static const IconData minus = LucideIcons.minus;
   static const IconData check = LucideIcons.check;
 
   // Status

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 import '../../bridge/core_api.dart';
 import '../../core/icons/app_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/shapes.dart';
 import '../../core/theme/spacing.dart';
-import '../../core/widgets/content_surface.dart';
+import '../../core/widgets/glass/app_glass.dart';
 import '../../core/widgets/loading.dart';
 import '../../core/widgets/page_header.dart';
 import '../../l10n/l10n.dart';
@@ -114,6 +115,16 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final glassSettings = GlassPanel.settings(colors);
+
+    TextStyle titleStyle(AppColors c) =>
+        theme.textTheme.titleMedium?.copyWith(color: c.fgPrimary) ??
+        TextStyle(color: c.fgPrimary, fontSize: 16, fontWeight: FontWeight.w500);
+
+    TextStyle subtitleStyle(AppColors c) =>
+        theme.textTheme.bodySmall?.copyWith(color: c.fgSecondary) ??
+        TextStyle(color: c.fgSecondary, fontSize: 13);
 
     return Scaffold(
       backgroundColor: colors.canvas,
@@ -140,108 +151,144 @@ class _SettingsPageState extends State<SettingsPage> {
               : ListView(
                   padding: const EdgeInsets.all(AppSpacing.md),
                   children: [
-                    ContentSurface(
-                      child: Column(
-                        children: [
-                          ListTile(
-                            title: Text(l10n.settingsAccountTitle),
-                            subtitle: Text(l10n.settingsAccountSubtitle),
-                            leading: Icon(
-                              AppIcons.user,
-                              color: colors.fgSecondary,
-                            ),
-                            trailing: Icon(
-                              AppIcons.chevronRight,
-                              color: colors.fgMuted,
-                              size: AppIcons.sm,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: AppShapes.borderMd,
-                            ),
-                            onTap: () => context.push('/auth'),
-                          ),
-                        ],
+                    // design-system §2.5 — settings grouped surface uses Liquid Glass.
+                    GlassGroupedSection(
+                      useOwnLayer: true,
+                      quality: GlassQuality.standard,
+                      settings: glassSettings,
+                      shape: LiquidRoundedSuperellipse(
+                        borderRadius: AppShapes.md,
                       ),
+                      margin: EdgeInsets.zero,
+                      children: [
+                        GlassListTile(
+                          leading: Icon(
+                            AppIcons.user,
+                            color: colors.fgSecondary,
+                            size: AppIcons.md,
+                          ),
+                          title: Text(
+                            l10n.settingsAccountTitle,
+                            style: titleStyle(colors),
+                          ),
+                          subtitle: Text(
+                            l10n.settingsAccountSubtitle,
+                            style: subtitleStyle(colors),
+                          ),
+                          trailing: Icon(
+                            AppIcons.chevronRight,
+                            color: colors.fgMuted,
+                            size: AppIcons.sm,
+                          ),
+                          onTap: () => context.push('/auth'),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    ContentSurface(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          ListTile(
-                            title: Text(l10n.settingsDefaultQuality),
-                            subtitle: Text(
-                              _labelForQn(
-                                _settings?.preferredQn ?? 80,
-                                l10n,
-                              ),
-                            ),
-                            leading: Icon(
-                              AppIcons.highQuality,
-                              color: colors.fgSecondary,
-                            ),
-                            trailing: Icon(
-                              AppIcons.chevronRight,
-                              color: colors.fgMuted,
-                              size: AppIcons.sm,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: AppShapes.borderMd,
-                            ),
-                            onTap: () => _pickQuality(context),
-                          ),
-                          Divider(height: 1, color: colors.borderSubtle),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                              AppSpacing.md,
-                              AppSpacing.sm,
-                              AppSpacing.md,
-                              AppSpacing.md,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Row(
-                                  children: [
-                                    Icon(
-                                      AppIcons.proxy,
-                                      color: colors.fgSecondary,
-                                      size: AppIcons.md,
-                                    ),
-                                    const SizedBox(width: AppSpacing.sm),
-                                    Text(
-                                      l10n.settingsProxyTitle,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium,
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: AppSpacing.sm),
-                                TextField(
-                                  controller: _proxyController,
-                                  decoration: InputDecoration(
-                                    hintText: 'http://127.0.0.1:7890',
-                                    helperText: l10n.settingsProxyHelper,
-                                    border: const OutlineInputBorder(),
-                                    isDense: true,
-                                  ),
-                                  keyboardType: TextInputType.url,
-                                  onSubmitted: (_) => _saveProxy(),
-                                ),
-                                const SizedBox(height: AppSpacing.sm),
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: FilledButton(
-                                    onPressed: _saveProxy,
-                                    child: Text(l10n.settingsProxySave),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                    GlassGroupedSection(
+                      useOwnLayer: true,
+                      quality: GlassQuality.standard,
+                      settings: glassSettings,
+                      shape: LiquidRoundedSuperellipse(
+                        borderRadius: AppShapes.md,
                       ),
+                      margin: EdgeInsets.zero,
+                      children: [
+                        GlassListTile(
+                          leading: Icon(
+                            AppIcons.highQuality,
+                            color: colors.fgSecondary,
+                            size: AppIcons.md,
+                          ),
+                          title: Text(
+                            l10n.settingsDefaultQuality,
+                            style: titleStyle(colors),
+                          ),
+                          subtitle: Text(
+                            _labelForQn(
+                              _settings?.preferredQn ?? 80,
+                              l10n,
+                            ),
+                            style: subtitleStyle(colors),
+                          ),
+                          trailing: Icon(
+                            AppIcons.chevronRight,
+                            color: colors.fgMuted,
+                            size: AppIcons.sm,
+                          ),
+                          onTap: () => _pickQuality(context),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.md,
+                            AppSpacing.sm,
+                            AppSpacing.md,
+                            AppSpacing.md,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    AppIcons.proxy,
+                                    color: colors.fgSecondary,
+                                    size: AppIcons.md,
+                                  ),
+                                  const SizedBox(width: AppSpacing.sm),
+                                  Text(
+                                    l10n.settingsProxyTitle,
+                                    style: titleStyle(colors),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              TextField(
+                                controller: _proxyController,
+                                style: TextStyle(color: colors.fgPrimary),
+                                decoration: InputDecoration(
+                                  hintText: 'http://127.0.0.1:7890',
+                                  hintStyle: TextStyle(color: colors.fgMuted),
+                                  helperText: l10n.settingsProxyHelper,
+                                  helperStyle:
+                                      TextStyle(color: colors.fgMuted),
+                                  border: OutlineInputBorder(
+                                    borderRadius: AppShapes.borderSm,
+                                    borderSide: BorderSide(
+                                      color: colors.borderSubtle,
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: AppShapes.borderSm,
+                                    borderSide: BorderSide(
+                                      color: colors.borderSubtle,
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: AppShapes.borderSm,
+                                    borderSide: BorderSide(
+                                      color: colors.accent,
+                                    ),
+                                  ),
+                                  isDense: true,
+                                  filled: true,
+                                  fillColor: colors.sunken,
+                                ),
+                                keyboardType: TextInputType.url,
+                                onSubmitted: (_) => _saveProxy(),
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: FilledButton(
+                                  onPressed: _saveProxy,
+                                  child: Text(l10n.settingsProxySave),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

@@ -215,7 +215,9 @@ Scaffold(
 | **桌面** compact 底栏 Tab | 用 `MicaSurface` + icon/label，不用 `GlassTabBar` / frosted tray |
 | 信息流视频卡 / 封面网格 | 滚动项 × N 会打爆 GPU；内容应不透明可读 |
 | 评论楼层、动态卡片、历史行 | 同上；长列表虚拟化 + 不透明表面 |
-| 播放器画面、弹幕、字幕 | 内容层；玻璃只可出现在 **控件条** |
+| 观看页右侧栏（UP / 分P / 相关） | 内容区，用 `ContentSurface`；勿 `GlassPanel` 滥用 |
+| 播放器画面、弹幕、字幕 | 内容层；玻璃只可出现在 **icon pill / 设置托盘** |
+| 播放器底部整条 seek/弹幕区铺玻璃 | 大面积起雾挡画面；玻璃仅包 icon 区域成 pill |
 | 全屏/沉浸播放时的大面积背景 | 避免「整页起雾」挡画面 |
 | 玻璃套玻璃 | 内层折射被禁/裁切，既丑又贵 |
 | 低电量 / 弱机 / Reduce Transparency | 降 `minimal` 或改不透明 elevated 表面 |
@@ -233,7 +235,10 @@ Fold 内屏             → medium/expanded；竖铰链双栏；仅外壳玻璃
 Flip 封面 cover       → 无 Liquid Glass；迷你播放/状态，非完整 App
 Flip 全开 compact     → 同手机
 Flip 半开 flex        → 上半画面零玻璃；下半控件可轻玻璃；无完整 Tab 壳
-播放中（任意形态）    → 画面与弹幕零玻璃；控件条可用暗色 glass.tint.player
+播放中（任意形态）    → 画面与弹幕零玻璃；底部 icon pill 可用 dark glass.tint.player（勿整条 seek 铺满玻璃）
+观看页右侧栏（UP/分P/相关） → 不透明 ContentSurface；玻璃留给 chrome / 设置
+播放器设置面板        → Liquid Glass tray（package glass，禁止 BackdropFilter 糊纹理）
+应用设置分组          → 可选 GlassGroupedSection（页内少量）
 全屏播放路由          → 不走壳层穿透；黑底沉浸
 ```
 

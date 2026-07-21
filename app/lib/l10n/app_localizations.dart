@@ -860,11 +860,29 @@ abstract class AppLocalizations {
   /// **'清晰度'**
   String get playerQuality;
 
-  /// 播放器倍速菜单
+  /// 播放器倍速菜单 / 设置子面板标题
   ///
   /// In zh, this message translates to:
   /// **'倍速'**
   String get playerSpeed;
+
+  /// 倍速子面板减号按钮（icon-only Semantics/Tooltip）
+  ///
+  /// In zh, this message translates to:
+  /// **'减慢播放速度'**
+  String get playerSpeedDecrease;
+
+  /// 倍速子面板加号按钮（icon-only Semantics/Tooltip）
+  ///
+  /// In zh, this message translates to:
+  /// **'加快播放速度'**
+  String get playerSpeedIncrease;
+
+  /// 倍速子面板离散滑块 Semantics 标签
+  ///
+  /// In zh, this message translates to:
+  /// **'播放速度'**
+  String get playerSpeedSlider;
 
   /// 播放器音轨菜单（保留；界面默认不展示）
   ///
@@ -895,6 +913,90 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'关闭字幕'**
   String get playerSubtitleOff;
+
+  /// 底栏字幕开关：开启
+  ///
+  /// In zh, this message translates to:
+  /// **'开启字幕'**
+  String get playerSubtitleOn;
+
+  /// 底栏字幕开关：关闭
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭字幕'**
+  String get playerSubtitleToggleOff;
+
+  /// 播放器右侧设置面板入口与标题
+  ///
+  /// In zh, this message translates to:
+  /// **'播放设置'**
+  String get playerSettings;
+
+  /// 本地 UI 占位开关，不改动媒体输出
+  ///
+  /// In zh, this message translates to:
+  /// **'稳定音量'**
+  String get playerStableVolume;
+
+  /// 本地 UI 占位开关，不改动媒体输出
+  ///
+  /// In zh, this message translates to:
+  /// **'人声增强'**
+  String get playerVoiceBoost;
+
+  /// 本地 UI 占位开关，不改动媒体输出
+  ///
+  /// In zh, this message translates to:
+  /// **'氛围模式'**
+  String get playerAmbientMode;
+
+  /// 本地 UI 占位；尚未接入自动暂停
+  ///
+  /// In zh, this message translates to:
+  /// **'定时关闭'**
+  String get playerSleepTimer;
+
+  /// 定时关闭关闭态文案
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭'**
+  String get playerSleepTimerOff;
+
+  /// 定时关闭：播完当前视频后暂停
+  ///
+  /// In zh, this message translates to:
+  /// **'播完当前视频'**
+  String get playerSleepTimerEndOfVideo;
+
+  /// 底栏自动连播开关
+  ///
+  /// In zh, this message translates to:
+  /// **'自动连播'**
+  String get playerAutoPlay;
+
+  /// 自动连播开启态 Tooltip
+  ///
+  /// In zh, this message translates to:
+  /// **'已开启自动连播'**
+  String get playerAutoPlayOn;
+
+  /// 自动连播关闭态 Tooltip
+  ///
+  /// In zh, this message translates to:
+  /// **'已关闭自动连播'**
+  String get playerAutoPlayOff;
+
+  /// 底栏剧场模式入口
+  ///
+  /// In zh, this message translates to:
+  /// **'剧场模式'**
+  String get playerTheater;
+
+  /// 底栏退出剧场模式
+  ///
+  /// In zh, this message translates to:
+  /// **'退出剧场模式'**
+  String get playerTheaterExit;
 
   /// No description provided for @playerFullscreen.
   ///

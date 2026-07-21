@@ -19,7 +19,7 @@ import '../user/library_navigation.dart';
 /// Related archives for the watch-page right rail — interaction §4.0.
 ///
 /// Compact horizontal rows (cover · title · UP · duration). Opaque content
-/// surface, not glass — design-system §2 / §8.2.
+/// tray (design-system §2 — related list is content, not glass chrome).
 final videoRelatedProvider =
     FutureProvider.autoDispose.family<List<FeedItemDto>, String>((ref, id) {
   return CoreApi.instance.videoRelated(id);

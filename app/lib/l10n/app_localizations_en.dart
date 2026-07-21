@@ -421,6 +421,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerSpeed => 'Speed';
 
   @override
+  String get playerSpeedDecrease => 'Decrease playback speed';
+
+  @override
+  String get playerSpeedIncrease => 'Increase playback speed';
+
+  @override
+  String get playerSpeedSlider => 'Playback speed';
+
+  @override
   String get playerAudio => 'Audio';
 
   @override
@@ -434,6 +443,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playerSubtitleOff => 'Off';
+
+  @override
+  String get playerSubtitleOn => 'Turn on subtitles';
+
+  @override
+  String get playerSubtitleToggleOff => 'Turn off subtitles';
+
+  @override
+  String get playerSettings => 'Player settings';
+
+  @override
+  String get playerStableVolume => 'Stable volume';
+
+  @override
+  String get playerVoiceBoost => 'Voice boost';
+
+  @override
+  String get playerAmbientMode => 'Ambient mode';
+
+  @override
+  String get playerSleepTimer => 'Sleep timer';
+
+  @override
+  String get playerSleepTimerOff => 'Off';
+
+  @override
+  String get playerSleepTimerEndOfVideo => 'End of video';
+
+  @override
+  String get playerAutoPlay => 'Autoplay';
+
+  @override
+  String get playerAutoPlayOn => 'Autoplay on';
+
+  @override
+  String get playerAutoPlayOff => 'Autoplay off';
+
+  @override
+  String get playerTheater => 'Theater mode';
+
+  @override
+  String get playerTheaterExit => 'Exit theater mode';
 
   @override
   String get playerFullscreen => 'Fullscreen';

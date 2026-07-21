@@ -15,8 +15,9 @@ import 'engagement_bar.dart';
 
 /// UP card on the watch-page right rail (avatar, name, follow).
 ///
-/// Content surface (opaque) — design-system §2 / §8; follow CTA with visible
-/// text — §7.7; login gate — interaction §8.
+/// Opaque content tray (design-system §2 Glass vs Content — rail panels are
+/// content, not chrome). Follow CTA with visible text — §7.7; login gate —
+/// interaction §8.
 class OwnerCard extends ConsumerStatefulWidget {
   const OwnerCard({
     super.key,

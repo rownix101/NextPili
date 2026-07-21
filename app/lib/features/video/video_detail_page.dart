@@ -127,6 +127,17 @@ class _WatchBody extends StatefulWidget {
 }
 
 class _WatchBodyState extends State<_WatchBody> {
+  bool _theaterMode = false;
+  bool _autoPlay = true;
+
+  void _playNextPart() {
+    final pages = widget.detail.pages;
+    if (pages.length < 2) return;
+    final idx = pages.indexWhere((p) => i64(p.cid) == widget.currentCid);
+    if (idx < 0 || idx + 1 >= pages.length) return;
+    widget.onSelectCid(i64(pages[idx + 1].cid));
+  }
+
   @override
   Widget build(BuildContext context) {
     final detail = widget.detail;
@@ -140,12 +151,17 @@ class _WatchBodyState extends State<_WatchBody> {
         // interaction §4.0 — dual column when content ≥ 960.
         // Player stays sticky above the scroll region so comments never tear
         // down the surface (progress/audio keep running).
-        final wide = constraints.maxWidth >= 960;
+        final wide = constraints.maxWidth >= 960 && !_theaterMode;
         final player = _PlayerBlock(
           detail: detail,
           videoId: videoId,
           cid: currentCid,
           coverHeroTag: widget.coverHeroTag,
+          autoPlay: _autoPlay,
+          onAutoPlayChanged: (v) => setState(() => _autoPlay = v),
+          onAutoPlayNext: _playNextPart,
+          theaterMode: _theaterMode,
+          onTheaterModeChanged: (v) => setState(() => _theaterMode = v),
         );
         final rail = _RightRail(
           detail: detail,
@@ -165,6 +181,7 @@ class _WatchBodyState extends State<_WatchBody> {
                   flex: 7,
                   child: _StickyPlayerColumn(
                     maxHeight: constraints.maxHeight - AppSpacing.md,
+                    theaterMode: false,
                     player: player,
                     body: [
                       EngagementBar(
@@ -192,11 +209,12 @@ class _WatchBodyState extends State<_WatchBody> {
           );
         }
 
-        // Narrow: sticky player + scroll body (engagement → title → rail → comments).
+        // Theater or narrow: full-width sticky player + scroll body.
         return Padding(
           padding: EdgeInsets.fromLTRB(padH, AppSpacing.md, padH, 0),
           child: _StickyPlayerColumn(
             maxHeight: constraints.maxHeight - AppSpacing.md,
+            theaterMode: _theaterMode,
             player: player,
             body: [
               EngagementBar(
@@ -207,9 +225,15 @@ class _WatchBodyState extends State<_WatchBody> {
               const SizedBox(height: AppSpacing.md),
               _TitleBlock(detail: detail),
               const SizedBox(height: AppSpacing.md),
-              rail,
-              const SizedBox(height: AppSpacing.lg),
+              if (!_theaterMode) ...[
+                rail,
+                const SizedBox(height: AppSpacing.lg),
+              ],
               below,
+              if (_theaterMode) ...[
+                const SizedBox(height: AppSpacing.lg),
+                rail,
+              ],
             ],
           ),
         );
@@ -219,17 +243,19 @@ class _WatchBodyState extends State<_WatchBody> {
 }
 
 /// Sticky 16:9 player + scrollable body; shrinks player when height is tight
-/// (multi-platform §3.1 short windows).
+/// (multi-platform §3.1 short windows). Theater uses a taller player band.
 class _StickyPlayerColumn extends StatelessWidget {
   const _StickyPlayerColumn({
     required this.maxHeight,
     required this.player,
     required this.body,
+    this.theaterMode = false,
   });
 
   final double maxHeight;
   final Widget player;
   final List<Widget> body;
+  final bool theaterMode;
 
   @override
   Widget build(BuildContext context) {
@@ -237,9 +263,11 @@ class _StickyPlayerColumn extends StatelessWidget {
     // multi-platform §3.1: short windows shrink the player, keep body scrollable.
     double playerMaxH = double.infinity;
     if (maxHeight.isFinite && maxHeight > 0) {
-      final reserve = maxHeight < 280 ? 72.0 : 96.0;
+      final reserve = theaterMode
+          ? (maxHeight < 280 ? 48.0 : 64.0)
+          : (maxHeight < 280 ? 72.0 : 96.0);
       final upper = (maxHeight - reserve).clamp(120.0, maxHeight);
-      final preferred = maxHeight * 0.62;
+      final preferred = maxHeight * (theaterMode ? 0.82 : 0.62);
       playerMaxH = preferred.clamp(120.0, upper);
     }
 
@@ -267,12 +295,22 @@ class _PlayerBlock extends StatelessWidget {
     required this.videoId,
     required this.cid,
     required this.coverHeroTag,
+    this.autoPlay = true,
+    this.onAutoPlayChanged,
+    this.onAutoPlayNext,
+    this.theaterMode = false,
+    this.onTheaterModeChanged,
   });
 
   final VideoDetailDto detail;
   final String videoId;
   final int cid;
   final Object coverHeroTag;
+  final bool autoPlay;
+  final ValueChanged<bool>? onAutoPlayChanged;
+  final VoidCallback? onAutoPlayNext;
+  final bool theaterMode;
+  final ValueChanged<bool>? onTheaterModeChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -309,6 +347,11 @@ class _PlayerBlock extends StatelessWidget {
               bvid: detail.bvid,
               title: detail.title,
               immersive: false,
+              autoPlay: autoPlay,
+              onAutoPlayChanged: onAutoPlayChanged,
+              onAutoPlayNext: onAutoPlayNext,
+              theaterMode: theaterMode,
+              onTheaterModeChanged: onTheaterModeChanged,
             ),
           ),
         ),

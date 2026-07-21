@@ -15,6 +15,7 @@ class PlayerColors extends ThemeExtension<PlayerColors> {
     required this.progressTrack,
     required this.danmakuDefault,
     required this.chromeGlass,
+    required this.menuSurface,
   });
 
   final Color scrimTop;
@@ -27,6 +28,9 @@ class PlayerColors extends ThemeExtension<PlayerColors> {
   final Color danmakuDefault;
   final Color chromeGlass;
 
+  /// Right-side settings popover plate (DESIGN.md §2).
+  final Color menuSurface;
+
   static const standard = PlayerColors(
     scrimTop: Color(0x00000000),
     scrimBottom: Color(0x99000000),
@@ -37,6 +41,7 @@ class PlayerColors extends ThemeExtension<PlayerColors> {
     progressTrack: Color(0x33FFFFFF),
     danmakuDefault: Color(0xFFF8FAFC),
     chromeGlass: Palette.glassTintPlayer,
+    menuSurface: Palette.menuSurfacePlayer,
   );
 
   static PlayerColors of(BuildContext context) {
@@ -54,6 +59,7 @@ class PlayerColors extends ThemeExtension<PlayerColors> {
     Color? progressTrack,
     Color? danmakuDefault,
     Color? chromeGlass,
+    Color? menuSurface,
   }) {
     return PlayerColors(
       scrimTop: scrimTop ?? this.scrimTop,
@@ -65,6 +71,7 @@ class PlayerColors extends ThemeExtension<PlayerColors> {
       progressTrack: progressTrack ?? this.progressTrack,
       danmakuDefault: danmakuDefault ?? this.danmakuDefault,
       chromeGlass: chromeGlass ?? this.chromeGlass,
+      menuSurface: menuSurface ?? this.menuSurface,
     );
   }
 
@@ -81,6 +88,7 @@ class PlayerColors extends ThemeExtension<PlayerColors> {
       progressTrack: Color.lerp(progressTrack, other.progressTrack, t)!,
       danmakuDefault: Color.lerp(danmakuDefault, other.danmakuDefault, t)!,
       chromeGlass: Color.lerp(chromeGlass, other.chromeGlass, t)!,
+      menuSurface: Color.lerp(menuSurface, other.menuSurface, t)!,
     );
   }
 }

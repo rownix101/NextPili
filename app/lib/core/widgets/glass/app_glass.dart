@@ -13,6 +13,7 @@ export 'package:liquid_glass_widgets/liquid_glass_widgets.dart'
         GlassDialogAction,
         GlassGroupedSection,
         GlassIconButton,
+        GlassInteractionBehavior,
         GlassListTile,
         GlassMenu,
         GlassModalSheet,
@@ -23,9 +24,14 @@ export 'package:liquid_glass_widgets/liquid_glass_widgets.dart'
         GlassSegment,
         GlassSegmentedControl,
         GlassSlider,
+        GlassSpecularSharpness,
         GlassTab,
         GlassTabBar,
         GlassTextField,
+        GlassToolbar,
         LiquidGlassSettings,
         LiquidGlassWidgets,
         LiquidRoundedSuperellipse;
+
+export 'glass_panel.dart';
+export 'mobile_glass_tab_bar.dart';

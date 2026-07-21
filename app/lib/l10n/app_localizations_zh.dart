@@ -417,6 +417,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playerSpeed => '倍速';
 
   @override
+  String get playerSpeedDecrease => '减慢播放速度';
+
+  @override
+  String get playerSpeedIncrease => '加快播放速度';
+
+  @override
+  String get playerSpeedSlider => '播放速度';
+
+  @override
   String get playerAudio => '音轨';
 
   @override
@@ -430,6 +439,48 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get playerSubtitleOff => '关闭字幕';
+
+  @override
+  String get playerSubtitleOn => '开启字幕';
+
+  @override
+  String get playerSubtitleToggleOff => '关闭字幕';
+
+  @override
+  String get playerSettings => '播放设置';
+
+  @override
+  String get playerStableVolume => '稳定音量';
+
+  @override
+  String get playerVoiceBoost => '人声增强';
+
+  @override
+  String get playerAmbientMode => '氛围模式';
+
+  @override
+  String get playerSleepTimer => '定时关闭';
+
+  @override
+  String get playerSleepTimerOff => '关闭';
+
+  @override
+  String get playerSleepTimerEndOfVideo => '播完当前视频';
+
+  @override
+  String get playerAutoPlay => '自动连播';
+
+  @override
+  String get playerAutoPlayOn => '已开启自动连播';
+
+  @override
+  String get playerAutoPlayOff => '已关闭自动连播';
+
+  @override
+  String get playerTheater => '剧场模式';
+
+  @override
+  String get playerTheaterExit => '退出剧场模式';
 
   @override
   String get playerFullscreen => '全屏';

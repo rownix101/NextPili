@@ -12,7 +12,7 @@ import '../../l10n/l10n.dart';
 
 /// Multi-P list on the watch-page right rail — interaction §4.0 / §4.5.
 ///
-/// Opaque elevated surface (not glass) — design-system §2.
+/// Opaque content tray (design-system §2 — lists are content, not glass chrome).
 class PartsPanel extends StatelessWidget {
   const PartsPanel({
     super.key,

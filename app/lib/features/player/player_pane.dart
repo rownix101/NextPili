@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
@@ -21,6 +21,8 @@ import 'playback_session.dart';
 import 'player_adapter.dart';
 import 'player_bottom_chrome.dart';
 import 'player_premium_audio_toast.dart';
+import 'player_settings_local_state.dart';
+import 'player_settings_overlay.dart';
 import 'player_top_bar.dart';
 import 'subtitle_overlay.dart';
 
@@ -45,6 +47,11 @@ class PlayerPane extends ConsumerStatefulWidget {
     this.immersive = false,
     this.showBack = false,
     this.onBack,
+    this.autoPlay = true,
+    this.onAutoPlayChanged,
+    this.onAutoPlayNext,
+    this.theaterMode = false,
+    this.onTheaterModeChanged,
   });
 
   final String videoId;
@@ -67,6 +74,19 @@ class PlayerPane extends ConsumerStatefulWidget {
 
   final VoidCallback? onBack;
 
+  /// When true, request next part/video after playback completes.
+  final bool autoPlay;
+
+  final ValueChanged<bool>? onAutoPlayChanged;
+
+  /// Invoked once when the active media completes and [autoPlay] is on.
+  final VoidCallback? onAutoPlayNext;
+
+  /// Theater layout (watch page expands player / hides rail).
+  final bool theaterMode;
+
+  final ValueChanged<bool>? onTheaterModeChanged;
+
   @override
   ConsumerState<PlayerPane> createState() => _PlayerPaneState();
 }
@@ -84,6 +104,16 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> with RouteAware {
   bool _premiumToastVisible = false;
   Timer? _premiumToastTimer;
   Uint8List? _premiumFrostFrame;
+  bool _settingsOpen = false;
+  PlayerSettingsLocalState _settingsLocal = const PlayerSettingsLocalState();
+  late final FocusNode _paneFocus =
+      FocusNode(debugLabel: 'player.pane.settings');
+
+  /// Last non-null subtitle so bottom-bar toggle can restore language.
+  SubtitleTrackDto? _lastSubtitleTrack;
+  StreamSubscription<bool>? _completedSub;
+  bool _autoPlayNextArmed = true;
+  late bool _autoPlay;
 
   /// True when subscribed to [appRouteObserver] (inline watch-page only).
   bool _routeSubscribed = false;
@@ -101,6 +131,7 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> with RouteAware {
   @override
   void initState() {
     super.initState();
+    _autoPlay = widget.autoPlay;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _claimSession();
@@ -130,8 +161,23 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> with RouteAware {
     }
     _chromeHideTimer?.cancel();
     _premiumToastTimer?.cancel();
+    unawaited(_completedSub?.cancel());
     _dmComposer.dispose();
+    _paneFocus.dispose();
     super.dispose();
+  }
+
+  void _bindCompletedListener(MediaKitPlayerAdapter adapter) {
+    if (_completedSub != null) return;
+    _completedSub = adapter.player.stream.completed.listen((done) {
+      if (!done || !mounted) return;
+      if (!_autoPlayNextArmed) return;
+      if (!_autoPlay) return;
+      final next = widget.onAutoPlayNext;
+      if (next == null) return;
+      _autoPlayNextArmed = false;
+      next();
+    });
   }
 
   void _claimSession() {
@@ -139,6 +185,16 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> with RouteAware {
           _target,
           host: widget.host,
         );
+  }
+
+  /// Riverpod forbids provider writes during build/dependency resolution.
+  /// [RouteObserver.subscribe] calls [didPush] synchronously from
+  /// [didChangeDependencies], so session open/release must run after the frame.
+  void _claimSessionSoon() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _claimSession();
+    });
   }
 
   void _releaseInline({required bool preferMini}) {
@@ -149,16 +205,24 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> with RouteAware {
         );
   }
 
+  void _releaseInlineSoon({required bool preferMini}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _releaseInline(preferMini: preferMini);
+    });
+  }
+
   @override
   void didPush() {
-    // First frame may race with initState post-frame; sameMedia short-circuits.
-    _claimSession();
+    // subscribe → didPush is sync during didChangeDependencies; defer open.
+    // May race initState post-frame claim; sameMedia short-circuits.
+    _claimSessionSoon();
   }
 
   @override
   void didPopNext() {
     // Route above us was popped (e.g. related video → back to this watch page).
-    _claimSession();
+    _claimSessionSoon();
   }
 
   @override
@@ -166,12 +230,14 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> with RouteAware {
     // Covered by another *page* route (related push). Detach without mini so
     // the new watch page can open cleanly; mini is for leaving the watch stack.
     // PopupMenu/showMenu must NOT reach here — appRouteObserver is PageRoute-only.
-    _releaseInline(preferMini: false);
+    _releaseInlineSoon(preferMini: false);
   }
 
   @override
   void didPop() {
     // This watch page left the stack. Mini if still owning and playing.
+    // Route is already leaving; fire release immediately (not post-frame —
+    // widget may unmount before the next frame callback runs).
     _releaseInline(preferMini: true);
   }
 
@@ -300,6 +366,10 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> with RouteAware {
   }
 
   void _bumpChrome() {
+    if (_settingsOpen) {
+      _holdChrome(true);
+      return;
+    }
     if (!_showChrome) {
       _setChromeVisible(true);
     } else {
@@ -307,15 +377,48 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> with RouteAware {
     }
   }
 
+  void _setSettingsOpen(bool open) {
+    if (_settingsOpen == open) return;
+    setState(() => _settingsOpen = open);
+    if (open) {
+      _holdChrome(true);
+      _paneFocus.requestFocus();
+    } else {
+      _holdChrome(false);
+    }
+  }
+
+  void _toggleSettings() {
+    _setSettingsOpen(!_settingsOpen);
+  }
+
+  void _closeSettings() {
+    if (_settingsOpen) _setSettingsOpen(false);
+  }
+
+  KeyEventResult _onPaneKey(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+    if (event.logicalKey == LogicalKeyboardKey.escape && _settingsOpen) {
+      _closeSettings();
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
   @override
   void didUpdateWidget(covariant PlayerPane oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.autoPlay != widget.autoPlay && widget.autoPlay != _autoPlay) {
+      _autoPlay = widget.autoPlay;
+    }
     if (oldWidget.cid != widget.cid ||
         oldWidget.videoId != widget.videoId ||
         oldWidget.qn != widget.qn ||
         oldWidget.epId != widget.epId ||
         oldWidget.host != widget.host) {
-      _claimSession();
+      _autoPlayNextArmed = true;
+      // didUpdateWidget runs during rebuild — defer provider write.
+      _claimSessionSoon();
     }
   }
 
@@ -360,6 +463,7 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> with RouteAware {
   Future<void> _switchSubtitle(SubtitleTrackDto? track) async {
     try {
       await ref.read(playbackSessionProvider.notifier).switchSubtitle(track);
+      if (track != null) _lastSubtitleTrack = track;
       await Haptics.selection();
       if (mounted) setState(() {});
     } catch (e) {
@@ -370,6 +474,39 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> with RouteAware {
         SnackBar(content: Text(errorMessage(e, context.l10n))),
       );
     }
+  }
+
+  Future<void> _toggleSubtitles(MediaKitPlayerAdapter adapter) async {
+    final current = adapter.currentSubtitle;
+    if (current != null) {
+      _lastSubtitleTrack = current;
+      await _switchSubtitle(null);
+      return;
+    }
+    final tracks = adapter.subtitleOptions;
+    if (tracks.isEmpty) return;
+    SubtitleTrackDto? restore = _lastSubtitleTrack;
+    if (restore != null) {
+      final stillThere = tracks.any((t) => t.id == restore!.id);
+      if (!stillThere) restore = null;
+    }
+    await _switchSubtitle(restore ?? tracks.first);
+  }
+
+  void _toggleAutoPlay() {
+    final next = !_autoPlay;
+    setState(() {
+      _autoPlay = next;
+      _autoPlayNextArmed = true;
+    });
+    widget.onAutoPlayChanged?.call(next);
+    unawaited(Haptics.selection());
+  }
+
+  void _toggleTheater() {
+    final next = !widget.theaterMode;
+    widget.onTheaterModeChanged?.call(next);
+    unawaited(Haptics.selection());
   }
 
   @override
@@ -407,189 +544,292 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> with RouteAware {
     if (ownsSurface && !loading && error == null && adapter != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
+        _bindCompletedListener(adapter);
         _syncPremiumAudioToast(adapter);
       });
     }
 
-    return ColoredBox(
-      color: Colors.black,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (error != null)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      errorMessage(error, l10n),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: player.controlFg),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    FilledButton(
-                      onPressed: () => notifier.retry(),
-                      child: Text(l10n.retry),
-                    ),
-                  ],
+    final chromeVisible = _showChrome || _settingsOpen;
+
+    return Focus(
+      focusNode: _paneFocus,
+      onKeyEvent: _onPaneKey,
+      child: ColoredBox(
+        color: Colors.black,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (error != null)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        errorMessage(error, l10n),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: player.controlFg),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      FilledButton(
+                        onPressed: () => notifier.retry(),
+                        child: Text(l10n.retry),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else if (loading)
+              const AppLoading()
+            else if (ownsSurface && adapter != null)
+              MouseRegion(
+                onHover: (_) => _bumpChrome(),
+                child: GestureDetector(
+                  onTap: () {
+                    if (_settingsOpen) {
+                      _closeSettings();
+                      return;
+                    }
+                    _toggleChrome();
+                  },
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Video(
+                        controller: adapter.controller,
+                        controls: NoVideoControls,
+                        fill: Colors.black,
+                        // CC is drawn by [SubtitleOverlay] — disable media_kit
+                        // SubtitleView so we never hit mpv sub-add mid-playback.
+                        subtitleViewConfiguration:
+                            const SubtitleViewConfiguration(visible: false),
+                      ),
+                      if (adapter.subtitleCues.isNotEmpty)
+                        SubtitleOverlay(
+                          position: adapter.player.stream.position,
+                          cues: adapter.subtitleCues,
+                          initialPosition: adapter.player.state.position,
+                        ),
+                      if (session.resolvedAid > 0)
+                        DanmakuOverlay(
+                          key: _danmakuKey,
+                          aid: session.resolvedAid,
+                          cid: widget.cid,
+                          position: adapter.player.stream.position,
+                          playing: adapter.player.stream.playing,
+                          initialPlaying: adapter.player.state.playing,
+                          enabled: session.danmakuOn,
+                          playbackRate: adapter.rate,
+                          onDanmakuLongPress: (item) {
+                            unawaited(
+                              showDanmakuActions(
+                                context,
+                                item: item,
+                                cid: widget.cid,
+                              ),
+                            );
+                          },
+                        ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              const AppLoading(),
+            if (_settingsOpen)
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: _closeSettings,
+                  child: const SizedBox.expand(),
                 ),
               ),
-            )
-          else if (loading)
-            const AppLoading()
-          else if (ownsSurface && adapter != null)
-            MouseRegion(
-              onHover: (_) => _bumpChrome(),
-              child: GestureDetector(
-                onTap: _toggleChrome,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Video(
-                      controller: adapter.controller,
-                      controls: NoVideoControls,
-                      fill: Colors.black,
-                      // CC is drawn by [SubtitleOverlay] — disable media_kit
-                      // SubtitleView so we never hit mpv sub-add mid-playback.
-                      subtitleViewConfiguration:
-                          const SubtitleViewConfiguration(visible: false),
-                    ),
-                    if (adapter.subtitleCues.isNotEmpty)
-                      SubtitleOverlay(
-                        position: adapter.player.stream.position,
-                        cues: adapter.subtitleCues,
-                        initialPosition: adapter.player.state.position,
-                      ),
-                    if (session.resolvedAid > 0)
-                      DanmakuOverlay(
-                        key: _danmakuKey,
-                        aid: session.resolvedAid,
-                        cid: widget.cid,
-                        position: adapter.player.stream.position,
-                        playing: adapter.player.stream.playing,
-                        initialPlaying: adapter.player.state.playing,
-                        enabled: session.danmakuOn,
-                        playbackRate: adapter.rate,
-                        onDanmakuLongPress: (item) {
-                          unawaited(
-                            showDanmakuActions(
-                              context,
-                              item: item,
-                              cid: widget.cid,
-                            ),
-                          );
-                        },
-                      ),
-                  ],
-                ),
-              ),
-            )
-          else
-            const AppLoading(),
-          Positioned.fill(
-            child: IgnorePointer(
-              ignoring: !_showChrome,
-              child: AnimatedOpacity(
-                opacity: _showChrome ? 1 : 0,
-                duration: appMotionDuration(
-                  context,
-                  AppDuration.playerChrome,
-                  reduced: AppDuration.short2,
-                ),
-                curve: AppEasing.standard,
-                child: Stack(
-                  children: [
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      child: PlayerTopBar(
-                        title: widget.title.isEmpty
-                            ? widget.videoId
-                            : widget.title,
-                        showTitle: widget.immersive || widget.showBack,
-                        showBack: widget.showBack,
-                        colors: player,
-                        onBack: widget.onBack,
-                        danmakuOn: session.danmakuOn,
-                        onToggleDanmaku: () {
-                          _bumpChrome();
-                          notifier.toggleDanmaku();
-                        },
-                        onFullscreen: widget.host ==
-                                PlayerSurfaceHost.fullscreen
-                            ? () => notifier.exitFullscreen()
-                            : () => notifier.enterFullscreen(),
-                        fullscreenExit:
-                            widget.host == PlayerSurfaceHost.fullscreen,
-                        onMini: widget.host == PlayerSurfaceHost.inline
-                            ? () => notifier.enterMini()
-                            : null,
-                      ),
-                    ),
-                    if (!loading &&
-                        error == null &&
-                        ownsSurface &&
-                        adapter != null)
+            Positioned.fill(
+              child: IgnorePointer(
+                ignoring: !chromeVisible,
+                child: AnimatedOpacity(
+                  opacity: chromeVisible ? 1 : 0,
+                  duration: appMotionDuration(
+                    context,
+                    AppDuration.playerChrome,
+                    reduced: AppDuration.short2,
+                  ),
+                  curve: AppEasing.standard,
+                  child: Stack(
+                    children: [
                       Positioned(
+                        top: 0,
                         left: 0,
                         right: 0,
-                        bottom: 0,
-                        child: PlayerBottomChrome(
-                          adapter: adapter,
+                        child: PlayerTopBar(
+                          title: widget.title.isEmpty
+                              ? widget.videoId
+                              : widget.title,
+                          showTitle: widget.immersive || widget.showBack,
+                          showBack: widget.showBack,
                           colors: player,
+                          onBack: widget.onBack,
                           danmakuOn: session.danmakuOn,
-                          dmComposer: _dmComposer,
-                          sendingDm: _sendingDm,
-                          onSendDanmaku: () {
-                            _holdChrome(true);
-                            unawaited(_sendDanmaku(adapter).whenComplete(() {
-                              if (mounted) _holdChrome(false);
-                            }));
+                          onToggleDanmaku: () {
+                            _bumpChrome();
+                            notifier.toggleDanmaku();
                           },
-                          onDmFocus: (focused) => _holdChrome(focused),
                           onFullscreen: widget.host ==
                                   PlayerSurfaceHost.fullscreen
                               ? () => notifier.exitFullscreen()
                               : () => notifier.enterFullscreen(),
                           fullscreenExit:
                               widget.host == PlayerSurfaceHost.fullscreen,
-                          onQuality: (s) {
-                            _bumpChrome();
-                            unawaited(_switchQuality(s));
-                          },
-                          onSpeed: (r) {
-                            _bumpChrome();
-                            unawaited(_switchSpeed(r));
-                          },
-                          onSubtitle: (t) {
-                            _bumpChrome();
-                            unawaited(_switchSubtitle(t));
-                          },
-                          onHoldChrome: _holdChrome,
-                          onInteract: _bumpChrome,
+                          onMini: widget.host == PlayerSurfaceHost.inline
+                              ? () => notifier.enterMini()
+                              : null,
                         ),
                       ),
-                  ],
+                      if (!loading &&
+                          error == null &&
+                          ownsSurface &&
+                          adapter != null)
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: PlayerBottomChrome(
+                            adapter: adapter,
+                            colors: player,
+                            danmakuOn: session.danmakuOn,
+                            dmComposer: _dmComposer,
+                            sendingDm: _sendingDm,
+                            onSendDanmaku: () {
+                              _holdChrome(true);
+                              unawaited(
+                                _sendDanmaku(adapter).whenComplete(() {
+                                  if (mounted && !_settingsOpen) {
+                                    _holdChrome(false);
+                                  }
+                                }),
+                              );
+                            },
+                            onDmFocus: (focused) {
+                              if (focused) {
+                                _holdChrome(true);
+                              } else if (!_settingsOpen) {
+                                _holdChrome(false);
+                              }
+                            },
+                            onFullscreen: widget.host ==
+                                    PlayerSurfaceHost.fullscreen
+                                ? () => notifier.exitFullscreen()
+                                : () => notifier.enterFullscreen(),
+                            fullscreenExit:
+                                widget.host == PlayerSurfaceHost.fullscreen,
+                            autoPlay: _autoPlay,
+                            subtitlesOn: adapter.currentSubtitle != null,
+                            subtitlesAvailable:
+                                adapter.subtitleOptions.isNotEmpty,
+                            onToggleAutoPlay: () {
+                              _bumpChrome();
+                              _toggleAutoPlay();
+                            },
+                            onToggleSubtitles: () {
+                              _bumpChrome();
+                              unawaited(_toggleSubtitles(adapter));
+                            },
+                            onToggleTheater:
+                                widget.onTheaterModeChanged == null ||
+                                        widget.host !=
+                                            PlayerSurfaceHost.inline
+                                    ? null
+                                    : () {
+                                        _bumpChrome();
+                                        _toggleTheater();
+                                      },
+                            theaterMode: widget.theaterMode,
+                            onHoldChrome: (held) {
+                              if (!held && _settingsOpen) return;
+                              _holdChrome(held);
+                            },
+                            onInteract: _bumpChrome,
+                            onToggleSettings: _toggleSettings,
+                            settingsOpen: _settingsOpen,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          if (ownsSurface &&
-              !loading &&
-              error == null &&
-              adapter != null &&
-              _premiumToastRole != null)
-            Positioned.fill(
-              child: PlayerPremiumAudioToast(
-                role: _premiumToastRole!,
-                visible: _premiumToastVisible,
-                frostFrame: _premiumFrostFrame,
+            if (ownsSurface &&
+                !loading &&
+                error == null &&
+                adapter != null)
+              Positioned(
+                top: 56,
+                right: AppSpacing.sm,
+                bottom: 72,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: PlayerSettingsOverlayHost(
+                    visible: _settingsOpen,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final maxW = constraints.maxWidth.clamp(0.0, 320.0);
+                        final width =
+                            maxW < 240 ? maxW : kPlayerSettingsPanelWidth;
+                        final q = adapter.currentVideo;
+                        final sub = adapter.currentSubtitle;
+                        return SizedBox(
+                          width: width.clamp(0.0, kPlayerSettingsPanelWidth),
+                          child: PlayerSettingsOverlay(
+                            colors: player,
+                            local: _settingsLocal,
+                            onLocalChanged: (s) {
+                              setState(() => _settingsLocal = s);
+                            },
+                            qualityLabel:
+                                q?.qualityLabel ?? l10n.playerQuality,
+                            speedLabel: playerSpeedLabel(adapter.rate),
+                            currentSpeed: adapter.rate,
+                            currentQualityId: q?.id,
+                            subtitleLabel:
+                                sub?.label ?? l10n.playerSubtitleOff,
+                            currentSubtitleId: sub?.id,
+                            qualities: adapter.qualityOptions,
+                            subtitleTracks: adapter.subtitleOptions,
+                            onQuality: (s) {
+                              _bumpChrome();
+                              unawaited(_switchQuality(s));
+                            },
+                            onSpeed: (r) {
+                              _bumpChrome();
+                              unawaited(_switchSpeed(r));
+                            },
+                            onSubtitle: (t) {
+                              _bumpChrome();
+                              unawaited(_switchSubtitle(t));
+                            },
+                            onInteract: _bumpChrome,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
               ),
-            ),
-        ],
+            if (ownsSurface &&
+                !loading &&
+                error == null &&
+                adapter != null &&
+                _premiumToastRole != null)
+              Positioned.fill(
+                child: PlayerPremiumAudioToast(
+                  role: _premiumToastRole!,
+                  visible: _premiumToastVisible,
+                  frostFrame: _premiumFrostFrame,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

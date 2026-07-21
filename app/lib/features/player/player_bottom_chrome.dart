@@ -1,46 +1,70 @@
 import 'package:flutter/material.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
-import '../../bridge/core_api.dart';
 import '../../core/icons/app_icons.dart';
 import '../../core/theme/player_colors.dart';
+import '../../core/theme/shapes.dart';
+import '../../core/widgets/glass/glass_panel.dart';
 import '../../core/widgets/np_button.dart';
 import '../../l10n/l10n.dart';
 import 'player_adapter.dart';
 
-/// Bottom chrome: danmaku composer, seek bar, transport + stream menus.
+/// Bottom chrome: danmaku composer, seek bar, transport + chrome toggles.
+///
+/// Right-side order: autoplay · subtitles · settings · theater · fullscreen.
+/// Quality / speed / subtitle language live in [PlayerSettingsOverlay].
+///
+/// Liquid Glass is **pill-scoped** to icon clusters only (design-system §2 —
+/// not a full-width frosted bar over seek/danmaku).
 class PlayerBottomChrome extends StatelessWidget {
   const PlayerBottomChrome({
     super.key,
     required this.adapter,
     required this.colors,
-    required this.onQuality,
-    required this.onSpeed,
-    required this.onSubtitle,
     required this.danmakuOn,
     required this.dmComposer,
     required this.sendingDm,
     required this.onSendDanmaku,
     required this.onDmFocus,
+    required this.autoPlay,
+    required this.subtitlesOn,
+    required this.subtitlesAvailable,
+    required this.onToggleAutoPlay,
+    required this.onToggleSubtitles,
     this.onFullscreen,
     this.fullscreenExit = false,
     this.onHoldChrome,
     this.onInteract,
+    this.onToggleSettings,
+    this.settingsOpen = false,
+    this.onToggleTheater,
+    this.theaterMode = false,
   });
 
   final MediaKitPlayerAdapter adapter;
   final PlayerColors colors;
-  final ValueChanged<StreamDto> onQuality;
-  final ValueChanged<double> onSpeed;
-  final ValueChanged<SubtitleTrackDto?> onSubtitle;
   final bool danmakuOn;
   final TextEditingController dmComposer;
   final bool sendingDm;
   final VoidCallback onSendDanmaku;
   final ValueChanged<bool> onDmFocus;
+  final bool autoPlay;
+  final bool subtitlesOn;
+  final bool subtitlesAvailable;
+  final VoidCallback onToggleAutoPlay;
+  final VoidCallback onToggleSubtitles;
   final VoidCallback? onFullscreen;
   final bool fullscreenExit;
   final ValueChanged<bool>? onHoldChrome;
   final VoidCallback? onInteract;
+  final VoidCallback? onToggleSettings;
+  final bool settingsOpen;
+  final VoidCallback? onToggleTheater;
+  final bool theaterMode;
+
+  static const double _pillRadius = AppShapes.full;
+  static const double _pillPadH = 4;
+  static const double _pillPadV = 2;
 
   @override
   Widget build(BuildContext context) {
@@ -65,16 +89,20 @@ class PlayerBottomChrome extends StatelessWidget {
                 final value =
                     pos.inMilliseconds.toDouble().clamp(0.0, maxMs).toDouble();
 
-                final qualities = adapter.qualityOptions;
-                final subs = adapter.subtitleOptions;
-                final currentQ = adapter.currentVideo;
-                final currentSub = adapter.currentSubtitle;
-                final rate = adapter.rate;
-
-                return Material(
-                  color: colors.chromeGlass,
+                // Soft bottom scrim for bare seek/danmaku readability — not glass.
+                return DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        colors.scrimTop,
+                        colors.scrimBottom,
+                      ],
+                    ),
+                  ),
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+                    padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -123,8 +151,7 @@ class PlayerBottomChrome extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 6),
                                 TextButton(
-                                  onPressed:
-                                      sendingDm ? null : onSendDanmaku,
+                                  onPressed: sendingDm ? null : onSendDanmaku,
                                   style: TextButton.styleFrom(
                                     foregroundColor: colors.controlFg,
                                     padding: const EdgeInsets.symmetric(
@@ -171,120 +198,130 @@ class PlayerBottomChrome extends StatelessWidget {
                         ),
                         LayoutBuilder(
                           builder: (context, rowConstraints) {
-                            final controls = Row(
-                              children: [
+                            final transport = _GlassIconPill(
+                              colors: colors,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  NpIconButton(
+                                    icon: playing
+                                        ? AppIcons.pause
+                                        : AppIcons.play,
+                                    color: colors.controlFg,
+                                    onPressed: () {
+                                      onInteract?.call();
+                                      if (playing) {
+                                        adapter.pause();
+                                      } else {
+                                        adapter.play();
+                                      }
+                                    },
+                                    tooltip: playing ? l10n.pause : l10n.play,
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 8),
+                                    child: Text(
+                                      '${formatPlayerDuration(pos)} / ${formatPlayerDuration(dur)}',
+                                      style: TextStyle(
+                                        color: colors.controlFgMuted,
+                                        fontSize: 12,
+                                        fontFeatures: const [
+                                          FontFeature.tabularFigures(),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+
+                            final chromeIcons = <Widget>[
+                              NpIconButton(
+                                icon: AppIcons.autoPlay,
+                                color: autoPlay
+                                    ? colors.progressPlayed
+                                    : colors.controlFg,
+                                onPressed: () {
+                                  onInteract?.call();
+                                  onToggleAutoPlay();
+                                },
+                                tooltip: autoPlay
+                                    ? l10n.playerAutoPlayOn
+                                    : l10n.playerAutoPlayOff,
+                              ),
+                              if (subtitlesAvailable)
                                 NpIconButton(
-                                  icon:
-                                      playing ? AppIcons.pause : AppIcons.play,
-                                  color: colors.controlFg,
+                                  icon: subtitlesOn
+                                      ? AppIcons.captions
+                                      : AppIcons.captionsOff,
+                                  color: subtitlesOn
+                                      ? colors.progressPlayed
+                                      : colors.controlFg,
                                   onPressed: () {
                                     onInteract?.call();
-                                    if (playing) {
-                                      adapter.pause();
-                                    } else {
-                                      adapter.play();
-                                    }
+                                    onToggleSubtitles();
                                   },
-                                  tooltip: playing ? l10n.pause : l10n.play,
+                                  tooltip: subtitlesOn
+                                      ? l10n.playerSubtitleToggleOff
+                                      : l10n.playerSubtitleOn,
                                 ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${formatPlayerDuration(pos)} / ${formatPlayerDuration(dur)}',
-                                  style: TextStyle(
-                                    color: colors.controlFgMuted,
-                                    fontSize: 12,
-                                    fontFeatures: const [
-                                      FontFeature.tabularFigures(),
-                                    ],
-                                  ),
+                              if (onToggleSettings != null)
+                                NpIconButton(
+                                  icon: AppIcons.sliders,
+                                  color: settingsOpen
+                                      ? colors.progressPlayed
+                                      : colors.controlFg,
+                                  onPressed: () {
+                                    onInteract?.call();
+                                    onToggleSettings?.call();
+                                  },
+                                  tooltip: l10n.playerSettings,
                                 ),
+                              if (onToggleTheater != null)
+                                NpIconButton(
+                                  icon: theaterMode
+                                      ? AppIcons.theaterExit
+                                      : AppIcons.theater,
+                                  color: theaterMode
+                                      ? colors.progressPlayed
+                                      : colors.controlFg,
+                                  onPressed: () {
+                                    onInteract?.call();
+                                    onToggleTheater?.call();
+                                  },
+                                  tooltip: theaterMode
+                                      ? l10n.playerTheaterExit
+                                      : l10n.playerTheater,
+                                ),
+                              if (onFullscreen != null)
+                                NpIconButton(
+                                  icon: fullscreenExit
+                                      ? AppIcons.fullscreenExit
+                                      : AppIcons.fullscreen,
+                                  color: colors.controlFg,
+                                  onPressed: onFullscreen,
+                                  tooltip: fullscreenExit
+                                      ? l10n.playerFullscreenExit
+                                      : l10n.playerFullscreen,
+                                ),
+                            ];
+
+                            final actions = _GlassIconPill(
+                              colors: colors,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: chromeIcons,
+                              ),
+                            );
+
+                            final row = Row(
+                              children: [
+                                transport,
                                 const Spacer(),
-                                if (qualities.isNotEmpty)
-                                  PlayerTextMenuButton(
-                                    label: currentQ?.qualityLabel ??
-                                        l10n.playerQuality,
-                                    tooltip: l10n.playerQuality,
-                                    colors: colors,
-                                    onOpened: () => onHoldChrome?.call(true),
-                                    onClosed: () => onHoldChrome?.call(false),
-                                    items: [
-                                      for (final q in qualities)
-                                        PopupMenuItem(
-                                          value: q.id,
-                                          child: Text(q.qualityLabel),
-                                        ),
-                                    ],
-                                    onSelected: (id) {
-                                      final q = qualities.firstWhere(
-                                        (e) => e.id == id,
-                                        orElse: () => qualities.first,
-                                      );
-                                      onQuality(q);
-                                    },
-                                  ),
-                                PlayerTextMenuButton(
-                                  label: playerSpeedLabel(rate),
-                                  tooltip: l10n.playerSpeed,
-                                  colors: colors,
-                                  onOpened: () => onHoldChrome?.call(true),
-                                  onClosed: () => onHoldChrome?.call(false),
-                                  items: [
-                                    for (final r
-                                        in MediaKitPlayerAdapter.speedOptions)
-                                      PopupMenuItem(
-                                        value: r.toString(),
-                                        child: Text(playerSpeedLabel(r)),
-                                      ),
-                                  ],
-                                  onSelected: (v) {
-                                    final r = double.tryParse(v);
-                                    if (r != null) onSpeed(r);
-                                  },
-                                ),
-                                if (subs.isNotEmpty)
-                                  PlayerTextMenuButton(
-                                    label: currentSub?.label ??
-                                        l10n.playerSubtitleOff,
-                                    tooltip: l10n.playerSubtitle,
-                                    colors: colors,
-                                    onOpened: () => onHoldChrome?.call(true),
-                                    onClosed: () => onHoldChrome?.call(false),
-                                    items: [
-                                      PopupMenuItem(
-                                        value: '',
-                                        child: Text(l10n.playerSubtitleOff),
-                                      ),
-                                      for (final t in subs)
-                                        PopupMenuItem(
-                                          value: t.id,
-                                          child: Text(t.label),
-                                        ),
-                                    ],
-                                    onSelected: (id) {
-                                      if (id.isEmpty) {
-                                        onSubtitle(null);
-                                        return;
-                                      }
-                                      final t = subs.firstWhere(
-                                        (e) => e.id == id,
-                                        orElse: () => subs.first,
-                                      );
-                                      onSubtitle(t);
-                                    },
-                                  ),
-                                if (onFullscreen != null)
-                                  NpIconButton(
-                                    icon: fullscreenExit
-                                        ? AppIcons.fullscreenExit
-                                        : AppIcons.fullscreen,
-                                    color: colors.controlFg,
-                                    onPressed: onFullscreen,
-                                    tooltip: fullscreenExit
-                                        ? l10n.playerFullscreenExit
-                                        : l10n.playerFullscreen,
-                                  ),
+                                actions,
                               ],
                             );
+
                             // Narrow / short-height player: allow horizontal scroll
                             // instead of RenderFlex overflow.
                             if (rowConstraints.maxWidth < 520) {
@@ -294,11 +331,11 @@ class PlayerBottomChrome extends StatelessWidget {
                                   constraints: BoxConstraints(
                                     minWidth: rowConstraints.maxWidth,
                                   ),
-                                  child: controls,
+                                  child: row,
                                 ),
                               );
                             }
-                            return controls;
+                            return row;
                           },
                         ),
                       ],
@@ -314,7 +351,35 @@ class PlayerBottomChrome extends StatelessWidget {
   }
 }
 
-/// Compact popup menu trigger used by quality / audio / speed / subtitle.
+/// Compact Liquid Glass pill around an icon cluster (not full-width chrome).
+class _GlassIconPill extends StatelessWidget {
+  const _GlassIconPill({
+    required this.colors,
+    required this.child,
+  });
+
+  final PlayerColors colors;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassContainer(
+      useOwnLayer: true,
+      quality: GlassQuality.standard,
+      shape: const LiquidRoundedSuperellipse(
+        borderRadius: PlayerBottomChrome._pillRadius,
+      ),
+      settings: GlassPanel.playerChromeSettings(colors.chromeGlass),
+      padding: const EdgeInsets.symmetric(
+        horizontal: PlayerBottomChrome._pillPadH,
+        vertical: PlayerBottomChrome._pillPadV,
+      ),
+      child: child,
+    );
+  }
+}
+
+/// Compact popup menu trigger used by subtitle (and similar chrome menus).
 class PlayerTextMenuButton extends StatelessWidget {
   const PlayerTextMenuButton({
     super.key,

@@ -4,11 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
+import '../../core/adaptive/form_factor.dart';
 import '../../core/icons/app_icons.dart';
 import '../../core/theme/player_colors.dart';
 import '../../core/widgets/loading.dart';
 import '../../core/widgets/np_button.dart';
 import '../../l10n/l10n.dart';
+import 'mini_player_pill.dart';
 import 'playback_session.dart';
 import 'player_pane.dart';
 
@@ -39,8 +41,13 @@ class PlayerOverlayLayer extends ConsumerWidget {
           Positioned.fill(
             child: _OverlayHost(child: _FullscreenHost(target: target)),
           ),
+        // Mobile: glass now-playing pill above tab bar (Apple Music demo).
+        // Desktop: draggable video PiP (existing mini surface host).
         if (host == PlayerSurfaceHost.mini && target != null)
-          _MiniHost(target: target),
+          if (isMobileOs)
+            MiniPlayerPill(target: target)
+          else
+            _MiniHost(target: target),
       ],
     );
   }

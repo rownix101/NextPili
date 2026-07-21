@@ -57,4 +57,7 @@ abstract final class Palette {
   static const glassTintAccentLight = Color(0x240284C7);
   static const glassTintAccentDark = Color(0x2938BDF8);
   static const glassTintPlayer = Color(0x59000000);
+
+  /// Player settings panel plate (no BackdropFilter over video).
+  static const menuSurfacePlayer = Color(0xE6121826);
 }
