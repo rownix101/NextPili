@@ -13,31 +13,13 @@ import '../../core/theme/spacing.dart';
 import '../../core/widgets/np_button.dart';
 import '../../core/widgets/page_header.dart';
 import '../../l10n/l10n.dart';
+import 'accounts_provider.dart';
 import 'auth_login_panel.dart';
 import 'dial_prefix.dart';
 import 'geetest/geetest_result.dart';
 import 'geetest/geetest_webview_dialog.dart';
 import 'password_risk_dialog.dart';
 
-class AccountsNotifier extends Notifier<List<AccountPublicDto>> {
-  @override
-  List<AccountPublicDto> build() {
-    try {
-      return CoreApi.instance.listAccounts();
-    } catch (_) {
-      return const [];
-    }
-  }
-
-  void refresh() {
-    state = CoreApi.instance.listAccounts();
-  }
-}
-
-final accountsProvider =
-    NotifierProvider<AccountsNotifier, List<AccountPublicDto>>(
-  AccountsNotifier.new,
-);
 
 /// Passport URLs opened externally for flows we do not host in-app.
 const _forgotPasswordUrl =

@@ -4,6 +4,7 @@
 
 pub mod api;
 pub mod app;
+pub mod auth_dto;
 pub mod auth_service;
 pub mod error;
 pub mod heartbeat;
