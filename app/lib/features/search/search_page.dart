@@ -15,6 +15,7 @@ import '../../core/widgets/loading.dart';
 import '../../core/widgets/page_header.dart';
 import '../../core/widgets/video_card.dart';
 import '../../l10n/l10n.dart';
+import '../../core/widgets/app_snack_bar.dart';
 
 class SearchPage extends ConsumerStatefulWidget {
   const SearchPage({super.key});
@@ -149,9 +150,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _loadingMore = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage(e, context.l10n))),
-      );
+      AppSnackBar.show(context, message: errorMessage(e, context.l10n));
     }
   }
 
@@ -164,6 +163,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       backgroundColor: colors.canvas,
       appBar: PageHeader(
         title: l10n.searchTitle,
+        showBack: Navigator.canPop(context),
       ),
       body: Column(
         children: [

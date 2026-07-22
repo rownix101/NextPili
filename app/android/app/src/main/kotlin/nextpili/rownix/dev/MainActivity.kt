@@ -1,0 +1,5 @@
+package nextpili.rownix.dev
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity : FlutterActivity()

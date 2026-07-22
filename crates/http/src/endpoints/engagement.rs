@@ -49,9 +49,7 @@ impl EngagementApi {
         Ok(map_relation(data))
     }
 
-    /// `POST /x/web-interface/archive/like`
-    ///
-    /// Web convention: `like=1` 点赞 · `like=2` 取消.
+    /// `POST /x/web-interface/archive/like` — `like=1` 点赞 · `like=2` 取消.
     pub async fn archive_like(
         client: &BiliClient,
         account: &Account,
@@ -70,15 +68,25 @@ impl EngagementApi {
         params.insert("like".into(), if like { "1" } else { "2" }.into());
 
         let url = BiliClient::resolve_url(API_BASE, "/x/web-interface/archive/like");
-        post_csrf(
-            client,
-            account,
+        let opts = RequestOptions {
+            account: Some(account),
             device_buvid3,
-            &url,
-            params,
-            video_referer(bvid, aid),
-        )
-        .await
+            auth: crate::middleware::AuthMode::Cookie,
+            csrf: true,
+            ..RequestOptions::default()
+        }
+        .with_referer(video_referer(bvid, aid));
+
+        let resp = client
+            .post_form_bili::<Value>(&url, params, opts)
+            .await?;
+        match resp.code {
+            0 => Ok(()),
+            65006 if like => Ok(()),
+            65004 if !like => Ok(()),
+            _ if is_like_idempotent_message(resp.message_text(), like) => Ok(()),
+            _ => resp.ensure_ok(),
+        }
     }
 
     /// `POST /x/web-interface/coin/add`
@@ -246,6 +254,18 @@ fn video_referer(bvid: &str, aid: i64) -> &'static str {
     "https://www.bilibili.com/"
 }
 
+fn is_like_idempotent_message(message: &str, like: bool) -> bool {
+    let m = message.trim();
+    if m.is_empty() {
+        return false;
+    }
+    if like {
+        m.contains("重复") || m.contains("已赞") || m.contains("已经点赞")
+    } else {
+        m.contains("未点赞") || m.contains("还没有点赞") || m.contains("取消点赞失败")
+    }
+}
+
 #[derive(Debug, Deserialize, Default)]
 struct RelationData {
     #[serde(default)]
@@ -286,5 +306,13 @@ mod tests {
         assert!(r.liked && r.favorited && r.following);
         assert!(!r.disliked);
         assert_eq!(r.coin, 2);
+    }
+
+    #[test]
+    fn like_idempotent_messages() {
+        assert!(is_like_idempotent_message("重复操作", true));
+        assert!(is_like_idempotent_message("已经点赞过了", true));
+        assert!(!is_like_idempotent_message("重复操作", false));
+        assert!(is_like_idempotent_message("未点赞", false));
     }
 }

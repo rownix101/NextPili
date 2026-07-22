@@ -91,8 +91,9 @@ runApp(
 | Linux | `~/.local/share/nextpili` |
 | Windows | `%APPDATA%/nextpili` |
 | macOS | `~/Library/Application Support/nextpili` |
+| Android | `getApplicationSupportDirectory()` / `getApplicationCacheDirectory()`（应用私有目录，经 `path_provider`） |
 
-使用 `path_provider` 取目录。
+使用 `path_provider` 取目录。`CoreApi.bootstrapDefault` 在 support/cache 下再挂 `nextpili/` 子目录。
 
 ### 3.1 玻璃使用边界（工程）
 

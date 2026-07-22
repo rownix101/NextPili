@@ -19,7 +19,7 @@ pub use auth::{
     login_sms, login_sms_send, logout, new_login_session_id, set_account_slot, AccountPublicDto,
     CaptchaDto, PasswordLoginDto, PasswordLoginResultDto, PasswordLoginResultKind, PasswordRiskDto,
     PasswordRiskSendSmsDto, PasswordRiskSendSmsResultDto, PasswordRiskVerifyDto, QrPollDto,
-    QrStartDto, QrStatusKind, SlotDto, SmsLoginDto, SmsSendDto, SmsSendDtoResult,
+    QrStartDto, QrStatusKind, SlotDto, SmsLoginDto, SmsSendDto, SmsSendDtoResult, SmsSendResultKind,
 };
 pub use dynamics::{dynamics_feed, DynamicItemDto, DynamicPageDto};
 pub use engagement::{

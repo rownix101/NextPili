@@ -19,6 +19,7 @@ import 'dial_prefix.dart';
 import 'geetest/geetest_result.dart';
 import 'geetest/geetest_webview_dialog.dart';
 import 'password_risk_dialog.dart';
+import '../../core/widgets/app_snack_bar.dart';
 
 
 /// Passport URLs opened externally for flows we do not host in-app.
@@ -124,7 +125,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
 
   void _toast(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    AppSnackBar.show(context, message: msg);
   }
 
   Future<void> _openExternal(String url, String failToast) async {
@@ -227,7 +228,33 @@ class _AuthPageState extends ConsumerState<AuthPage>
     );
   }
 
-  /// Fetch captcha params + embedded GeeTest (PiliPlus-style).
+  /// Run GeeTest for [captcha] and store SMS gee_* fields. Returns false if cancelled.
+  Future<bool> _solveSmsGeetest(CaptchaDto captcha) async {
+    setState(() {
+      _captcha = captcha;
+      _captchaKey = null;
+      _smsGeeChallenge = null;
+      _smsGeeValidate = null;
+      _smsGeeSeccode = null;
+      _smsHint = context.l10n.authSmsHintCompleteGee;
+    });
+    final result = await _runGeetest(captcha.gt, captcha.challenge);
+    if (!mounted) return false;
+    if (result == null) {
+      setState(() => _smsHint = context.l10n.authSmsHintCompleteGee);
+      return false;
+    }
+    setState(() {
+      _smsGeeChallenge = result.challenge;
+      _smsGeeValidate = result.validate;
+      _smsGeeSeccode = result.seccode;
+      _smsHint = context.l10n.authCaptchaKeyReady;
+    });
+    _toast(context.l10n.authCaptchaKeyReady);
+    return true;
+  }
+
+  /// Optional early captcha (web captcha endpoint) before send.
   Future<void> _solveSmsCaptcha() async {
     setState(() {
       _busy = true;
@@ -235,79 +262,89 @@ class _AuthPageState extends ConsumerState<AuthPage>
     });
     try {
       final captcha = await CoreApi.instance.loginCaptcha();
-      final session = CoreApi.instance.newLoginSessionId();
-      if (!mounted) return;
-      setState(() {
-        _captcha = captcha;
-        _loginSessionId = session;
-        _captchaKey = null;
-        _smsGeeChallenge = null;
-        _smsGeeValidate = null;
-        _smsGeeSeccode = null;
-        _smsHint = context.l10n.authSmsHintCompleteGee;
-      });
-      final result = await _runGeetest(captcha.gt, captcha.challenge);
-      if (!mounted) return;
-      if (result == null) {
-        setState(() => _smsHint = context.l10n.authSmsHintCompleteGee);
-        return;
+      if (_loginSessionId.isEmpty) {
+        _loginSessionId = CoreApi.instance.newLoginSessionId();
       }
-      setState(() {
-        _smsGeeChallenge = result.challenge;
-        _smsGeeValidate = result.validate;
-        _smsGeeSeccode = result.seccode;
-        _smsHint = context.l10n.authCaptchaKeyReady;
-      });
-      _toast(context.l10n.authCaptchaKeyReady);
+      if (!mounted) return;
+      await _solveSmsGeetest(captcha);
     } catch (e) {
+      if (!mounted) return;
       _toast(errorMessage(e, context.l10n));
-      if (mounted) {
-        setState(() => _smsHint = context.l10n.authSmsHintFetchFailed);
-      }
+      setState(() => _smsHint = context.l10n.authSmsHintFetchFailed);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
+  /// PiliPlus SMS: send → (optional) need captcha → geetest → resend with gee_*.
   Future<void> _sendSms() async {
     final tel = _telController.text.trim();
-    var captcha = _captcha;
-    var validate = _smsGeeValidate;
-    var seccode = _smsGeeSeccode;
-    var challenge = _smsGeeChallenge;
-
-    if (captcha == null ||
-        validate == null ||
-        validate.isEmpty ||
-        seccode == null ||
-        seccode.isEmpty) {
-      await _solveSmsCaptcha();
-      captcha = _captcha;
-      validate = _smsGeeValidate;
-      seccode = _smsGeeSeccode;
-      challenge = _smsGeeChallenge;
-      if (captcha == null ||
-          validate == null ||
-          validate.isEmpty ||
-          seccode == null ||
-          seccode.isEmpty) {
-        return;
-      }
+    if (tel.isEmpty) {
+      _toast(context.l10n.authPhoneHint);
+      return;
     }
 
     setState(() => _busy = true);
     try {
-      final result = await CoreApi.instance.loginSmsSend(
+      if (_loginSessionId.isEmpty) {
+        _loginSessionId = CoreApi.instance.newLoginSessionId();
+      }
+
+      var result = await CoreApi.instance.loginSmsSend(
         SmsSendDto(
           cid: _dial.countryId,
           tel: tel,
-          token: captcha.token,
-          geeChallenge: challenge ?? captcha.challenge,
-          geeValidate: validate,
-          geeSeccode: seccode,
+          token: _captcha?.token ?? '',
+          geeChallenge: _smsGeeChallenge ?? '',
+          geeValidate: _smsGeeValidate ?? '',
+          geeSeccode: _smsGeeSeccode ?? '',
           loginSessionId: _loginSessionId,
         ),
       );
+      if (!mounted) return;
+      _loginSessionId = result.loginSessionId;
+
+      if (result.kind == SmsSendResultKind.needCaptcha) {
+        final captcha = result.captcha;
+        final needMsg = result.message;
+        if (captcha == null || captcha.gt.isEmpty || captcha.challenge.isEmpty) {
+          if (!mounted) return;
+          final fail = context.l10n.authSmsHintFetchFailed;
+          _toast(needMsg.isNotEmpty ? needMsg : fail);
+          setState(() => _smsHint = fail);
+          return;
+        }
+        if (!mounted) return;
+        setState(() => _smsHint = context.l10n.authSmsHintCompleteGee);
+        final ok = await _solveSmsGeetest(captcha);
+        if (!ok || !mounted) return;
+
+        result = await CoreApi.instance.loginSmsSend(
+          SmsSendDto(
+            cid: _dial.countryId,
+            tel: tel,
+            token: _captcha?.token ?? captcha.token,
+            geeChallenge: _smsGeeChallenge ?? captcha.challenge,
+            geeValidate: _smsGeeValidate ?? '',
+            geeSeccode: _smsGeeSeccode ?? '',
+            loginSessionId: _loginSessionId,
+          ),
+        );
+        if (!mounted) return;
+        _loginSessionId = result.loginSessionId;
+        if (result.kind == SmsSendResultKind.needCaptcha) {
+          final fail = context.l10n.authSmsHintFetchFailed;
+          _toast(result.message.isNotEmpty ? result.message : fail);
+          setState(() {
+            _smsGeeChallenge = null;
+            _smsGeeValidate = null;
+            _smsGeeSeccode = null;
+            _smsHint = fail;
+          });
+          return;
+        }
+      }
+
       if (!mounted) return;
       setState(() {
         _captchaKey = result.captchaKey;
@@ -454,6 +491,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
           }
       }
     } catch (e) {
+      if (!mounted) return;
       _toast(errorMessage(e, context.l10n));
     } finally {
       if (mounted) setState(() => _busy = false);

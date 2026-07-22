@@ -8,6 +8,7 @@ pub use crate::auth_service::{
     AccountPublicDto, CaptchaDto, PasswordLoginDto, PasswordLoginResultDto, PasswordLoginResultKind,
     PasswordRiskDto, PasswordRiskSendSmsDto, PasswordRiskSendSmsResultDto, PasswordRiskVerifyDto,
     QrPollDto, QrStartDto, QrStatusKind, SlotDto, SmsLoginDto, SmsSendDto, SmsSendDtoResult,
+    SmsSendResultKind,
 };
 
 /// Start TV/HD QR login. Prefer only on desktop / tablet UI surfaces.
@@ -65,13 +66,17 @@ pub async fn login_captcha() -> Result<CaptchaDto, AppError> {
     auth_service::login_captcha(&app.http()).await
 }
 
-/// Generate a fresh SMS login session id (uuid without dashes).
+/// SMS `login_session_id` = md5(buvid + timestamp_ms) (PiliPlus).
 #[flutter_rust_bridge::frb(sync)]
 pub fn new_login_session_id() -> String {
-    auth_service::new_login_session_id()
+    let app = match CoreApp::global() {
+        Ok(a) => a,
+        Err(_) => return auth_service::new_login_session_id(""),
+    };
+    auth_service::new_login_session_id(&app.store.buvid3())
 }
 
-/// Send SMS verification code after captcha is solved.
+/// Send SMS; may return NeedCaptcha with gt/challenge/token for GeeTest.
 pub async fn login_sms_send(req: SmsSendDto) -> Result<SmsSendDtoResult, AppError> {
     let app = CoreApp::global()?;
     auth_service::login_sms_send(&app.http(), &app.store, req).await

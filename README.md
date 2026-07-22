@@ -5,7 +5,7 @@
 [![MSRV](https://img.shields.io/badge/MSRV-1.85-orange?logo=rust)](https://www.rust-lang.org/)
 [![Flutter](https://img.shields.io/badge/Flutter-%E2%89%A5%203.41-02569B?logo=flutter&logoColor=white)](https://flutter.dev/)
 [![FRB](https://img.shields.io/badge/flutter__rust__bridge-2.12-blue)](https://github.com/fzyzcjy/flutter_rust_bridge)
-[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows%20%7C%20macOS-lightgrey)](#)
+[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows%20%7C%20macOS%20%7C%20Android-lightgrey)](#)
 
 用 Rust 持有协议与凭据、用 Flutter 做桌面壳，经 [flutter_rust_bridge](https://github.com/fzyzcjy/flutter_rust_bridge) 2.12 贯通的 B 站第三方客户端骨架。
 
@@ -13,7 +13,7 @@
 
 ## 概览
 
-NextPili 是桌面优先（Linux / Windows / macOS）的 B 站客户端工程。业务与签名在 Rust；UI 只做展示与交互。`domain` 无 IO；凭据不得进入 Flutter 持久化层。
+NextPili 是桌面优先（Linux / Windows / macOS）的 B 站客户端工程，并已接入 Android 壳（手机/平板断点与底栏见 `docs/ux/multi-platform.md`）。业务与签名在 Rust；UI 只做展示与交互。`domain` 无 IO；凭据不得进入 Flutter 持久化层。
 
 | 层 | 职责 |
 |----|------|
@@ -109,6 +109,24 @@ cd app
 flutter pub get
 flutter run -d linux
 ```
+
+Android（真机 / 模拟器，需 Android SDK + NDK + Rust Android targets）：
+
+```bash
+# 一次性：Rust Android 目标
+rustup target add aarch64-linux-android armv7-linux-androideabi \
+  x86_64-linux-android i686-linux-android
+
+# 若主机 JDK ≥ 25，请为 Gradle 指定 JDK 17/21（AGP 8.11 + Kotlin DSL）
+# 例如写入 ~/.gradle/gradle.properties：
+# org.gradle.java.home=/path/to/jdk-21
+
+cd app
+flutter pub get
+flutter run -d <device-id>   # flutter devices 查看
+```
+
+应用 ID：`nextpili.rownix.dev`。
 
 ## 当前进度
 

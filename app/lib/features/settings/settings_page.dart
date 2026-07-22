@@ -11,6 +11,7 @@ import '../../core/widgets/glass/app_glass.dart';
 import '../../core/widgets/loading.dart';
 import '../../core/widgets/page_header.dart';
 import '../../l10n/l10n.dart';
+import '../../core/widgets/app_snack_bar.dart';
 
 /// Common Bilibili qn options (see docs/api/endpoints/video.md).
 /// Labels that are not pure tech tokens resolve via l10n in [_labelForQn].
@@ -108,7 +109,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _toast(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    AppSnackBar.show(context, message: msg);
   }
 
   @override
@@ -128,7 +129,10 @@ class _SettingsPageState extends State<SettingsPage> {
 
     return Scaffold(
       backgroundColor: colors.canvas,
-      appBar: PageHeader(title: l10n.settingsTitle),
+      appBar: PageHeader(
+        title: l10n.settingsTitle,
+        showBack: Navigator.canPop(context),
+      ),
       body: _loading
           ? const AppLoading()
           : _error != null

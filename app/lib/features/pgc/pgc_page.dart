@@ -60,6 +60,7 @@ class _PgcPageState extends ConsumerState<PgcPage>
       backgroundColor: colors.canvas,
       appBar: PageHeader(
         title: l10n.pgcTitle,
+        showBack: Navigator.canPop(context),
         bottom: TabBar(
           controller: _tabsCtrl,
           isScrollable: true,

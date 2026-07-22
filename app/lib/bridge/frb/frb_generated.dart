@@ -2243,6 +2243,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  CaptchaDto dco_decode_box_autoadd_captcha_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_captcha_dto(raw);
+  }
+
+  @protected
   int dco_decode_box_autoadd_i_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
@@ -2764,6 +2770,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  CaptchaDto? dco_decode_opt_box_autoadd_captcha_dto(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_box_autoadd_captcha_dto(raw);
+  }
+
+  @protected
   int? dco_decode_opt_box_autoadd_i_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_i_32(raw);
@@ -3153,12 +3165,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   SmsSendDtoResult dco_decode_sms_send_dto_result(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return SmsSendDtoResult(
-      captchaKey: dco_decode_String(arr[0]),
-      loginSessionId: dco_decode_String(arr[1]),
+      kind: dco_decode_sms_send_result_kind(arr[0]),
+      captchaKey: dco_decode_String(arr[1]),
+      loginSessionId: dco_decode_String(arr[2]),
+      message: dco_decode_String(arr[3]),
+      captcha: dco_decode_opt_box_autoadd_captcha_dto(arr[4]),
     );
+  }
+
+  @protected
+  SmsSendResultKind dco_decode_sms_send_result_kind(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return SmsSendResultKind.values[raw as int];
   }
 
   @protected
@@ -3404,6 +3425,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return (sse_decode_bootstrap_config(deserializer));
+  }
+
+  @protected
+  CaptchaDto sse_decode_box_autoadd_captcha_dto(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_captcha_dto(deserializer));
   }
 
   @protected
@@ -4158,6 +4185,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  CaptchaDto? sse_decode_opt_box_autoadd_captcha_dto(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_captcha_dto(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
   int? sse_decode_opt_box_autoadd_i_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -4611,12 +4651,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_kind = sse_decode_sms_send_result_kind(deserializer);
     var var_captchaKey = sse_decode_String(deserializer);
     var var_loginSessionId = sse_decode_String(deserializer);
+    var var_message = sse_decode_String(deserializer);
+    var var_captcha = sse_decode_opt_box_autoadd_captcha_dto(deserializer);
     return SmsSendDtoResult(
+      kind: var_kind,
       captchaKey: var_captchaKey,
       loginSessionId: var_loginSessionId,
+      message: var_message,
+      captcha: var_captcha,
     );
+  }
+
+  @protected
+  SmsSendResultKind sse_decode_sms_send_result_kind(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return SmsSendResultKind.values[inner];
   }
 
   @protected
@@ -4869,6 +4924,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_bootstrap_config(self, serializer);
+  }
+
+  @protected
+  void sse_encode_box_autoadd_captcha_dto(
+    CaptchaDto self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_captcha_dto(self, serializer);
   }
 
   @protected
@@ -5489,6 +5553,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_opt_box_autoadd_captcha_dto(
+    CaptchaDto? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_captcha_dto(self, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_opt_box_autoadd_i_32(int? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -5825,8 +5902,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_sms_send_result_kind(self.kind, serializer);
     sse_encode_String(self.captchaKey, serializer);
     sse_encode_String(self.loginSessionId, serializer);
+    sse_encode_String(self.message, serializer);
+    sse_encode_opt_box_autoadd_captcha_dto(self.captcha, serializer);
+  }
+
+  @protected
+  void sse_encode_sms_send_result_kind(
+    SmsSendResultKind self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
   }
 
   @protected

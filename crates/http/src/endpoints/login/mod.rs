@@ -8,7 +8,8 @@ mod types;
 pub use types::{
     CaptchaParams, LoginSuccess, PasswordKey, PasswordLoginOutcome, PasswordLoginRequest,
     QrPollStatus, QrStart, SafeCenterCaptcha, SafeCenterInfo, SafeCenterSmsSendRequest,
-    SafeCenterSmsVerifyRequest, SmsLoginRequest, SmsSendRequest, SmsSendResult,
+    SafeCenterSmsVerifyRequest, SmsLoginRequest, SmsNeedCaptcha, SmsSendOutcome, SmsSendRequest,
+    SmsSendResult,
 };
 
 /// Passport login endpoints (QR + SMS + password).

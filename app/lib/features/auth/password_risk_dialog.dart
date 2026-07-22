@@ -7,6 +7,7 @@ import '../../core/theme/spacing.dart';
 import '../../core/widgets/np_button.dart';
 import '../../l10n/l10n.dart';
 import 'geetest/geetest_webview_dialog.dart';
+import '../../core/widgets/app_snack_bar.dart';
 
 /// Safe-center phone verify dialog (PiliPlus-style) after password login risk.
 Future<AccountPublicDto?> showPasswordRiskDialog({
@@ -63,7 +64,7 @@ class _PasswordRiskDialogState extends State<_PasswordRiskDialog> {
 
   void _toast(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    AppSnackBar.show(context, message: msg);
   }
 
   Future<void> _solveCaptcha() async {

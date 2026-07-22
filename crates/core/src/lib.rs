@@ -36,7 +36,8 @@ pub use api::{
     PasswordRiskSendSmsDto, PasswordRiskSendSmsResultDto, PasswordRiskVerifyDto, PgcEpisodeDto,
     PgcRankItemDto, PgcRankPageDto, PgcSeasonDto, PopularFeedDto, QrPollDto, QrStartDto,
     QrStatusKind, RecommendFeedDto, ReplyDto, ReplyListDto, SearchSuggestDto, SearchVideoItemDto,
-    SearchVideoPageDto, SettingsDto, SlotDto, SmsLoginDto, SmsSendDto, SmsSendDtoResult, StreamDto,
+    SearchVideoPageDto, SettingsDto, SlotDto, SmsLoginDto, SmsSendDto, SmsSendDtoResult,
+    SmsSendResultKind, StreamDto,
     SubtitleTrackDto, ToViewItemDto, ToViewPageDto, VideoDetailDto, VideoPageDto, VideoStatDto,
 };
 pub use app::CoreApp;
@@ -47,6 +48,6 @@ pub const CORE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// FFI API compatibility version (major bumps on breaking changes).
 pub const API_MAJOR: u32 = 0;
-/// minor … · 17: feed_ranking / feed_regions · 18: danmaku_like / danmaku_report · 19: video_related
-pub const API_MINOR: u32 = 19;
+/// minor … · 19: video_related · 20: SMS need-captcha outcome + session id
+pub const API_MINOR: u32 = 20;
 pub const API_PATCH: u32 = 0;

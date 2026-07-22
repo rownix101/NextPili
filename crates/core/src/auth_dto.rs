@@ -85,10 +85,19 @@ pub struct SmsSendDto {
     pub local_id: Option<String>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SmsSendResultKind {
+    Sent,
+    NeedCaptcha,
+}
+
 #[derive(Debug, Clone)]
 pub struct SmsSendDtoResult {
+    pub kind: SmsSendResultKind,
     pub captcha_key: String,
     pub login_session_id: String,
+    pub message: String,
+    pub captcha: Option<CaptchaDto>,
 }
 
 #[derive(Debug, Clone)]

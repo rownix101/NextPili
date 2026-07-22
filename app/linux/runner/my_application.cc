@@ -15,15 +15,34 @@ struct _MyApplication {
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 
-// Called when first Flutter frame received.
+// Truthy env: "1" / "true" / "yes" / "on" (case-insensitive).
+static gboolean env_flag_enabled(const char* name) {
+  const gchar* v = g_getenv(name);
+  if (v == nullptr) {
+    return FALSE;
+  }
+  return g_ascii_strcasecmp(v, "1") == 0 || g_ascii_strcasecmp(v, "true") == 0 ||
+         g_ascii_strcasecmp(v, "yes") == 0 || g_ascii_strcasecmp(v, "on") == 0;
+}
+
+// Pierce path first frame: show window; optional compositor blur.
 static void first_frame_cb(MyApplication* self, FlView* view) {
   GtkWidget* top = gtk_widget_get_toplevel(GTK_WIDGET(view));
   gtk_widget_show(top);
   // Compositor real-time blur — not Flutter BackdropFilter.
   // Wayland: ext-background-effect-v1 · X11: KWin blur atom.
-  if (GTK_IS_WINDOW(top)) {
+  // NEXTPILI_NO_BLUR=1 keeps transparent pierce but skips this protocol path.
+  if (!env_flag_enabled("NEXTPILI_NO_BLUR") && GTK_IS_WINDOW(top)) {
     nextpili_request_compositor_blur(GTK_WINDOW(top));
   }
+  (void)self;
+}
+
+// Opaque path: show window only (no pierce / no blur).
+static void first_frame_opaque_cb(MyApplication* self, FlView* view) {
+  GtkWidget* top = gtk_widget_get_toplevel(GTK_WIDGET(view));
+  gtk_widget_show(top);
+  (void)self;
 }
 
 // Re-assert blur after map (X11 atom / Wayland surface ready).
@@ -77,21 +96,37 @@ static void my_application_activate(GApplication* application) {
 
   gtk_window_set_default_size(window, 1280, 720);
 
-  // Desktop pierce: transparent window; blur is compositor-side (see
-  // desktop_compositor_blur.cc). Requires a compositing WM + RGBA visual.
-  gtk_widget_set_app_paintable(GTK_WIDGET(window), TRUE);
-  {
-    GdkScreen* screen = gtk_window_get_screen(window);
-    if (screen != nullptr && gdk_screen_is_composited(screen)) {
-      GdkVisual* visual = gdk_screen_get_rgba_visual(screen);
-      if (visual != nullptr) {
-        gtk_widget_set_visual(GTK_WIDGET(window), visual);
+  // A/B:
+  //   NEXTPILI_NO_PIERCE=1 → opaque (no RGBA, no blur) — Dart must match.
+  //   NEXTPILI_NO_BLUR=1   → transparent pierce ON, compositor blur OFF.
+  const gboolean no_pierce = env_flag_enabled("NEXTPILI_NO_PIERCE");
+  const gboolean no_blur = env_flag_enabled("NEXTPILI_NO_BLUR");
+
+  if (!no_pierce) {
+    // Desktop pierce: transparent window; blur is compositor-side (see
+    // desktop_compositor_blur.cc). Requires a compositing WM + RGBA visual.
+    gtk_widget_set_app_paintable(GTK_WIDGET(window), TRUE);
+    {
+      GdkScreen* screen = gtk_window_get_screen(window);
+      if (screen != nullptr && gdk_screen_is_composited(screen)) {
+        GdkVisual* visual = gdk_screen_get_rgba_visual(screen);
+        if (visual != nullptr) {
+          gtk_widget_set_visual(GTK_WIDGET(window), visual);
+        }
       }
     }
+    if (!no_blur) {
+      g_signal_connect(window, "map", G_CALLBACK(on_window_map), nullptr);
+      g_signal_connect(window, "size-allocate",
+                       G_CALLBACK(on_window_size_allocate), nullptr);
+    } else {
+      g_message(
+          "nextpili: NEXTPILI_NO_BLUR set — pierce transparent, no compositor "
+          "blur");
+    }
+  } else {
+    g_message("nextpili: NEXTPILI_NO_PIERCE set — opaque window (no pierce)");
   }
-  g_signal_connect(window, "map", G_CALLBACK(on_window_map), nullptr);
-  g_signal_connect(window, "size-allocate", G_CALLBACK(on_window_size_allocate),
-                   nullptr);
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();
   fl_dart_project_set_dart_entrypoint_arguments(
@@ -99,16 +134,22 @@ static void my_application_activate(GApplication* application) {
 
   FlView* view = fl_view_new(project);
   GdkRGBA background_color;
-  // Transparent for desktop pierce (Liquid Glass chrome).
-  gdk_rgba_parse(&background_color, "#00000000");
+  if (no_pierce) {
+    // Opaque dark canvas (matches app dark canvas token #0B0F1A).
+    gdk_rgba_parse(&background_color, "#0B0F1A");
+  } else {
+    // Transparent for desktop pierce (Liquid Glass chrome).
+    gdk_rgba_parse(&background_color, "#00000000");
+  }
   fl_view_set_background_color(view, &background_color);
   gtk_widget_show(GTK_WIDGET(view));
   gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(view));
 
   // Show the window when Flutter renders.
   // Requires the view to be realized so we can start rendering.
-  g_signal_connect_swapped(view, "first-frame", G_CALLBACK(first_frame_cb),
-                           self);
+  g_signal_connect_swapped(
+      view, "first-frame",
+      G_CALLBACK(no_pierce ? first_frame_opaque_cb : first_frame_cb), self);
   gtk_widget_realize(GTK_WIDGET(view));
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));

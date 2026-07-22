@@ -11,6 +11,7 @@ import '../../theme/spacing.dart';
 /// from `liquid_glass_widgets` Apple Music demo — chrome settings + jelly
 /// indicator — while using NextPili semantic colors.
 ///
+/// Expects **≤5** primary tabs (locked IA: 4 — home · dynamics · library · me).
 /// Desktop compact stays on FrostedNavBar / Mica (not this widget).
 ///
 /// Layout metrics are shared with the mini-player pill so overlays stack
@@ -115,13 +116,13 @@ class MobileGlassTabBar extends StatelessWidget {
         quality: GlassQuality.standard,
         interactionBehavior: GlassInteractionBehavior.full,
         barHeight: barHeight,
-        // Outer float margin is SafeArea; keep inner pad tight for 7 tabs.
-        horizontalPadding: 10,
+        // Outer float margin is SafeArea; 4 primary tabs can breathe.
+        horizontalPadding: 12,
         verticalPadding: barVerticalPadding,
-        spacing: 4,
+        spacing: 8,
         iconSize: AppIcons.md,
-        labelFontSize: 10,
-        iconLabelSpacing: 0,
+        labelFontSize: 11,
+        iconLabelSpacing: 2,
         magnification: 1.12,
       ),
     );

@@ -44,10 +44,7 @@ ThemeData _build(Brightness brightness, AppColors colors) {
     canvasColor: colors.canvas,
     textTheme: textTheme,
     primaryTextTheme: textTheme,
-    extensions: <ThemeExtension<dynamic>>[
-      colors,
-      PlayerColors.standard,
-    ],
+    extensions: <ThemeExtension<dynamic>>[colors, PlayerColors.standard],
     appBarTheme: AppBarTheme(
       centerTitle: false,
       elevation: 0,
@@ -55,9 +52,20 @@ ThemeData _build(Brightness brightness, AppColors colors) {
       backgroundColor: colors.canvas,
       foregroundColor: colors.fgPrimary,
       surfaceTintColor: Colors.transparent,
-      systemOverlayStyle: brightness == Brightness.dark
-          ? SystemUiOverlayStyle.light
-          : SystemUiOverlayStyle.dark,
+      systemOverlayStyle: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: brightness == Brightness.dark
+            ? Brightness.light
+            : Brightness.dark,
+        statusBarBrightness: brightness == Brightness.dark
+            ? Brightness.dark
+            : Brightness.light,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness: brightness == Brightness.dark
+            ? Brightness.light
+            : Brightness.dark,
+        systemNavigationBarContrastEnforced: false,
+      ),
       titleTextStyle: textTheme.titleMedium,
     ),
     cardTheme: CardThemeData(
@@ -146,7 +154,12 @@ ThemeData _build(Brightness brightness, AppColors colors) {
       backgroundColor: colors.elevated,
       contentTextStyle: textTheme.bodyMedium?.copyWith(color: colors.fgPrimary),
       behavior: SnackBarBehavior.floating,
+      elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: AppShapes.borderMd),
+      // Floating inset — slight lift from bottom edge (motion §5.3 spatial cue).
+      insetPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      actionTextColor: colors.accent,
+      disabledActionTextColor: colors.fgMuted,
     ),
     listTileTheme: ListTileThemeData(
       iconColor: colors.fgSecondary,
@@ -159,9 +172,12 @@ ThemeData _build(Brightness brightness, AppColors colors) {
       indicatorColor: colors.accent.withValues(alpha: 0.14),
       selectedIconTheme: IconThemeData(color: colors.accent, size: 24),
       unselectedIconTheme: IconThemeData(color: colors.fgSecondary, size: 24),
-      selectedLabelTextStyle: textTheme.labelMedium?.copyWith(color: colors.accent),
-      unselectedLabelTextStyle:
-          textTheme.labelMedium?.copyWith(color: colors.fgSecondary),
+      selectedLabelTextStyle: textTheme.labelMedium?.copyWith(
+        color: colors.accent,
+      ),
+      unselectedLabelTextStyle: textTheme.labelMedium?.copyWith(
+        color: colors.fgSecondary,
+      ),
     ),
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: Colors.transparent,

@@ -2985,6 +2985,17 @@ impl SseDecode for Option<crate::auth_dto::AccountPublicDto> {
     }
 }
 
+impl SseDecode for Option<crate::auth_dto::CaptchaDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::auth_dto::CaptchaDto>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<i32> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3476,11 +3487,29 @@ impl SseDecode for crate::auth_dto::SmsSendDto {
 impl SseDecode for crate::auth_dto::SmsSendDtoResult {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_kind = <crate::auth_dto::SmsSendResultKind>::sse_decode(deserializer);
         let mut var_captchaKey = <String>::sse_decode(deserializer);
         let mut var_loginSessionId = <String>::sse_decode(deserializer);
+        let mut var_message = <String>::sse_decode(deserializer);
+        let mut var_captcha = <Option<crate::auth_dto::CaptchaDto>>::sse_decode(deserializer);
         return crate::auth_dto::SmsSendDtoResult {
+            kind: var_kind,
             captcha_key: var_captchaKey,
             login_session_id: var_loginSessionId,
+            message: var_message,
+            captcha: var_captcha,
+        };
+    }
+}
+
+impl SseDecode for crate::auth_dto::SmsSendResultKind {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::auth_dto::SmsSendResultKind::Sent,
+            1 => crate::auth_dto::SmsSendResultKind::NeedCaptcha,
+            _ => unreachable!("Invalid variant for SmsSendResultKind: {}", inner),
         };
     }
 }
@@ -4970,8 +4999,11 @@ impl flutter_rust_bridge::IntoIntoDart<crate::auth_dto::SmsSendDto>
 impl flutter_rust_bridge::IntoDart for crate::auth_dto::SmsSendDtoResult {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
+            self.kind.into_into_dart().into_dart(),
             self.captcha_key.into_into_dart().into_dart(),
             self.login_session_id.into_into_dart().into_dart(),
+            self.message.into_into_dart().into_dart(),
+            self.captcha.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -4984,6 +5016,27 @@ impl flutter_rust_bridge::IntoIntoDart<crate::auth_dto::SmsSendDtoResult>
     for crate::auth_dto::SmsSendDtoResult
 {
     fn into_into_dart(self) -> crate::auth_dto::SmsSendDtoResult {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::auth_dto::SmsSendResultKind {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::Sent => 0.into_dart(),
+            Self::NeedCaptcha => 1.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::auth_dto::SmsSendResultKind
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::auth_dto::SmsSendResultKind>
+    for crate::auth_dto::SmsSendResultKind
+{
+    fn into_into_dart(self) -> crate::auth_dto::SmsSendResultKind {
         self
     }
 }
@@ -5751,6 +5804,16 @@ impl SseEncode for Option<crate::auth_dto::AccountPublicDto> {
     }
 }
 
+impl SseEncode for Option<crate::auth_dto::CaptchaDto> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::auth_dto::CaptchaDto>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for Option<i32> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -6093,8 +6156,27 @@ impl SseEncode for crate::auth_dto::SmsSendDto {
 impl SseEncode for crate::auth_dto::SmsSendDtoResult {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <crate::auth_dto::SmsSendResultKind>::sse_encode(self.kind, serializer);
         <String>::sse_encode(self.captcha_key, serializer);
         <String>::sse_encode(self.login_session_id, serializer);
+        <String>::sse_encode(self.message, serializer);
+        <Option<crate::auth_dto::CaptchaDto>>::sse_encode(self.captcha, serializer);
+    }
+}
+
+impl SseEncode for crate::auth_dto::SmsSendResultKind {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::auth_dto::SmsSendResultKind::Sent => 0,
+                crate::auth_dto::SmsSendResultKind::NeedCaptcha => 1,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
     }
 }
 

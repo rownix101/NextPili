@@ -3,9 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../bridge/core_api.dart';
+import '../../core/adaptive/form_factor.dart';
 import '../../core/adaptive/window_size.dart';
+import '../../core/icons/app_icons.dart';
 import '../../core/motion/app_motion.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/shapes.dart';
 import '../../core/theme/spacing.dart';
 import '../../core/utils/format.dart';
 import '../../core/widgets/empty_state.dart';
@@ -13,6 +16,7 @@ import '../../core/widgets/glass/app_glass.dart';
 import '../../core/widgets/loading.dart';
 import '../../core/widgets/video_card.dart';
 import '../../l10n/l10n.dart';
+import '../../core/widgets/app_snack_bar.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -30,56 +34,217 @@ class _HomePageState extends ConsumerState<HomePage> {
     final l10n = context.l10n;
     final width = MediaQuery.sizeOf(context).width;
     final padH = AppSpacing.pagePaddingH(width);
+    final mobile = isMobileOs;
 
     return Scaffold(
       backgroundColor: colors.canvas,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(
-              padH,
-              AppSpacing.sm,
-              padH,
-              AppSpacing.sm,
-            ),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
-                child: GlassSegmentedControl(
-                  segments: [
-                    GlassSegment(label: l10n.homeTabRecommend),
-                    GlassSegment(label: l10n.homeTabPopular),
-                    GlassSegment(label: l10n.homeTabRegion),
-                  ],
-                  selectedIndex: _tab,
-                  onSegmentSelected: (i) => setState(() => _tab = i),
-                  selectedTextStyle: Theme.of(context)
-                      .textTheme
-                      .labelLarge
-                      ?.copyWith(color: colors.fgPrimary),
-                  unselectedTextStyle: Theme.of(context)
-                      .textTheme
-                      .labelLarge
-                      ?.copyWith(color: colors.fgSecondary),
-                  quality: GlassQuality.standard,
-                  useOwnLayer: true,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (mobile)
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  padH,
+                  AppSpacing.sm,
+                  padH,
+                  AppSpacing.xs,
+                ),
+                child: _MobileHomeChrome(
+                  searchHint: l10n.searchHint,
+                  searchLabel: l10n.navSearch,
+                  liveLabel: l10n.navLive,
+                  pgcLabel: l10n.navPgc,
+                  onSearch: () => context.push('/search'),
+                  onLive: () => context.push('/live'),
+                  onPgc: () => context.push('/pgc'),
+                ),
+              ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                padH,
+                mobile ? AppSpacing.xs : AppSpacing.sm,
+                padH,
+                AppSpacing.sm,
+              ),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: GlassSegmentedControl(
+                    segments: [
+                      GlassSegment(label: l10n.homeTabRecommend),
+                      GlassSegment(label: l10n.homeTabPopular),
+                      GlassSegment(label: l10n.homeTabRegion),
+                    ],
+                    selectedIndex: _tab,
+                    onSegmentSelected: (i) => setState(() => _tab = i),
+                    selectedTextStyle: Theme.of(context)
+                        .textTheme
+                        .labelLarge
+                        ?.copyWith(color: colors.fgPrimary),
+                    unselectedTextStyle: Theme.of(context)
+                        .textTheme
+                        .labelLarge
+                        ?.copyWith(color: colors.fgSecondary),
+                    quality: GlassQuality.standard,
+                    useOwnLayer: true,
+                  ),
                 ),
               ),
             ),
-          ),
-          Expanded(
-            child: IndexedStack(
-              index: _tab,
-              children: const [
-                _RecommendFeedTab(),
-                _PopularFeedTab(),
-                _RegionFeedTab(),
-              ],
+            Expanded(
+              child: IndexedStack(
+                index: _tab,
+                children: const [
+                  _RecommendFeedTab(),
+                  _PopularFeedTab(),
+                  _RegionFeedTab(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Mobile-only home chrome: search + shortcuts for demoted destinations.
+class _MobileHomeChrome extends StatelessWidget {
+  const _MobileHomeChrome({
+    required this.searchHint,
+    required this.searchLabel,
+    required this.liveLabel,
+    required this.pgcLabel,
+    required this.onSearch,
+    required this.onLive,
+    required this.onPgc,
+  });
+
+  final String searchHint;
+  final String searchLabel;
+  final String liveLabel;
+  final String pgcLabel;
+  final VoidCallback onSearch;
+  final VoidCallback onLive;
+  final VoidCallback onPgc;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Material(
+          color: colors.sunken.withValues(alpha: 0.85),
+          borderRadius: AppShapes.borderFull,
+          child: InkWell(
+            onTap: onSearch,
+            borderRadius: AppShapes.borderFull,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm + 2,
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    AppIcons.search,
+                    size: AppIcons.sm,
+                    color: colors.fgMuted,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      searchHint,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium
+                          ?.copyWith(color: colors.fgMuted),
+                    ),
+                  ),
+                  Semantics(
+                    button: true,
+                    label: searchLabel,
+                    child: const SizedBox.shrink(),
+                  ),
+                ],
+              ),
             ),
           ),
-        ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Row(
+          children: [
+            Expanded(
+              child: _HomeShortcutChip(
+                icon: AppIcons.live,
+                label: liveLabel,
+                onTap: onLive,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: _HomeShortcutChip(
+                icon: AppIcons.movie,
+                label: pgcLabel,
+                onTap: onPgc,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _HomeShortcutChip extends StatelessWidget {
+  const _HomeShortcutChip({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final theme = Theme.of(context);
+    return Material(
+      color: colors.sunken.withValues(alpha: 0.65),
+      borderRadius: AppShapes.borderMd,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: AppShapes.borderMd,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: AppIcons.sm, color: colors.fgSecondary),
+              const SizedBox(width: AppSpacing.xs),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelLarge
+                      ?.copyWith(color: colors.fgPrimary),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -161,9 +326,7 @@ class _RecommendFeedTabState extends State<_RecommendFeedTab> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _loadingMore = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage(e, context.l10n))),
-      );
+      AppSnackBar.show(context, message: errorMessage(e, context.l10n));
     }
   }
 
@@ -260,9 +423,7 @@ class _PopularFeedTabState extends State<_PopularFeedTab> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _loadingMore = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage(e, context.l10n))),
-      );
+      AppSnackBar.show(context, message: errorMessage(e, context.l10n));
     }
   }
 

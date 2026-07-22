@@ -132,15 +132,14 @@ class _GeetestWebviewDialogState extends State<GeetestWebviewDialog> {
       final msgStr = msg.toString();
       if (msgStr.startsWith('success:')) {
         final dataStr = msgStr.substring('success:'.length);
-        try {
-          final data = jsonDecode(dataStr);
-          final result = GeetestResult.tryParse(data);
-          if (result != null && mounted) {
-            Navigator.of(context).pop(result);
-          }
-        } catch (e) {
-          debugPrint('geetest decode error: $e');
+        final result = GeetestResult.tryParse(dataStr);
+        if (result != null && mounted) {
+          Navigator.of(context).pop(result);
+          return;
         }
+        debugPrint(
+          'geetest linux success parse failed: type=${dataStr.runtimeType} raw=$dataStr',
+        );
       } else if (msgStr.startsWith('error:')) {
         debugPrint('geetest error: $msgStr');
       } else if (msgStr.startsWith('close:')) {
@@ -257,14 +256,25 @@ class _GeetestWebviewDialogState extends State<GeetestWebviewDialog> {
                 ..addJavaScriptHandler(
                   handlerName: 'success',
                   callback: (args) {
+                    Object? payload;
                     if (args.isNotEmpty) {
-                      final result = GeetestResult.tryParse(args[0]);
-                      if (result != null && mounted) {
-                        Navigator.of(context).pop(result);
-                        return;
-                      }
+                      payload = args[0];
                     }
-                    debugPrint('geetest invalid result: $args');
+                    // Some platform bridges pass the map as the only element;
+                    // others wrap [name, data] or stringify once.
+                    final result = GeetestResult.tryParse(payload) ??
+                        (args.length > 1
+                            ? GeetestResult.tryParse(args[1])
+                            : null) ??
+                        GeetestResult.tryParse(args);
+                    if (result != null && mounted) {
+                      Navigator.of(context).pop(result);
+                      return;
+                    }
+                    debugPrint(
+                      'geetest invalid result: types='
+                      '${args.map((e) => e.runtimeType).toList()} args=$args',
+                    );
                   },
                 )
                 ..addJavaScriptHandler(

@@ -26,9 +26,14 @@ class PageHeader extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onBack;
 
   @override
-  Size get preferredSize => Size.fromHeight(
-        kToolbarHeight + (bottom?.preferredSize.height ?? 0),
-      );
+  Size get preferredSize {
+    // Height is layout-only; AppBar applies status-bar padding itself.
+    // preferredSize must stay toolbar (+ bottom) — do not add viewPadding here
+    // or Scaffold double-counts the status bar.
+    return Size.fromHeight(
+      kToolbarHeight + (bottom?.preferredSize.height ?? 0),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,6 +48,9 @@ class PageHeader extends StatelessWidget implements PreferredSizeWidget {
       surfaceTintColor: Colors.transparent,
       scrolledUnderElevation: 0,
       elevation: 0,
+      // Edge-to-edge mobile: keep title/actions below the status bar.
+      // (AppBar default already uses MediaQuery.padding; explicit for clarity.)
+      primary: true,
       leading: leading ??
           (showBack
               ? NpIconButton(

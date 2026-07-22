@@ -30,40 +30,11 @@ class AppShell extends StatelessWidget {
 
   final Widget child;
 
-  static const _paths = <String>[
-    '/home',
-    '/live',
-    '/pgc',
-    '/search',
-    '/dynamics',
-    '/library',
-    '/settings',
-  ];
-
-  int _indexForLocation(String location) {
-    if (location.startsWith('/live')) return 1;
-    if (location.startsWith('/pgc')) return 2;
-    if (location.startsWith('/search')) return 3;
-    if (location.startsWith('/dynamics')) return 4;
-    if (location.startsWith('/library')) return 5;
-    if (location.startsWith('/settings')) return 6;
-    return 0;
-  }
-
-  void _goIndex(BuildContext context, int index) {
-    if (index < 0 || index >= _paths.length) return;
-    context.go(_paths[index]);
-  }
-
-  List<_NavDest> _destinations(AppLocalizations l10n) => [
+  /// Desktop rail / compact bar (search lives in chrome top bar).
+  List<_NavDest> _desktopDestinations(AppLocalizations l10n) => [
         _NavDest(icon: AppIcons.home, label: l10n.navHome, location: '/home'),
         _NavDest(icon: AppIcons.live, label: l10n.navLive, location: '/live'),
         _NavDest(icon: AppIcons.movie, label: l10n.navPgc, location: '/pgc'),
-        _NavDest(
-          icon: AppIcons.search,
-          label: l10n.navSearch,
-          location: '/search',
-        ),
         _NavDest(
           icon: AppIcons.dynamics,
           label: l10n.navDynamics,
@@ -81,35 +52,61 @@ class AppShell extends StatelessWidget {
         ),
       ];
 
+  /// Mobile bottom bar — 4 primaries (multi-platform §4.1 / interaction §1.1).
+  /// Search is chrome; live/pgc are home secondary; settings under Me.
+  List<_NavDest> _mobileDestinations(AppLocalizations l10n) => [
+        _NavDest(icon: AppIcons.home, label: l10n.navHome, location: '/home'),
+        _NavDest(
+          icon: AppIcons.dynamics,
+          label: l10n.navDynamics,
+          location: '/dynamics',
+        ),
+        _NavDest(
+          icon: AppIcons.inbox,
+          label: l10n.navLibrary,
+          location: '/library',
+        ),
+        _NavDest(icon: AppIcons.user, label: l10n.navMe, location: '/me'),
+      ];
+
+  int _mobileIndexFor(String path) {
+    if (path.startsWith('/dynamics')) return 1;
+    if (path.startsWith('/library')) return 2;
+    if (path.startsWith('/me') ||
+        path.startsWith('/settings') ||
+        path.startsWith('/auth')) {
+      return 3;
+    }
+    // /home, /live, /pgc, /search → home family
+    return 0;
+  }
+
+  int _desktopIndexFor(List<_NavDest> dests, String path) {
+    if (path.startsWith('/search')) return -1;
+    final i = dests.indexWhere((d) => path.startsWith(d.location));
+    return i < 0 ? 0 : i;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final location = GoRouterState.of(context).uri.toString();
-    final index = _indexForLocation(location);
+    final path = GoRouterState.of(context).uri.path;
     final sizeClass = windowSizeClassOf(context);
     final colors = AppColors.of(context);
     final l10n = context.l10n;
-    final dests = _destinations(l10n);
     final pierce = DesktopWindow.desktopPierceEnabled;
 
-    // Desktop: search lives in chrome top bar (interaction §1.1 / §2.1).
-    final railDests = dests.where((d) => d.location != '/search').toList();
-    final railIndex = () {
-      final loc = GoRouterState.of(context).uri.path;
-      if (loc.startsWith('/search')) return -1;
-      final i = railDests.indexWhere((d) => loc.startsWith(d.location));
-      return i < 0 ? 0 : i;
-    }();
-
     if (usesNavigationRail(sizeClass)) {
+      final dests = _desktopDestinations(l10n);
+      final index = _desktopIndexFor(dests, path);
       return _DesktopShell(
-        index: railIndex < 0 ? null : railIndex,
-        dests: railDests,
+        index: index < 0 ? null : index,
+        dests: dests,
         sizeClass: sizeClass,
         colors: colors,
         pierce: pierce,
         onSelect: (i) {
-          if (i < 0 || i >= railDests.length) return;
-          context.go(railDests[i].location);
+          if (i < 0 || i >= dests.length) return;
+          context.go(dests[i].location);
         },
         onSearch: () => context.go('/search'),
         onAccount: () => context.push('/auth'),
@@ -121,13 +118,18 @@ class AppShell extends StatelessWidget {
     // - Mobile OS → floating Liquid Glass pill (design-system §2.5)
     // - Desktop narrow window → edge-flush Mica + icon/label (no frosted tray)
     if (isMobileOs) {
+      final dests = _mobileDestinations(l10n);
+      final index = _mobileIndexFor(path);
       return Scaffold(
         backgroundColor: colors.canvas,
         extendBody: true,
         body: child,
         bottomNavigationBar: MobileGlassTabBar(
           selectedIndex: index,
-          onTabSelected: (i) => _goIndex(context, i),
+          onTabSelected: (i) {
+            if (i < 0 || i >= dests.length) return;
+            context.go(dests[i].location);
+          },
           tabs: [
             for (final d in dests)
               GlassTab(
@@ -141,16 +143,21 @@ class AppShell extends StatelessWidget {
       );
     }
 
+    final dests = _desktopDestinations(l10n);
+    final index = _desktopIndexFor(dests, path);
+    final barIndex = index < 0 ? 0 : index;
     return Scaffold(
       backgroundColor: pierce ? Colors.transparent : colors.canvas,
       extendBody: true,
       body: child,
       bottomNavigationBar: FrostedNavBar(
-        selectedIndex: index,
-        onSelect: (i) => _goIndex(context, i),
+        selectedIndex: barIndex,
+        onSelect: (i) {
+          if (i < 0 || i >= dests.length) return;
+          context.go(dests[i].location);
+        },
         items: [
-          for (final d in dests)
-            FrostedNavItem(icon: d.icon, label: d.label),
+          for (final d in dests) FrostedNavItem(icon: d.icon, label: d.label),
         ],
       ),
     );

@@ -58,6 +58,20 @@ abstract final class DesktopWindow {
     return Platform.isLinux || Platform.isWindows || Platform.isMacOS;
   }
 
+  static bool _envFlag(String name) {
+    final v = Platform.environment[name]?.trim().toLowerCase();
+    if (v == null || v.isEmpty) return false;
+    return v == '1' || v == 'true' || v == 'yes' || v == 'on';
+  }
+
+  /// `NEXTPILI_NO_PIERCE=1` → opaque shell (no transparent backdrop / blur).
+  /// Pair with Linux runner (`my_application.cc`).
+  static bool get pierceDisabledByEnv => _envFlag('NEXTPILI_NO_PIERCE');
+
+  /// `NEXTPILI_NO_BLUR=1` → keep transparent pierce; skip compositor blur only.
+  /// Linux runner honors this; Dart skips wallpaper sample plate for cleaner A/B.
+  static bool get blurDisabledByEnv => _envFlag('NEXTPILI_NO_BLUR');
+
   /// Call after [WidgetsFlutterBinding.ensureInitialized], before [runApp].
   ///
   /// Does not block on first frame: [waitUntilReadyToShow] shows the window
@@ -67,6 +81,28 @@ abstract final class DesktopWindow {
 
     try {
       await windowManager.ensureInitialized();
+
+      if (pierceDisabledByEnv) {
+        _backdrop = DesktopBackdrop.none;
+        const opaqueOptions = WindowOptions(
+          minimumSize: Size(800, 500),
+          backgroundColor: Color(0xFF0B0F1A),
+          skipTaskbar: false,
+          titleBarStyle: TitleBarStyle.normal,
+        );
+        // ignore: unawaited_futures
+        windowManager.waitUntilReadyToShow(opaqueOptions, () async {
+          await windowManager.setBackgroundColor(const Color(0xFF0B0F1A));
+          await windowManager.show();
+          await windowManager.focus();
+        });
+        await windowManager.setBackgroundColor(const Color(0xFF0B0F1A));
+        debugPrint(
+          'DesktopWindow: pierce disabled (NEXTPILI_NO_PIERCE) — opaque shell',
+        );
+        return;
+      }
+
       await _initAcrylic();
 
       const options = WindowOptions(
@@ -90,10 +126,17 @@ abstract final class DesktopWindow {
       await windowManager.setBackgroundColor(Colors.transparent);
       await _applyBackdrop(dark: dark);
 
-      // Linux only: wallpaper sample for MicaSurface (no compositor blur).
-      if (Platform.isLinux && _backdrop == DesktopBackdrop.simulatedPierce) {
+      // Linux only: wallpaper sample plate (not compositor live blur).
+      // Skip under NEXTPILI_NO_BLUR so A/B isolates transparent pierce alone.
+      if (Platform.isLinux &&
+          _backdrop == DesktopBackdrop.simulatedPierce &&
+          !blurDisabledByEnv) {
         // ignore: unawaited_futures
         DesktopWallpaper.ensureLoaded();
+      } else if (blurDisabledByEnv) {
+        debugPrint(
+          'DesktopWindow: blur disabled (NEXTPILI_NO_BLUR) — pierce without blur plate',
+        );
       }
     } catch (e, st) {
       debugPrint('DesktopWindow init failed: $e\n$st');

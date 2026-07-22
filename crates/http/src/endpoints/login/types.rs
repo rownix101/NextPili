@@ -52,6 +52,24 @@ pub struct SmsSendResult {
     pub captcha_key: String,
 }
 
+#[derive(Debug, Clone)]
+pub struct SmsNeedCaptcha {
+    pub recaptcha_token: String,
+    pub gee_gt: String,
+    pub gee_challenge: String,
+    pub recaptcha_url: String,
+}
+
+#[derive(Debug, Clone)]
+pub enum SmsSendOutcome {
+    Sent(SmsSendResult),
+    NeedCaptcha {
+        message: String,
+        bili_code: i32,
+        captcha: SmsNeedCaptcha,
+    },
+}
+
 /// RSA key material from `/x/passport-login/web/key`.
 #[derive(Debug, Clone)]
 pub struct PasswordKey {
@@ -112,12 +130,6 @@ pub(crate) struct GeetestData {
     pub(crate) gt: String,
     #[serde(default)]
     pub(crate) challenge: String,
-}
-
-#[derive(Debug, Deserialize)]
-pub(crate) struct SmsSendData {
-    #[serde(default)]
-    pub(crate) captcha_key: String,
 }
 
 #[derive(Debug, Deserialize)]

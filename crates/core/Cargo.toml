@@ -27,6 +27,8 @@ anyhow = { workspace = true }
 flutter_rust_bridge = { workspace = true }
 
 uuid = { workspace = true }
+md-5 = { workspace = true }
+hex = { workspace = true }
 
 [dev-dependencies]
 tempfile = "3"

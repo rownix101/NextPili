@@ -25,47 +25,46 @@ appsec = "b5475a8825547a4fc26c7d518eaaa02e"
 
 ```text
 1. params["appkey"] = appkey
-2. params["ts"] = unix_seconds // 字符串或数字皆可；推荐字符串
-3. 按 key 字典序排序全部参数
-4. query = urlencode 拼接（与普通 form 一致）
-5. sign = md5_hex( query + appsec )
-6. params["sign"] = sign
+2. params["ts"] = unix_seconds // 字符串；推荐秒级
+3. 删除旧 sign
+4. 按 key 字典序排序
+5. query = 对每个 key/value 做 RFC3986 component 编码后拼接
+   - 非空：encode(key) + "=" + encode(value)
+   - 空 value：仅 encode(key)（无 "="）——对齐 PiliPlus Uri.encodeComponent
+6. sign = md5_hex( query + appsec )
+7. params["sign"] = sign
 ```
 
 注意：
 
 - 计算 sign **之前** 若已有旧 `sign`，先删除再签。
 - 登录态 App 请求额外带 `access_key`。
-- 值需要 `Uri.encodeComponent`；空值写成 `key=` 或 `key` 需与实现保持一致（空 value 的编码方式需与签名侧保持一致；业务值通常非空）。
+- **必须**对 value 做 percent-encode（`statistics` JSON 含 `{}"` 等）；未编码会导致「签名错误」。
+- 编码字符集：unreserved = `A-Z a-z 0-9 - . _ ~`；其余 `%XX`（大写十六进制）。
 
 ## 伪代码
 
 ```rust
 fn app_sign(params: &mut BTreeMap<String, String>, appkey: &str, appsec: &str) {
- params.insert("appkey".into, appkey.into);
- params.insert(
- "ts".into,
- SystemTime::now
- .duration_since(UNIX_EPOCH).unwrap
- .as_secs
- .to_string,
- );
- params.remove("sign");
+    params.remove("sign");
+    params.insert("appkey".into(), appkey.into());
+    params.insert("ts".into(), unix_secs().to_string());
 
- let query = params
- .iter
- .map(|(k, v)| {
- if v.is_empty {
- urlencoding::encode(k).into_owned
- } else {
- format!("{}={}", urlencoding::encode(k), urlencoding::encode(v))
- }
- })
- .collect::<Vec<_>>
- .join("&");
+    // sort by key (BTreeMap), percent-encode each component, then md5
+    let query = params
+        .iter()
+        .map(|(k, v)| {
+            if v.is_empty() {
+                percent_encode(k)
+            } else {
+                format!("{}={}", percent_encode(k), percent_encode(v))
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("&");
 
- let sign = format!("{:x}", md5::compute(format!("{query}{appsec}")));
- params.insert("sign".into, sign);
+    let sign = md5_hex(format!("{query}{appsec}"));
+    params.insert("sign".into(), sign);
 }
 ```
 

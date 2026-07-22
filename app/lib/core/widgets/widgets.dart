@@ -1,6 +1,7 @@
 /// Shared UI building blocks (content opaque; glass lives under glass/).
 library;
 
+export 'app_snack_bar.dart';
 export 'content_surface.dart';
 export 'empty_state.dart';
 export 'frosted_nav_bar.dart';

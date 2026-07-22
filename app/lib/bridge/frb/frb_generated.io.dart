@@ -59,6 +59,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BootstrapConfig dco_decode_box_autoadd_bootstrap_config(dynamic raw);
 
   @protected
+  CaptchaDto dco_decode_box_autoadd_captcha_dto(dynamic raw);
+
+  @protected
   int dco_decode_box_autoadd_i_32(dynamic raw);
 
   @protected
@@ -225,6 +228,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   AccountPublicDto? dco_decode_opt_box_autoadd_account_public_dto(dynamic raw);
 
   @protected
+  CaptchaDto? dco_decode_opt_box_autoadd_captcha_dto(dynamic raw);
+
+  @protected
   int? dco_decode_opt_box_autoadd_i_32(dynamic raw);
 
   @protected
@@ -320,6 +326,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SmsSendDtoResult dco_decode_sms_send_dto_result(dynamic raw);
 
   @protected
+  SmsSendResultKind dco_decode_sms_send_result_kind(dynamic raw);
+
+  @protected
   StreamDto dco_decode_stream_dto(dynamic raw);
 
   @protected
@@ -381,6 +390,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BootstrapConfig sse_decode_box_autoadd_bootstrap_config(
     SseDeserializer deserializer,
   );
+
+  @protected
+  CaptchaDto sse_decode_box_autoadd_captcha_dto(SseDeserializer deserializer);
 
   @protected
   int sse_decode_box_autoadd_i_32(SseDeserializer deserializer);
@@ -595,6 +607,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  CaptchaDto? sse_decode_opt_box_autoadd_captcha_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   int? sse_decode_opt_box_autoadd_i_32(SseDeserializer deserializer);
 
   @protected
@@ -704,6 +721,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SmsSendDtoResult sse_decode_sms_send_dto_result(SseDeserializer deserializer);
 
   @protected
+  SmsSendResultKind sse_decode_sms_send_result_kind(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   StreamDto sse_decode_stream_dto(SseDeserializer deserializer);
 
   @protected
@@ -772,6 +794,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_box_autoadd_bootstrap_config(
     BootstrapConfig self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_captcha_dto(
+    CaptchaDto self,
     SseSerializer serializer,
   );
 
@@ -1061,6 +1089,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_opt_box_autoadd_captcha_dto(
+    CaptchaDto? self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_box_autoadd_i_32(int? self, SseSerializer serializer);
 
   @protected
@@ -1201,6 +1235,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_sms_send_dto_result(
     SmsSendDtoResult self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_sms_send_result_kind(
+    SmsSendResultKind self,
     SseSerializer serializer,
   );
 

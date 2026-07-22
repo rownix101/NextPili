@@ -45,6 +45,11 @@ class _UserPageState extends ConsumerState<UserPage>
         title: l10n.navLibrary,
         actions: [
           NpIconButton(
+            tooltip: l10n.navSearch,
+            icon: AppIcons.search,
+            onPressed: () => context.push('/search'),
+          ),
+          NpIconButton(
             tooltip: l10n.account,
             icon: AppIcons.user,
             onPressed: () => context.push('/auth'),

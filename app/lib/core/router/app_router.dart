@@ -11,6 +11,7 @@ import '../../features/player/player_page.dart';
 import '../../features/search/search_page.dart';
 import '../../features/settings/settings_page.dart';
 import '../../features/shell/app_shell.dart';
+import '../../features/user/me_page.dart';
 import '../../features/user/user_page.dart';
 import '../../features/video/video_detail_page.dart';
 import '../motion/app_motion.dart';
@@ -94,6 +95,15 @@ GoRouter createAppRouter() {
               key: state.pageKey,
               name: state.name,
               child: const UserPage(),
+            ),
+          ),
+          GoRoute(
+            path: '/me',
+            name: 'me',
+            pageBuilder: (context, state) => AppTransitions.fadeThrough(
+              key: state.pageKey,
+              name: state.name,
+              child: const MePage(),
             ),
           ),
           GoRoute(

@@ -51,7 +51,12 @@ pub async fn video_like(aid: i64, bvid: String, like: bool) -> Result<ArchiveRel
         &bvid,
     )
     .await?;
-    refresh_relation(&http, &account, buvid.as_str(), aid, &bvid).await
+    let mut rel = refresh_relation_soft(&http, &account, buvid.as_str(), aid, &bvid).await;
+    rel.liked = like;
+    if like {
+        rel.disliked = false;
+    }
+    Ok(rel)
 }
 
 /// Cast coins. `multiply` clamped to 1..=2. Optionally like at the same time.
@@ -75,7 +80,15 @@ pub async fn video_coin(
         &bvid,
     )
     .await?;
-    refresh_relation(&http, &account, buvid.as_str(), aid, &bvid).await
+    let mut rel = refresh_relation_soft(&http, &account, buvid.as_str(), aid, &bvid).await;
+    if rel.coin < multiply {
+        rel.coin = multiply.clamp(1, 2);
+    }
+    if also_like {
+        rel.liked = true;
+        rel.disliked = false;
+    }
+    Ok(rel)
 }
 
 /// Favorite into the default folder, or unfav-all when `favorite=false`.
@@ -116,7 +129,7 @@ pub async fn video_favorite(
     }
 
     // Relation refresh may lag; synthesize fav bit if needed.
-    let mut rel = refresh_relation(&http, &account, buvid.as_str(), aid, &bvid).await?;
+    let mut rel = refresh_relation_soft(&http, &account, buvid.as_str(), aid, &bvid).await;
     rel.favorited = favorite;
     Ok(rel)
 }
@@ -163,8 +176,7 @@ pub async fn video_favorite_deal(
     )
     .await?;
 
-    let mut rel = refresh_relation(&http, &account, buvid.as_str(), aid, &bvid).await?;
-    // Any add implies still favorited; pure del relies on relation endpoint.
+    let mut rel = refresh_relation_soft(&http, &account, buvid.as_str(), aid, &bvid).await;
     if !add.is_empty() {
         rel.favorited = true;
     }
@@ -205,15 +217,17 @@ impl From<domain::ArchiveRelation> for ArchiveRelationDto {
     }
 }
 
-async fn refresh_relation(
+async fn refresh_relation_soft(
     http: &http::BiliClient,
     account: &auth::Account,
     buvid: &str,
     aid: i64,
     bvid: &str,
-) -> Result<ArchiveRelationDto, AppError> {
-    let rel = EngagementApi::archive_relation(http, account, Some(buvid), aid, bvid).await?;
-    Ok(rel.into())
+) -> ArchiveRelationDto {
+    match EngagementApi::archive_relation(http, account, Some(buvid), aid, bvid).await {
+        Ok(rel) => rel.into(),
+        Err(_) => ArchiveRelationDto::default_empty(),
+    }
 }
 
 fn main_account(app: &CoreApp) -> Option<auth::Account> {

@@ -12,6 +12,7 @@ import '../../core/widgets/content_surface.dart';
 import '../../core/widgets/np_button.dart';
 import '../../l10n/l10n.dart';
 import 'engagement_bar.dart';
+import '../../core/widgets/app_snack_bar.dart';
 
 /// UP card on the watch-page right rail (avatar, name, follow).
 ///
@@ -53,23 +54,18 @@ class _OwnerCardState extends ConsumerState<OwnerCard> {
       ref.invalidate(videoRelationProvider(_key));
       await Haptics.impactLight();
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(
-              next ? context.l10n.followSuccess : context.l10n.unfollowSuccess,
-            ),
-          ),
-        );
+      AppSnackBar.show(
+        context,
+        message: next
+            ? context.l10n.followSuccess
+            : context.l10n.unfollowSuccess,
+      );
     } catch (e) {
       if (!mounted) return;
       setState(() => _followingOverride = currentlyFollowing);
       await Haptics.error();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage(e, context.l10n))),
-      );
+      AppSnackBar.show(context, message: errorMessage(e, context.l10n));
     } finally {
       if (mounted) setState(() => _busy = false);
     }

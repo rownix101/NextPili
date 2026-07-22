@@ -396,22 +396,38 @@ class SmsSendDto {
 }
 
 class SmsSendDtoResult {
+  final SmsSendResultKind kind;
   final String captchaKey;
   final String loginSessionId;
+  final String message;
+  final CaptchaDto? captcha;
 
   const SmsSendDtoResult({
+    required this.kind,
     required this.captchaKey,
     required this.loginSessionId,
+    required this.message,
+    this.captcha,
   });
 
   @override
-  int get hashCode => captchaKey.hashCode ^ loginSessionId.hashCode;
+  int get hashCode =>
+      kind.hashCode ^
+      captchaKey.hashCode ^
+      loginSessionId.hashCode ^
+      message.hashCode ^
+      captcha.hashCode;
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is SmsSendDtoResult &&
           runtimeType == other.runtimeType &&
+          kind == other.kind &&
           captchaKey == other.captchaKey &&
-          loginSessionId == other.loginSessionId;
+          loginSessionId == other.loginSessionId &&
+          message == other.message &&
+          captcha == other.captcha;
 }
+
+enum SmsSendResultKind { sent, needCaptcha }

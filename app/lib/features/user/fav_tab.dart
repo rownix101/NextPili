@@ -11,6 +11,7 @@ import '../../core/widgets/video_card.dart';
 import '../../l10n/l10n.dart';
 import 'library_navigation.dart';
 import 'library_video_grid.dart';
+import '../../core/widgets/app_snack_bar.dart';
 
 /// Favorites folders + resources tab for [UserPage].
 class FavTab extends StatefulWidget {
@@ -130,9 +131,7 @@ class _FavTabState extends State<FavTab> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _loadingMore = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage(e, context.l10n))),
-      );
+      AppSnackBar.show(context, message: errorMessage(e, context.l10n));
     }
   }
 

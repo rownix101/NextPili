@@ -2,6 +2,7 @@ import 'dart:io' show Directory, Platform;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
@@ -12,6 +13,7 @@ import 'package:path_provider/path_provider.dart';
 import 'app.dart';
 import 'bridge/core_api.dart';
 import 'core/adaptive/desktop_window.dart';
+import 'core/adaptive/form_factor.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/glass_theme.dart';
@@ -24,6 +26,7 @@ Future<void> main() async {
   MediaKit.ensureInitialized();
   await LiquidGlassWidgets.initialize();
   await DesktopWindow.ensureInitialized();
+  _initMobileSystemUi();
   await _initGeetestWebViewEnvironment();
 
   String? bootError;
@@ -52,6 +55,23 @@ Future<void> main() async {
             ? NextPiliApp()
             : _BootstrapErrorApp(message: bootError),
       ),
+    ),
+  );
+}
+
+/// Edge-to-edge + transparent system bars on phone/tablet OS.
+///
+/// Layout still respects [MediaQuery.padding] / SafeArea (multi-platform §7).
+void _initMobileSystemUi() {
+  if (kIsWeb || !isMobileOs) return;
+  // ignore: discarded_futures
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+      systemNavigationBarContrastEnforced: false,
     ),
   );
 }

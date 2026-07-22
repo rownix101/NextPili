@@ -27,11 +27,11 @@ Future<QrPollDto> loginQrPoll({required String authCode, String? localId}) =>
 Future<CaptchaDto> loginCaptcha() =>
     RustLib.instance.api.crateApiAuthLoginCaptcha();
 
-/// Generate a fresh SMS login session id (uuid without dashes).
+/// SMS `login_session_id` = md5(buvid + timestamp_ms) (PiliPlus).
 String newLoginSessionId() =>
     RustLib.instance.api.crateApiAuthNewLoginSessionId();
 
-/// Send SMS verification code after captcha is solved.
+/// Send SMS; may return NeedCaptcha with gt/challenge/token for GeeTest.
 Future<SmsSendDtoResult> loginSmsSend({required SmsSendDto req}) =>
     RustLib.instance.api.crateApiAuthLoginSmsSend(req: req);
 

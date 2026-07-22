@@ -118,6 +118,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navLibrary => 'Library';
 
   @override
+  String get navMe => 'Me';
+
+  @override
   String get navSettings => 'Settings';
 
   @override

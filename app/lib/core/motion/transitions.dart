@@ -9,10 +9,14 @@ bool appReduceMotion(BuildContext context) =>
     MediaQuery.disableAnimationsOf(context);
 
 /// Duration that collapses under reduce-motion.
+///
+/// Default [reduced] is [AppDuration.none] (true zero). Pass a short residual
+/// (e.g. [AppDuration.short2]) only when a ≤100ms fade still aids comprehension
+/// (player chrome — motion.md §6).
 Duration appMotionDuration(
   BuildContext context,
   Duration normal, {
-  Duration reduced = AppDuration.instant,
+  Duration reduced = AppDuration.none,
 }) {
   return appReduceMotion(context) ? reduced : normal;
 }
@@ -77,25 +81,27 @@ abstract final class AppTransitions {
           return _fadeOnly(animation, child);
         }
         final dir = reverse ? -1.0 : 1.0;
-        final enter = Tween<Offset>(
-          begin: Offset(dir * offsetFraction, 0),
-          end: Offset.zero,
-        ).animate(
-          CurvedAnimation(
-            parent: animation,
-            curve: AppEasing.standardDecelerate,
-            reverseCurve: AppEasing.standardAccelerate,
-          ),
-        );
-        final exit = Tween<Offset>(
-          begin: Offset.zero,
-          end: Offset(-dir * offsetFraction, 0),
-        ).animate(
-          CurvedAnimation(
-            parent: secondaryAnimation,
-            curve: AppEasing.standardAccelerate,
-          ),
-        );
+        final enter =
+            Tween<Offset>(
+              begin: Offset(dir * offsetFraction, 0),
+              end: Offset.zero,
+            ).animate(
+              CurvedAnimation(
+                parent: animation,
+                curve: AppEasing.standardDecelerate,
+                reverseCurve: AppEasing.standardAccelerate,
+              ),
+            );
+        final exit =
+            Tween<Offset>(
+              begin: Offset.zero,
+              end: Offset(-dir * offsetFraction, 0),
+            ).animate(
+              CurvedAnimation(
+                parent: secondaryAnimation,
+                curve: AppEasing.standardAccelerate,
+              ),
+            );
         return SlideTransition(
           position: exit,
           child: FadeTransition(
@@ -159,10 +165,7 @@ abstract final class AppTransitions {
         );
         return FadeTransition(
           opacity: outFade,
-          child: FadeTransition(
-            opacity: inFade,
-            child: child,
-          ),
+          child: FadeTransition(opacity: inFade, child: child),
         );
       },
     );
@@ -263,10 +266,7 @@ abstract final class AppTransitions {
       layoutBuilder: (current, previous) {
         return Stack(
           alignment: Alignment.topCenter,
-          children: <Widget>[
-            ...previous,
-            ?current,
-          ],
+          children: <Widget>[...previous, ?current],
         );
       },
       child: child,
@@ -276,10 +276,7 @@ abstract final class AppTransitions {
 
 Widget _fadeOnly(Animation<double> animation, Widget child) {
   return FadeTransition(
-    opacity: CurvedAnimation(
-      parent: animation,
-      curve: AppEasing.standard,
-    ),
+    opacity: CurvedAnimation(parent: animation, curve: AppEasing.standard),
     child: child,
   );
 }
@@ -313,10 +310,7 @@ Widget _fadeThrough({
     opacity: outFade,
     child: FadeTransition(
       opacity: inFade,
-      child: ScaleTransition(
-        scale: inScale,
-        child: child,
-      ),
+      child: ScaleTransition(scale: inScale, child: child),
     ),
   );
 }

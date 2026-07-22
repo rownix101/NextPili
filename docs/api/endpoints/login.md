@@ -67,11 +67,17 @@ POST /x/passport-tv-login/qrcode/poll
 
 与 B 站官网一致：**短信是登录与注册同一流程**。未注册手机号在 `login/sms` 成功后由服务端建号（响应可含 `is_new`）。产品 UI 文案为「登录/注册」，**不实现**独立 `web/reg/tel` 注册页（社区旧链仍可参考，见下文）。
 
+按需极验：
+
+```text
+POST sms/send（可无 gee_*）
+  → 成功且 recaptcha_url 空 → captcha_key
+  → code -105 或 recaptcha_url 非空 → 解析 token/gt/challenge（URL 或 preCapture）
+  → 完成极验 → 再 POST sms/send（带 gee_* + recaptcha_token）
+POST login/sms
 ```
-GET /x/passport-login/captcha?source=main_web
-POST /x/passport-login/sms/send   # AppSign + 极验结果
-POST /x/passport-login/login/sms  # AppSign；新号即注册
-```
+
+可选预取：`GET /x/passport-login/captcha?source=main_web`（手动点「人机验证」）。
 
 客户端策略：
 
@@ -121,8 +127,11 @@ POST /x/passport-login/login/sms # 登录（含新号注册）AppSign
 | `tel` | 手机号 |
 | `buvid` / `local_id` | 设备 id |
 | `login_session_id` | `md5(buvid + timestamp_ms)` |
-| `gee_*` / `recaptcha_token` | 人机验证结果 |
-| `build`, `mobi_app`, `platform`, `statistics` | 客户端信息 |
+| `gee_*` / `recaptcha_token` | 人机验证结果（首次探测可省略） |
+| `mobi_app` / `platform` / `build` | `android_hd` / `android` / `2001100` |
+| `c_locale` / `s_locale` / `disable_rcmd` / `statistics` | 客户端信息 |
+
+成功条件（App）：`code == 0` 且 `data.recaptcha_url` 为空；否则按需极验后重试。
 
 成功 `data` 除 cookie / token 外，可出现 `is_new`（`true` = 本次为新注册）。客户端可忽略该字段，统一按登录成功处理。
 

@@ -74,7 +74,8 @@ export 'frb/auth_dto.dart'
         SlotDto,
         SmsLoginDto,
         SmsSendDto,
-        SmsSendDtoResult;
+        SmsSendDtoResult,
+        SmsSendResultKind;
 export 'frb/error.dart' show AppError, ErrorKind;
 
 /// Thin facade over generated FRB bindings.

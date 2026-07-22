@@ -12,6 +12,7 @@ import '../../core/widgets/loading.dart';
 import '../../core/widgets/page_header.dart';
 import '../../core/widgets/video_card.dart';
 import '../../l10n/l10n.dart';
+import '../../core/widgets/app_snack_bar.dart';
 
 /// Live recommend feed (REST).
 class LivePage extends ConsumerStatefulWidget {
@@ -94,9 +95,7 @@ class _LivePageState extends ConsumerState<LivePage> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _loadingMore = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage(e, context.l10n))),
-      );
+      AppSnackBar.show(context, message: errorMessage(e, context.l10n));
     }
   }
 
@@ -112,7 +111,10 @@ class _LivePageState extends ConsumerState<LivePage> {
     final l10n = context.l10n;
     return Scaffold(
       backgroundColor: colors.canvas,
-      appBar: PageHeader(title: l10n.liveTitle),
+      appBar: PageHeader(
+        title: l10n.liveTitle,
+        showBack: Navigator.canPop(context),
+      ),
       body: _buildBody(l10n),
     );
   }

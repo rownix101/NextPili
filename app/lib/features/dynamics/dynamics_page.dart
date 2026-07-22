@@ -13,6 +13,7 @@ import '../../core/widgets/loading.dart';
 import '../../core/widgets/np_button.dart';
 import '../../core/widgets/page_header.dart';
 import '../../l10n/l10n.dart';
+import '../../core/widgets/app_snack_bar.dart';
 
 /// Follow dynamics (read-only).
 class DynamicsPage extends ConsumerStatefulWidget {
@@ -105,9 +106,7 @@ class _DynamicsPageState extends ConsumerState<DynamicsPage> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _loadingMore = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage(e, context.l10n))),
-      );
+      AppSnackBar.show(context, message: errorMessage(e, context.l10n));
     }
   }
 
@@ -128,6 +127,11 @@ class _DynamicsPageState extends ConsumerState<DynamicsPage> {
       appBar: PageHeader(
         title: l10n.dynamicsTitle,
         actions: [
+          NpIconButton(
+            tooltip: l10n.navSearch,
+            icon: AppIcons.search,
+            onPressed: () => context.push('/search'),
+          ),
           NpIconButton(
             tooltip: l10n.account,
             icon: AppIcons.user,

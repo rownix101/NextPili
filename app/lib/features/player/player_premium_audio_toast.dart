@@ -54,14 +54,15 @@ class _PlayerPremiumAudioToastState extends State<PlayerPremiumAudioToast>
   @override
   void initState() {
     super.initState();
+    // Loop ambient — not UI response latency; longer than AppDuration.long*.
     _shimmer = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2200),
     );
     _presence = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 200),
-      reverseDuration: const Duration(milliseconds: 160),
+      duration: AppDuration.medium1,
+      reverseDuration: AppDuration.short3,
       value: widget.visible ? 1 : 0,
     );
   }
@@ -132,9 +133,10 @@ class _PlayerPremiumAudioToastState extends State<PlayerPremiumAudioToast>
         animation: _presence,
         builder: (context, child) {
           final raw = _presence.value;
+          // Enter decelerate, leave accelerate — motion.md §3.
           final t = _presence.status == AnimationStatus.reverse
-              ? Curves.easeInCubic.transform(raw)
-              : Curves.easeOutCubic.transform(raw);
+              ? AppEasing.standardAccelerate.transform(raw)
+              : AppEasing.standardDecelerate.transform(raw);
           if (t <= 0.001) return const SizedBox.shrink();
 
           return Padding(
@@ -225,8 +227,8 @@ class _FrostedChip extends StatelessWidget {
               Positioned.fill(
                 child: ImageFiltered(
                   imageFilter: ImageFilter.blur(
-                    sigmaX: reduceMotion ? 12 : 22,
-                    sigmaY: reduceMotion ? 12 : 22,
+                    sigmaX: reduceMotion ? 10 : 16,
+                    sigmaY: reduceMotion ? 10 : 16,
                     tileMode: TileMode.clamp,
                   ),
                   child: Image.memory(
@@ -242,7 +244,7 @@ class _FrostedChip extends StatelessWidget {
             if (!hasFrame)
               Positioned.fill(
                 child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
+                  filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
                   child: const ColoredBox(color: Colors.transparent),
                 ),
               ),

@@ -35,11 +35,9 @@ impl AppSigner {
         params.insert("appkey".into(), self.appkey.clone());
         params.insert("ts".into(), ts.to_string());
 
-        let query = params
-            .iter()
-            .map(|(k, v)| format!("{k}={v}"))
-            .collect::<Vec<_>>()
-            .join("&");
+        // PiliPlus / bilibili-API-collect: md5( urlencode(sorted_query) + appsec ).
+        // Values such as statistics JSON must be percent-encoded or sign fails.
+        let query = encode_sign_query(params);
         let raw = format!("{query}{}", self.appsec);
         let mut hasher = Md5::new();
         hasher.update(raw.as_bytes());
@@ -47,6 +45,36 @@ impl AppSigner {
         params.insert("sign".into(), sign.clone());
         sign
     }
+}
+
+/// Build sorted `key=value&…` with RFC3986 component encoding (PiliPlus `Uri.encodeComponent`).
+///
+/// Empty values: `key` without `=` (matches PiliPlus `_makeQueryFromParametersDefault`).
+fn encode_sign_query(params: &BTreeMap<String, String>) -> String {
+    let mut parts = Vec::with_capacity(params.len());
+    for (k, v) in params {
+        let ek = percent_encode_component(k);
+        if v.is_empty() {
+            parts.push(ek);
+        } else {
+            parts.push(format!("{ek}={}", percent_encode_component(v)));
+        }
+    }
+    parts.join("&")
+}
+
+/// Percent-encode for URI component: unreserved = ALPHA / DIGIT / "-" / "." / "_" / "~".
+fn percent_encode_component(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for b in s.bytes() {
+        match b {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                out.push(b as char);
+            }
+            _ => out.push_str(&format!("%{b:02X}")),
+        }
+    }
+    out
 }
 
 fn unix_secs() -> u64 {
@@ -70,7 +98,6 @@ mod tests {
         assert_eq!(params.get("ts").map(String::as_str), Some("1"));
         assert_eq!(params.get("sign").map(String::as_str), Some(sign.as_str()));
 
-        // Recompute expected: appkey=testkey&foo=bar&ts=1 + testsec
         let mut hasher = Md5::new();
         hasher.update(b"appkey=testkey&foo=bar&ts=1testsec");
         let expected = hex::encode(hasher.finalize());
@@ -93,5 +120,37 @@ mod tests {
         let s = AppSigner::android_hd();
         assert_eq!(s.appkey, APPKEY_ANDROID_HD);
         assert!(!s.appsec.is_empty());
+    }
+
+    #[test]
+    fn app_sign_encodes_statistics_json() {
+        let signer = AppSigner::new("dfca71928277209b", "b5475a8825547a4fc26c7d518eaaa02e");
+        let mut params = BTreeMap::new();
+        params.insert(
+            "statistics".into(),
+            r#"{"appId":5,"platform":3,"version":"2.0.1","abtest":""}"#.into(),
+        );
+        params.insert("tel".into(), "13800138000".into());
+        let sign = signer.sign_with_ts(&mut params, 1_700_000_000);
+
+        let encoded_stats = percent_encode_component(
+            r#"{"appId":5,"platform":3,"version":"2.0.1","abtest":""}"#,
+        );
+        let query = format!(
+            "appkey=dfca71928277209b&statistics={encoded_stats}&tel=13800138000&ts=1700000000"
+        );
+        let mut hasher = Md5::new();
+        hasher.update(format!("{query}b5475a8825547a4fc26c7d518eaaa02e").as_bytes());
+        assert_eq!(sign, hex::encode(hasher.finalize()));
+        // Unencoded braces must not appear in the signed query material.
+        assert!(encoded_stats.contains("%7B") || encoded_stats.contains("%7b"));
+    }
+
+    #[test]
+    fn empty_value_omits_equals_in_sign_query() {
+        let mut params = BTreeMap::new();
+        params.insert("a".into(), String::new());
+        params.insert("b".into(), "1".into());
+        assert_eq!(encode_sign_query(&params), "a&b=1");
     }
 }

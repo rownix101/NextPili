@@ -52,6 +52,7 @@ class _VideoCardState extends State<VideoCard> {
     final colors = AppColors.of(context);
     final theme = Theme.of(context);
     final reduceMotion = appReduceMotion(context);
+    final micro = reduceMotion ? Duration.zero : AppDuration.short2;
 
     final scale = reduceMotion
         ? 1.0
@@ -62,7 +63,7 @@ class _VideoCardState extends State<VideoCard> {
     Widget cover = Stack(
       fit: StackFit.expand,
       children: [
-        _Cover(url: widget.coverUrl),
+        _Cover(url: widget.coverUrl, reduceMotion: reduceMotion),
         if (widget.live)
           Positioned(
             left: AppSpacing.sm,
@@ -90,17 +91,24 @@ class _VideoCardState extends State<VideoCard> {
               color: colors.fgPrimary.withValues(alpha: 0.72),
             ),
           ),
-        if (_hover)
-          ColoredBox(
-            color: colors.fgPrimary.withValues(alpha: 0.18),
-            child: Center(
-              child: Icon(
-                AppIcons.playCircle,
-                size: AppIcons.xl,
-                color: colors.onAccent,
+        // Always mounted so hover mask can fade (no teleport).
+        AnimatedOpacity(
+          opacity: _hover ? 1 : 0,
+          duration: micro,
+          curve: AppEasing.standardDecelerate,
+          child: IgnorePointer(
+            child: ColoredBox(
+              color: colors.fgPrimary.withValues(alpha: 0.18),
+              child: Center(
+                child: Icon(
+                  AppIcons.playCircle,
+                  size: AppIcons.xl,
+                  color: colors.onAccent,
+                ),
               ),
             ),
           ),
+        ),
       ],
     );
 
@@ -128,8 +136,8 @@ class _VideoCardState extends State<VideoCard> {
         onPointerCancel: (_) => setState(() => _pressed = false),
         child: AnimatedScale(
           scale: scale,
-          duration: reduceMotion ? Duration.zero : AppDuration.short2,
-          curve: AppEasing.standard,
+          duration: micro,
+          curve: AppEasing.standardDecelerate,
           child: ContentSurface(
             onTap: widget.onTap,
             child: Column(
@@ -205,9 +213,10 @@ class _Badge extends StatelessWidget {
 }
 
 class _Cover extends StatelessWidget {
-  const _Cover({required this.url});
+  const _Cover({required this.url, required this.reduceMotion});
 
   final String url;
+  final bool reduceMotion;
 
   @override
   Widget build(BuildContext context) {
@@ -225,20 +234,40 @@ class _Cover extends StatelessWidget {
         color: colors.sunken,
         child: Icon(AppIcons.imageBroken, color: colors.fgMuted),
       ),
+      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+        if (reduceMotion || wasSynchronouslyLoaded) return child;
+        return AnimatedOpacity(
+          opacity: frame == null ? 0 : 1,
+          duration: frame == null ? Duration.zero : AppDuration.medium1,
+          curve: AppEasing.standardDecelerate,
+          child: child,
+        );
+      },
       loadingBuilder: (context, child, progress) {
         if (progress == null) return child;
-        return ColoredBox(
-          color: colors.sunken,
-          child: Center(
-            child: SizedBox(
-              width: 22,
-              height: 22,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: colors.accent,
+        // Keep placeholder under fading image so load → content is not a hard cut.
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            ColoredBox(
+              color: colors.sunken,
+              child: Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: colors.accent,
+                    value: progress.expectedTotalBytes != null
+                        ? progress.cumulativeBytesLoaded /
+                            progress.expectedTotalBytes!
+                        : null,
+                  ),
+                ),
               ),
             ),
-          ),
+            child,
+          ],
         );
       },
     );

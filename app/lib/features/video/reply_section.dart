@@ -12,6 +12,7 @@ import '../../core/widgets/loading.dart';
 import '../../core/widgets/np_button.dart';
 import '../../l10n/l10n.dart';
 import 'engagement_bar.dart';
+import '../../core/widgets/app_snack_bar.dart';
 
 /// Paginated main-floor comments for a video (`aid`).
 ///
@@ -112,9 +113,7 @@ class _ReplySectionState extends ConsumerState<ReplySection> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _loadingMore = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage(e, context.l10n))),
-      );
+      AppSnackBar.show(context, message: errorMessage(e, context.l10n));
     }
   }
 
@@ -129,9 +128,7 @@ class _ReplySectionState extends ConsumerState<ReplySection> {
     final text = _composer.text.trim();
     final l10n = context.l10n;
     if (text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.replyEmptyMessage)),
-      );
+      AppSnackBar.show(context, message: l10n.replyEmptyMessage);
       return;
     }
     if (!await ensureLoggedIn(context)) return;
@@ -150,15 +147,11 @@ class _ReplySectionState extends ConsumerState<ReplySection> {
         _composer.clear();
         _sending = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.replySent)),
-      );
+      AppSnackBar.show(context, message: l10n.replySent);
     } catch (e) {
       if (!mounted) return;
       setState(() => _sending = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage(e, context.l10n))),
-      );
+      AppSnackBar.show(context, message: errorMessage(e, context.l10n));
     }
   }
 

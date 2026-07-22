@@ -16,6 +16,7 @@ import '../../l10n/l10n.dart';
 import '../player/player_adapter.dart';
 import '../player/player_subtitle_config.dart';
 import '../video/engagement_bar.dart';
+import '../../core/widgets/app_snack_bar.dart';
 
 /// Live room watch page: metadata + media_kit stream + chat.
 class LiveRoomPage extends StatefulWidget {
@@ -86,9 +87,7 @@ class _LiveRoomPageState extends State<LiveRoomPage> {
     final text = _chatComposer.text.trim();
     final l10n = context.l10n;
     if (text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.liveChatEmptyMessage)),
-      );
+      AppSnackBar.show(context, message: l10n.liveChatEmptyMessage);
       return;
     }
     if (!await ensureLoggedIn(context)) return;
@@ -99,16 +98,12 @@ class _LiveRoomPageState extends State<LiveRoomPage> {
       if (!mounted) return;
       _chatComposer.clear();
       setState(() => _sendingChat = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.liveChatSent)),
-      );
+      AppSnackBar.show(context, message: l10n.liveChatSent);
       await _refreshChat();
     } catch (e) {
       if (!mounted) return;
       setState(() => _sendingChat = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage(e, context.l10n))),
-      );
+      AppSnackBar.show(context, message: errorMessage(e, context.l10n));
     }
   }
 

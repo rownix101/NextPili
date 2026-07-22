@@ -114,7 +114,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get navDynamics => '动态';
 
   @override
-  String get navLibrary => '我的';
+  String get navLibrary => '媒体库';
+
+  @override
+  String get navMe => '我的';
 
   @override
   String get navSettings => '设置';

@@ -311,8 +311,14 @@ abstract class AppLocalizations {
   /// No description provided for @navLibrary.
   ///
   /// In zh, this message translates to:
-  /// **'我的'**
+  /// **'媒体库'**
   String get navLibrary;
+
+  /// No description provided for @navMe.
+  ///
+  /// In zh, this message translates to:
+  /// **'我的'**
+  String get navMe;
 
   /// No description provided for @navSettings.
   ///

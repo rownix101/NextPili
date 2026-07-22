@@ -21,7 +21,8 @@ pub use live::LiveApi;
 pub use login::{
     CaptchaParams, LoginApi, LoginSuccess, PasswordKey, PasswordLoginOutcome, PasswordLoginRequest,
     QrPollStatus, QrStart, SafeCenterCaptcha, SafeCenterInfo, SafeCenterSmsSendRequest,
-    SafeCenterSmsVerifyRequest, SmsLoginRequest, SmsSendRequest, SmsSendResult,
+    SafeCenterSmsVerifyRequest, SmsLoginRequest, SmsNeedCaptcha, SmsSendOutcome, SmsSendRequest,
+    SmsSendResult,
 };
 pub use nav::{NavApi, NavInfo};
 pub use pgc::{PgcApi, PgcPlayUrlParams};

@@ -18,6 +18,8 @@
 | P2 | 手机（竖屏） | 底栏导航、单列信息流；架构与 token 预留，功能可后于桌面 |
 | P2 | 折叠屏 | **同一套断点**；外屏 ≈ compact，内屏 ≈ medium/expanded；铰链区不放关键控件 |
 
+**工程状态（Android）**：`app/android/` 已脚手架；包名 `nextpili.rownix.dev`；FRB/`cargokit` 编 `libcore.so`；`compact` 走 `MobileGlassTabBar`（`isMobileOs`）。主机 JDK ≥ 25 时需为 Gradle 指定 17/21；AGP 暂锁 **8.11.x**（AGP 9 与 `flutter_inappwebview` 的 `proguard-android.txt` 不兼容）。
+
 **非目标（首期交付）**：Web 发布、嵌入式、车机。  
 **设计期已考虑**：手机 / 折叠的导航形态与玻璃边界（见 §12），避免日后推翻 chrome 结构。
 
@@ -83,6 +85,7 @@ expanded+:   [ Rail + Body + (optional secondary) ]
 ```
 
 - 一级目的地数量建议 **3–5**，过多收入「更多」。
+- **手机 compact 底栏（已锁定）**：首页 · 动态 · 媒体库 · 我的（共 4）。搜索在首页/各页顶栏；直播 / 番剧从首页快捷入口或「我的」进入；设置在「我的」。
 - 设置页：桌面可用 **左侧设置分类 + 右侧表单**；compact 用推入式列表。
 
 ### 4.2 双栏（List–Detail）

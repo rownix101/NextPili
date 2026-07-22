@@ -5,6 +5,7 @@ import '../../core/haptics/haptics.dart';
 import '../../core/theme/player_colors.dart';
 import '../../l10n/l10n.dart';
 import '../video/engagement_bar.dart' show ensureLoggedIn;
+import '../../core/widgets/app_snack_bar.dart';
 
 /// PiliPlus-aligned danmaku report reasons (`ReportOptions.danmakuReport`).
 const Map<int, String> kDanmakuReportReasonsZh = {
@@ -117,16 +118,12 @@ Future<void> _like(
     await CoreApi.instance.danmakuLike(oid: cid, dmid: dmid, like: true);
     await Haptics.success();
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.playerDanmakuLiked)),
-    );
+    AppSnackBar.show(context, message: l10n.playerDanmakuLiked);
   } catch (e) {
     if (!context.mounted) return;
     await Haptics.error();
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(errorMessage(e, context.l10n))),
-    );
+    AppSnackBar.show(context, message: errorMessage(e, context.l10n));
   }
 }
 
@@ -215,13 +212,11 @@ Future<void> _report(
       -5 => l10n.playerDanmakuReportDup,
       _ => l10n.playerDanmakuReportOk,
     };
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    AppSnackBar.show(context, message: msg);
   } catch (e) {
     if (!context.mounted) return;
     await Haptics.error();
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(errorMessage(e, context.l10n))),
-    );
+    AppSnackBar.show(context, message: errorMessage(e, context.l10n));
   }
 }

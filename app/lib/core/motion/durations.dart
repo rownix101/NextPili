@@ -1,5 +1,9 @@
 /// Duration tokens — docs/ux/motion.md §2.
 abstract final class AppDuration {
+  /// True zero — reduce-motion collapse, skip enter/exit.
+  static const none = Duration.zero;
+
+  /// Near-instant micro feedback when a zero-length frame is undesirable.
   static const instant = Duration(milliseconds: 50);
   static const short1 = Duration(milliseconds: 50);
   static const short2 = Duration(milliseconds: 100);

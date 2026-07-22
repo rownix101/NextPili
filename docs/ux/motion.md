@@ -24,7 +24,8 @@
 
 | Token | 时长 | 适用 |
 |-------|------|------|
-| `duration.instant` | 0–50ms | 减少动效模式；开关瞬时态 |
+| `duration.none` | 0ms | 减少动效默认坍缩；跳过进出动画 |
+| `duration.instant` | 0–50ms | 近瞬时微反馈；非 reduce 默认坍缩 |
 | `duration.short1` | 50ms | 极微反馈（按压 opacity） |
 | `duration.short2` | 100ms | 图标切换、小控件 |
 | `duration.short3` | 150ms | 按钮、ripple 感知强化 |
@@ -55,13 +56,13 @@
 | `easing.emphasizedDecelerate` | 强调进入 | | 大面板滑入 |
 | `easing.emphasizedAccelerate` | 强调离开 | | 大面板滑出 |
 
-Flutter 粗映射（实现可微调）：
+Flutter 实现（`AppEasing`，语义名固定、控制点偏强 cubic，避免内置曲线偏软）：
 
 | Token | Flutter 参考 |
 |-------|----------------|
-| standard | `Curves.easeInOutCubic` |
-| decelerate 进入 | `Curves.easeOutCubic` |
-| accelerate 离开 | `Curves.easeInCubic` |
+| standard | `Cubic(0.77, 0, 0.175, 1)` |
+| decelerate 进入 | `Cubic(0.23, 1, 0.32, 1)` |
+| accelerate 离开 | `Cubic(0.55, 0.055, 0.675, 1)` |
 | emphasized | `Curves.easeInOutCubicEmphasized`（若版本可用）或自定义 Cubic |
 
 ---
@@ -133,7 +134,7 @@ Flutter 粗映射（实现可微调）：
 
 | 场景 | 方案 |
 |------|------|
-| Snackbar | 自底部/下缘 slide + fade；可堆叠策略：替换前一条 |
+| Snackbar | 自底部/下缘 slide + fade；**替换前一条**（不排队）；实现：`AppSnackBar.show` + `AnimationStyle`（enter `medium1` / exit `short3`；reduce → `noAnimation`） |
 | 拉取刷新 | 平台默认指示器；完成时短 fade |
 | 进度不确定 | 线性/环形 indeterminate；避免无意义循环装饰动画 |
 
@@ -145,7 +146,7 @@ Flutter 粗映射（实现可微调）：
 
 | 原动效 | 降级 |
 |--------|------|
-| 位移、缩放、shared axis | 改为短 fade 或瞬时切换 |
+| 位移、缩放、shared axis | 改为短 fade 或瞬时切换（`appMotionDuration` 默认 reduced = `duration.none`） |
 | Hero 变形 | 关闭，直接切换 |
 | 点赞 bounce | 仅颜色状态 |
 | 播放器 chrome | 可瞬时显示/隐藏或保留极短 fade（≤100ms） |

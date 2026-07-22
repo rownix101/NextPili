@@ -5,11 +5,13 @@ use auth::{now_ms, Account, AccountRegistry, WbiSigner};
 use domain::id::{AccountId, UserMid};
 use http::{
     BiliClient, LoginSuccess, NavApi, PasswordLoginOutcome, PasswordLoginRequest,
-    SafeCenterSmsSendRequest, SafeCenterSmsVerifyRequest, SmsLoginRequest, SmsSendRequest,
+    SafeCenterSmsSendRequest, SafeCenterSmsVerifyRequest, SmsLoginRequest, SmsSendOutcome,
+    SmsSendRequest,
 };
+use md5::{Digest, Md5};
 use parking_lot::RwLock;
 use store::Store;
-use uuid::Uuid;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Start TV/HD QR login; returns URL + auth_code for the UI.
 pub async fn login_qr_start(http: &BiliClient, local_id: &str) -> Result<QrStartDto, AppError> {
@@ -96,7 +98,7 @@ pub async fn finalize_qr_login(
     })
 }
 
-/// Fetch geetest captcha params for SMS.
+/// Fetch geetest captcha params (web captcha or safe-center pre).
 pub async fn login_captcha(http: &BiliClient) -> Result<CaptchaDto, AppError> {
     let c = http::LoginApi::captcha(http).await?;
     Ok(CaptchaDto {
@@ -107,25 +109,46 @@ pub async fn login_captcha(http: &BiliClient) -> Result<CaptchaDto, AppError> {
     })
 }
 
-/// Create a new SMS login session id (uuid without dashes).
-pub fn new_login_session_id() -> String {
-    Uuid::new_v4().simple().to_string()
+/// PiliPlus: `md5(buvid + timestamp_ms)`.
+pub fn new_login_session_id(buvid: &str) -> String {
+    let ts_ms = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_millis())
+        .unwrap_or(0);
+    login_session_id_with_ts(buvid, ts_ms)
 }
 
+fn login_session_id_with_ts(buvid: &str, ts_ms: u128) -> String {
+    let mut hasher = Md5::new();
+    hasher.update(buvid.as_bytes());
+    hasher.update(ts_ms.to_string().as_bytes());
+    hex::encode(hasher.finalize())
+}
 
-/// Send SMS code after captcha is solved.
+#[cfg(test)]
+mod session_id_tests {
+    use super::login_session_id_with_ts;
+    use md5::{Digest, Md5};
+
+    #[test]
+    fn login_session_id_matches_md5_buvid_ts() {
+        let id = login_session_id_with_ts("buvidX", 1_700_000_000_000);
+        assert_eq!(id.len(), 32);
+        assert!(id.chars().all(|c| c.is_ascii_hexdigit()));
+        let mut hasher = Md5::new();
+        hasher.update(b"buvidX");
+        hasher.update(b"1700000000000");
+        assert_eq!(id, hex::encode(hasher.finalize()));
+    }
+}
+
+/// Send SMS code. Empty geetest fields = first probe; may return NeedCaptcha.
 pub async fn login_sms_send(
     http: &BiliClient,
     store: &Store,
     req: SmsSendDto,
 ) -> Result<SmsSendDtoResult, AppError> {
     validate_tel(&req.tel)?;
-    if req.gee_validate.trim().is_empty() || req.gee_seccode.trim().is_empty() {
-        return Err(AppError::new(
-            ErrorKind::InvalidArgument,
-            "请先完成人机验证",
-        ));
-    }
     let buvid = store.buvid3();
     let local_id = if req.local_id.as_deref().unwrap_or("").is_empty() {
         buvid.clone()
@@ -133,37 +156,87 @@ pub async fn login_sms_send(
         req.local_id.unwrap()
     };
     let session = if req.login_session_id.trim().is_empty() {
-        new_login_session_id()
+        new_login_session_id(&buvid)
     } else {
         req.login_session_id
     };
 
-    let seccode = if req.gee_seccode.contains('|') {
-        req.gee_seccode
+    let has_gee = !req.gee_validate.trim().is_empty();
+    let seccode = if has_gee {
+        normalize_seccode(&req.gee_seccode, &req.gee_validate)
     } else {
-        format!("{}|jordan", req.gee_seccode)
+        String::new()
     };
 
-    let result = http::LoginApi::sms_send(
+    let outcome = http::LoginApi::sms_send(
         http,
         &SmsSendRequest {
             cid: req.cid,
             tel: &req.tel,
             login_session_id: &session,
-            recaptcha_token: &req.token,
-            gee_challenge: &req.gee_challenge,
-            gee_validate: &req.gee_validate,
-            gee_seccode: &seccode,
+            recaptcha_token: req.token.trim(),
+            gee_challenge: req.gee_challenge.trim(),
+            gee_validate: req.gee_validate.trim(),
+            gee_seccode: seccode.as_str(),
             buvid: &buvid,
             local_id: &local_id,
         },
     )
     .await?;
 
-    Ok(SmsSendDtoResult {
-        captcha_key: result.captcha_key,
-        login_session_id: session,
-    })
+    match outcome {
+        SmsSendOutcome::Sent(result) => Ok(SmsSendDtoResult {
+            kind: SmsSendResultKind::Sent,
+            captcha_key: result.captcha_key,
+            login_session_id: session,
+            message: String::new(),
+            captcha: None,
+        }),
+        SmsSendOutcome::NeedCaptcha {
+            message,
+            captcha,
+            ..
+        } => {
+            let captcha_dto = if captcha.gee_gt.is_empty() || captcha.gee_challenge.is_empty() {
+                match http::LoginApi::safe_center_pre_captcha(http).await {
+                    Ok(pre) => CaptchaDto {
+                        token: pre.recaptcha_token,
+                        gt: pre.gee_gt,
+                        challenge: pre.gee_challenge,
+                        captcha_type: "geetest".into(),
+                    },
+                    Err(e) => {
+                        tracing::warn!(error = %e, "preCapture failed; trying web captcha");
+                        login_captcha(http).await?
+                    }
+                }
+            } else {
+                CaptchaDto {
+                    token: captcha.recaptcha_token,
+                    gt: captcha.gee_gt,
+                    challenge: captcha.gee_challenge,
+                    captcha_type: "geetest".into(),
+                }
+            };
+            if captcha_dto.gt.is_empty() || captcha_dto.challenge.is_empty() {
+                return Err(AppError::new(
+                    ErrorKind::InvalidArgument,
+                    if message.is_empty() {
+                        "获取验证码失败，请改用其它登录方式".into()
+                    } else {
+                        message
+                    },
+                ));
+            }
+            Ok(SmsSendDtoResult {
+                kind: SmsSendResultKind::NeedCaptcha,
+                captcha_key: String::new(),
+                login_session_id: session,
+                message,
+                captcha: Some(captcha_dto),
+            })
+        }
+    }
 }
 
 /// Complete SMS login with verification code.

@@ -25,6 +25,7 @@ import 'player_settings_local_state.dart';
 import 'player_settings_overlay.dart';
 import 'player_top_bar.dart';
 import 'subtitle_overlay.dart';
+import '../../core/widgets/app_snack_bar.dart';
 
 /// Inline (or host-bound) video surface + chrome for one cid.
 ///
@@ -293,9 +294,7 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> with RouteAware {
     final text = _dmComposer.text.trim();
     final l10n = context.l10n;
     if (text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.playerDanmakuEmpty)),
-      );
+      AppSnackBar.show(context, message: l10n.playerDanmakuEmpty);
       return;
     }
     if (!await ensureLoggedIn(context)) return;
@@ -318,17 +317,13 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> with RouteAware {
       _danmakuKey.currentState?.injectLocal(posted);
       setState(() => _sendingDm = false);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.playerDanmakuSent)),
-      );
+      AppSnackBar.show(context, message: l10n.playerDanmakuSent);
     } catch (e) {
       if (!mounted) return;
       await Haptics.error();
       if (!mounted) return;
       setState(() => _sendingDm = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage(e, context.l10n))),
-      );
+      AppSnackBar.show(context, message: errorMessage(e, context.l10n));
     }
   }
 
@@ -441,9 +436,7 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> with RouteAware {
       if (mounted) setState(() {});
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage(e, context.l10n))),
-      );
+      AppSnackBar.show(context, message: errorMessage(e, context.l10n));
     }
   }
 
@@ -454,9 +447,7 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> with RouteAware {
       if (mounted) setState(() {});
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage(e, context.l10n))),
-      );
+      AppSnackBar.show(context, message: errorMessage(e, context.l10n));
     }
   }
 
@@ -470,9 +461,7 @@ class _PlayerPaneState extends ConsumerState<PlayerPane> with RouteAware {
       if (!mounted) return;
       await Haptics.error();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage(e, context.l10n))),
-      );
+      AppSnackBar.show(context, message: errorMessage(e, context.l10n));
     }
   }
 

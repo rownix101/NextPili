@@ -15,8 +15,8 @@ pub use endpoints::{
     QrStart, RankingFeed, RecommendFeed, ReplyApi, SafeCenterCaptcha, SafeCenterInfo,
     SafeCenterSmsSendRequest,
     SafeCenterSmsVerifyRequest, SearchApi, SearchSuggest, SearchVideoPage, SmsLoginRequest,
-    SmsSendRequest, SmsSendResult, UserApi, VideoApi, PLAYURL_FNVAL_DASH, REPLY_MODE_HOT,
-    REPLY_MODE_TIME, REPLY_TYPE_VIDEO,
+    SmsNeedCaptcha, SmsSendOutcome, SmsSendRequest, SmsSendResult, UserApi, VideoApi,
+    PLAYURL_FNVAL_DASH, REPLY_MODE_HOT, REPLY_MODE_TIME, REPLY_TYPE_VIDEO,
 };
 pub use error::{Error, Result};
 pub use middleware::{AuthMode, SignMode};

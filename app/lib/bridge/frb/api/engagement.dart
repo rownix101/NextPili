@@ -7,7 +7,7 @@ import '../error.dart';
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `default_empty`, `main_account`, `refresh_relation`, `require_main`
+// These functions are ignored because they are not marked as `pub`: `default_empty`, `main_account`, `refresh_relation_soft`, `require_main`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `fmt`, `from`
 
 /// Current engagement flags. Requires login; empty defaults when unauthenticated.
