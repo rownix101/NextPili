@@ -251,32 +251,32 @@ Flip 半开 flex        → 上半画面零玻璃；下半控件可轻玻璃；�
 | 做 | 不做 |
 |----|------|
 | 手写语义 token（bg / fg / accent / status） | **Material 3** 视觉、`ColorScheme.fromSeed` 当品牌源 |
-| 强调色 **Sky 青**（玻璃友好） | **B 站粉**（`#FB7299` 及玫红/品红系 CTA） |
-| cinema navy 深色 + 冷灰白浅色 | 纯 OLED 黑大面积、暖灰脏底 |
+| 强调色 **午夜蓝紫 A**（玻璃友好） | **B 站粉**（`#FB7299` 及玫红/品红系 CTA） |
+| 午夜蓝紫深色 + 冷灰白浅色 | 纯 OLED 黑大面积、暖灰脏底 |
 | 业务禁止 `Color(0xFF...)` | 业务硬编码色值 |
 
-品牌一句话：**冷色电影感 + 青强调 + 玻璃 chrome**，不与官方 App 撞色。
+品牌一句话：**冷色电影感 + 午夜蓝紫强调 + 玻璃 chrome**，不与官方 App 撞色。
 
 ### 3.2 品牌与角色（锁定值）
 
 | Token | Light | Dark | 用途 |
 |-------|-------|------|------|
-| `color.accent` / `primary` | `#0284C7` | `#38BDF8` | CTA、选中、进度、焦点环强调 |
-| `color.onAccent` | `#FFFFFF` | `#0B0F1A` | accent 上的字/图标 |
+| `color.accent` / `primary` | `#5B4BFF` | `#7567FF` | CTA、选中、进度、焦点环强调 |
+| `color.onAccent` | `#FFFFFF` | `#08090D` | accent 上的字/图标 |
 | `color.secondary` | `#4F46E5` | `#818CF8` | 链接、筛选、次要强调 |
 | `color.tertiary` | `#7C3AED` | `#A78BFA` | 少量点缀（活动/实验功能） |
-| `color.bg.canvas` | `#F4F6FA` | `#0B0F1A` | 页面底（内容区） |
-| `color.bg.elevated` | `#FFFFFF` | `#121826` | 不透明卡片 / 面板 |
-| `color.bg.sunken` | `#E8ECF4` | `#070A12` | 凹陷区、输入井 |
-| `color.fg.primary` | `#0F172A` | `#F8FAFC` | 主文字 |
-| `color.fg.secondary` | `#475569` | `#94A3B8` | 次要文字 / meta |
+| `color.bg.canvas` | `#F4F6FA` | `#08090D` | 页面底（内容区） |
+| `color.bg.elevated` | `#FFFFFF` | `#13151C` | 不透明卡片 / 面板 |
+| `color.bg.sunken` | `#E8ECF4` | `#05060A` | 凹陷区、输入井 |
+| `color.fg.primary` | `#0F172A` | `#F5F5F7` | 主文字 |
+| `color.fg.secondary` | `#475569` | `#9296A3` | 次要文字 / meta |
 | `color.fg.muted` | `#64748B` | `#64748B` | 更弱说明 |
-| `color.border.subtle` | `#E2E8F0` | `#1F2937` | 分割、未选中描边 |
+| `color.border.subtle` | `#E2E8F0` | `#252833` | 分割、未选中描边 |
 | `color.border.strong` | `#CBD5E1` | `#334155` | 强调描边 |
 | `color.error` | `#DC2626` | `#F87171` | 错误 / 危险 |
 | `color.success` | `#16A34A` | `#4ADE80` | 成功 |
 | `color.warning` | `#D97706` | `#FBBF24` | 警告（清晰度/网络） |
-| `color.info` | `#0284C7` | `#38BDF8` | 一般信息（与 accent 对齐） |
+| `color.info` | `#5B4BFF` | `#7567FF` | 一般信息（与 accent 对齐） |
 | `color.live` | `#EF4444` | `#F87171` | **仅**直播角标（功能色，非品牌） |
 | `color.vip` | `#CA8A04` | `#EAB308` | 大会员等（克制） |
 
@@ -289,9 +289,10 @@ Flip 半开 flex        → 上半画面零玻璃；下半控件可轻玻璃；�
 
 说明：
 
-- Dark `canvas #0B0F1A` 极轻蓝紫，玻璃高光不脏。
+- Dark `canvas #08090D` 极轻蓝紫，玻璃高光不脏。
 - Light 避免纯白大面积，否则玻璃几乎不可见。
-- `accent` **仅小面积**；页面底与侧栏禁止大块青染。
+- `accent` **仅小面积**；页面底与侧栏禁止大块蓝紫染。
+- Dark `surface.hover` 目标值 `#1C1F29`，由 `fg.primary` 约 4–6% 叠加在 `bg.elevated` 上实现。
 
 ### 3.3 Theme 接入（非 M3 语义）
 
@@ -309,9 +310,9 @@ Flutter 仍可用 `ThemeData` 承载 token，但 **不以 M3 ColorScheme 角色�
 
 | Token | Light | Dark | 说明 |
 |-------|-------|------|------|
-| `glass.tint.neutral` | `rgba(255,255,255,0.10)` | `rgba(18,24,38,0.45)` | 默认 chrome |
-| `glass.tint.chrome` | `rgba(255,255,255,0.14)` | `rgba(15,23,42,0.55)` | 顶栏 / Rail 略实 |
-| `glass.tint.accent` | `rgba(2,132,199,0.14)` | `rgba(56,189,248,0.16)` | 选中 / 强调 pill（少用） |
+| `glass.tint.neutral` | `rgba(255,255,255,0.10)` | `rgba(19,21,28,0.45)` | 默认 chrome |
+| `glass.tint.chrome` | `rgba(255,255,255,0.14)` | `rgba(16,17,24,0.55)` | 顶栏 / Rail 略实 |
+| `glass.tint.accent` | `rgba(91,75,255,0.14)` | `rgba(117,103,255,0.16)` | 选中 / 强调 pill（少用） |
 | `glass.tint.player` | — | `rgba(0,0,0,0.35)` | 播放器控件条（始终暗） |
 
 浅色模式玻璃若几乎看不见：提高 `glass.tint.*` alpha 或背景改用略有色相的 canvas，**不要**靠无限加大 blur。
@@ -413,20 +414,20 @@ runApp(LiquidGlassWidgets.wrap(
         chromaticAberration: 0.02,
       ),
       quality: GlassQuality.standard,
-      glowColors: GlassGlowColors(primary: Color(0xFF0284C7)), // accent light
+      glowColors: GlassGlowColors(primary: Color(0xFF5B4BFF)), // accent light
     ),
     dark: GlassThemeVariant(
       settings: GlassThemeSettings(
         blur: 8,
         thickness: 32,
-        glassColor: Color(0x73121826), // glass.tint.neutral dark
+        glassColor: Color(0x7313151C), // glass.tint.neutral dark
         lightIntensity: 0.6,
         refractiveIndex: 1.18,
         saturation: 1.35,
         chromaticAberration: 0.02,
       ),
       quality: GlassQuality.standard,
-      glowColors: GlassGlowColors(primary: Color(0xFF38BDF8)), // accent dark
+      glowColors: GlassGlowColors(primary: Color(0xFF7567FF)), // accent dark
     ),
   ),
 ));
@@ -806,7 +807,7 @@ Reduce Transparency：玻璃降为更高不透明 / `minimal`；由库默认处�
 
 ```text
 app/lib/core/theme/
-  palette.dart            # §3 色板常量（accent sky，无 B 站粉）
+  palette.dart            # §3 色板常量（accent 午夜蓝紫 A，无 B 站粉）
   app_colors.dart         # ThemeExtension<AppColors>
   text_themes.dart        # Inter + CJK fallback + type token
   player_colors.dart      # ThemeExtension
@@ -857,7 +858,7 @@ runApp(
 ## 11. 验收清单（设计规范）
 
 - [ ] 无业务硬编码色值 / blur / thickness（除 token 定义处）
-- [ ] **无** B 站粉 / 玫红作 accent；accent 为 Sky `#0284C7` / `#38BDF8`
+- [ ] **无** B 站粉 / 玫红作 accent；accent 为 午夜蓝紫 A `#5B4BFF` / `#7567FF`
 - [ ] **无** Material Symbols / `Icons.*` 作默认图标；统一 Lucide / `AppIcons.*`
 - [ ] 正文字体为 Inter + 系统 CJK fallback；无整包 CJK 字体
 - [ ] **不**以 M3 / `ColorScheme.fromSeed` 为品牌色源
@@ -892,3 +893,4 @@ runApp(
 | v0.5.5 | 撤销 Flutter 桌面 blur；Linux 改合成器 real-time blur |
 | v0.5.6 | Wayland 主路径改为 `ext-background-effect-v1`（wayland-scanner）；X11 仍 KWin atom |
 | v0.6 | **移除 Mica / 桌面穿透**：不透明窗口；Rail 与桌面紧凑底栏改用 `ChromeSurface`；删除 `flutter_acrylic`、壁纸采样与合成器 blur |
+| v0.6.1 | 采用 **A. 午夜蓝紫** 配色：更新 accent / canvas / surface / fg / border / glass tint 常量 |

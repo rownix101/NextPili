@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 /// Locked color constants from docs/ux/design-system.md §3.
 /// Business code must read via [AppColors] ThemeExtension, not these raw values.
 abstract final class Palette {
-  // Accent (Sky — not Bilibili pink / official blue)
-  static const accentLight = Color(0xFF0284C7);
-  static const accentDark = Color(0xFF38BDF8);
+  // Accent (Midnight Blue-Purple A — not Bilibili pink / official blue)
+  static const accentLight = Color(0xFF5B4BFF);
+  static const accentDark = Color(0xFF7567FF);
   static const onAccentLight = Color(0xFFFFFFFF);
-  static const onAccentDark = Color(0xFF0B0F1A);
+  static const onAccentDark = Color(0xFF08090D);
 
   static const secondaryLight = Color(0xFF4F46E5);
   static const secondaryDark = Color(0xFF818CF8);
@@ -16,22 +16,22 @@ abstract final class Palette {
 
   // Backgrounds
   static const canvasLight = Color(0xFFF4F6FA);
-  static const canvasDark = Color(0xFF0B0F1A);
+  static const canvasDark = Color(0xFF08090D);
   static const elevatedLight = Color(0xFFFFFFFF);
-  static const elevatedDark = Color(0xFF121826);
+  static const elevatedDark = Color(0xFF13151C);
   static const sunkenLight = Color(0xFFE8ECF4);
-  static const sunkenDark = Color(0xFF070A12);
+  static const sunkenDark = Color(0xFF05060A);
 
   // Foreground
   static const fgPrimaryLight = Color(0xFF0F172A);
-  static const fgPrimaryDark = Color(0xFFF8FAFC);
+  static const fgPrimaryDark = Color(0xFFF5F5F7);
   static const fgSecondaryLight = Color(0xFF475569);
-  static const fgSecondaryDark = Color(0xFF94A3B8);
+  static const fgSecondaryDark = Color(0xFF9296A3);
   static const fgMuted = Color(0xFF64748B);
 
   // Borders
   static const borderSubtleLight = Color(0xFFE2E8F0);
-  static const borderSubtleDark = Color(0xFF1F2937);
+  static const borderSubtleDark = Color(0xFF252833);
   static const borderStrongLight = Color(0xFFCBD5E1);
   static const borderStrongDark = Color(0xFF334155);
 
@@ -51,13 +51,13 @@ abstract final class Palette {
 
   // Glass tint (alpha = stain strength)
   static const glassTintNeutralLight = Color(0x1AFFFFFF);
-  static const glassTintNeutralDark = Color(0x73121826);
+  static const glassTintNeutralDark = Color(0x7313151C);
   static const glassTintChromeLight = Color(0x24FFFFFF);
-  static const glassTintChromeDark = Color(0x8C0F172A);
-  static const glassTintAccentLight = Color(0x240284C7);
-  static const glassTintAccentDark = Color(0x2938BDF8);
+  static const glassTintChromeDark = Color(0x8C101118);
+  static const glassTintAccentLight = Color(0x245B4BFF);
+  static const glassTintAccentDark = Color(0x297567FF);
   static const glassTintPlayer = Color(0x59000000);
 
   /// Player settings panel plate (no BackdropFilter over video).
-  static const menuSurfacePlayer = Color(0xE6121826);
+  static const menuSurfacePlayer = Color(0xE613151C);
 }

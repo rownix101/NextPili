@@ -450,7 +450,7 @@ bar=2&foo=1&wts=1700000000&w_rid=<32位hex>
 
 | 主张 | Example |
 |------|---------|
-| Token | `color.bg.canvas` = `#0B0F1A`（Dark） |
+| Token | `color.bg.canvas` = `#08090D`（Dark） |
 | 玻璃规则 | ✅ Rail / ❌ Feed 卡片（表） |
 | 图标规则 | ✅ 播放 icon-only / ❌ 登录仅图标；展开导航有标签 |
 | 触觉规则 | ✅ 收藏成功 `haptic.impactLight` / ❌ 列表滚动震 |

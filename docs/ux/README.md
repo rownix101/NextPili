@@ -43,7 +43,7 @@
 | 核心路径 | 推荐/热门、搜索、播放（含弹幕/清晰度）、评论、历史/收藏、动态、直播、番剧 |
 | 视觉语言 | **Liquid Glass**：玻璃用于导航/控制层；内容区不透明、可读；桌面窗口不透明，Rail/紧凑底栏用 `ChromeSurface` |
 | UI 技术 | Flutter + **[liquid_glass_widgets](https://pub.dev/packages/liquid_glass_widgets)**（玻璃）+ `window_manager` + **自有语义 Token**（**不用 M3 视觉**） |
-| 配色 / 字 / 图标 | Sky accent · Inter + 系统 CJK · Lucide（用/不用见 design-system §7） |
+| 配色 / 字 / 图标 | 午夜蓝紫 A accent · Inter + 系统 CJK · Lucide（用/不用见 design-system §7） |
 | 反馈 | 视觉为主；触觉增强且可关；文案自足（不靠图标/震动单独传义） |
 | 非目标 | 不模仿官方 App 像素级；**不用 B 站粉**；不以移动端竖屏信息流为默认布局；不做插件主题市场（首期）；不做整页玻璃化 |
 
@@ -91,8 +91,8 @@
 | 默认玻璃质量 | `GlassQuality.standard` + `adaptiveQuality: true` |
 | 玻璃用 / 不用 | chrome·浮层用；Feed/评论/画面不用（design-system §2.5） |
 | 手机 / 折叠 | P2；Fold / Flip 同断点（multi-platform） |
-| **配色 accent** | Light `#0284C7` / Dark `#38BDF8`（Sky；**非** B 站粉） |
-| 深色 / 浅色画布 | `#0B0F1A` / `#F4F6FA` |
+| **配色 accent** | Light `#5B4BFF` / Dark `#7567FF`（午夜蓝紫 A；**非** B 站粉） |
+| 深色 / 浅色画布 | `#08090D` / `#F4F6FA` |
 | **字体** | Inter + 系统 CJK fallback |
 | **图标集** | Lucide（Outlined）；业务 `AppIcons.*` |
 | **图标形态** | 导航展开=图标+文字；icon-only 仅通用/紧凑 chrome；CTA 必有文字（§7） |
@@ -106,7 +106,7 @@
 
 ## 6. 版本与变更
 
-- 文档版本与 `architecture.md` 同步用草案号（当前 UX **v0.4**）。
+- 文档版本与 `architecture.md` 同步用草案号（当前 UX **v0.5**）。
 - 变更影响实现时：先改本文与对应专章，PR 标明破坏性（token 改名、断点、换库、图标/触觉策略）。
 - Token 命名以 **语义** 为准（`color.bg.canvas`、`glass.blur`、`haptic.selection`），实现映射到 Theme / Haptics / AppIcons。
 
@@ -116,3 +116,4 @@
 | v0.2 | 确立 Liquid Glass；锁定配色与 `liquid_glass_widgets` |
 | v0.3 | 锁定 Sky accent / Inter / Lucide；明确不用 M3 与 B 站粉 |
 | v0.4 | 增补图标用/不用 + 触觉反馈；原则/锁定表/反馈通道索引 |
+| v0.5 | 采用 A. 午夜蓝紫配色（Light/Dark accent、深色画布与玻璃 tint） |

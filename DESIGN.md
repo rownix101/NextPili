@@ -40,10 +40,10 @@ Row order (top → bottom):
 |--------------|-------|--------|
 | Settings tray | `GlassContainer` + `GlassPanel.playerChromeSettings(chromeGlass)` | Liquid Glass tray (package shader glass, **not** Flutter `BackdropFilter`) |
 | `player.chromeGlass` | existing `glass.tint.player` | Tint for settings tray **and** bottom **icon pills** |
-| `player.menuSurface` | `#121826` @ ~90% | Fallback / nested opaque chips if glass is degraded |
+| `player.menuSurface` | `#13151C` @ ~90% | Fallback / nested opaque chips if glass is degraded |
 | `player.controlFg` | near-white | Row icons + primary labels |
 | `player.controlFgMuted` | white ~70% | Secondary values, chevrons |
-| `player.progressPlayed` / accent | Sky accent | Switch track active |
+| `player.progressPlayed` / accent | A. 午夜蓝紫 accent | Switch track active |
 | Border | white @ ~8% | Optional hairline under glass if contrast needs help |
 
 **Hard rule:** never Flutter `BackdropFilter` over the media_kit video texture (desktop HW textures are not sampleable). Package Liquid Glass chrome over the player is allowed for settings tray + icon pills only — **not** a full-width frosted bar over the seek track.
