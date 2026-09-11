@@ -45,6 +45,9 @@ export 'frb/api/user.dart'
         FavResourcePageDto,
         HistoryItemDto,
         HistoryPageDto,
+        MemberProfileDto,
+        MemberVideoItemDto,
+        MemberVideoPageDto,
         ToViewItemDto,
         ToViewPageDto;
 export 'frb/api/video.dart'
@@ -286,6 +289,23 @@ class CoreApi {
 
   Future<frb_user.ToViewPageDto> toviewList({int pn = 1, int ps = 20}) =>
       frb_user.toviewList(pn: pn, ps: ps);
+
+  /// Public UP profile card (viewable without login).
+  Future<frb_user.MemberProfileDto> memberProfile(int mid) =>
+      frb_user.memberProfile(mid: PlatformInt64Util.from(mid));
+
+  /// UP contribution list. First page: `aid = 0`; then use previous `nextAid`.
+  /// `order`: `pubdate` or `click`.
+  Future<frb_user.MemberVideoPageDto> memberVideos({
+    required int mid,
+    int aid = 0,
+    String order = 'pubdate',
+  }) =>
+      frb_user.memberVideos(
+        mid: PlatformInt64Util.from(mid),
+        aid: PlatformInt64Util.from(aid),
+        order: order,
+      );
 
   /// Pass [rid] (aid) > 0 to fill each folder's `inFolder` for that archive.
   Future<frb_user.FavFolderListDto> favFolders({int rid = 0}) =>

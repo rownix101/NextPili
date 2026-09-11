@@ -10,7 +10,7 @@ pub mod serde_util;
 pub use client::{BiliClient, ClientConfig, RequestOptions};
 pub use endpoints::{
     now_unix, CaptchaParams, DanmakuApi, DynamicsApi, EngagementApi, FeedApi, HeartbeatParams,
-    LiveApi, LoginApi, LoginSuccess, NavApi, NavInfo, PasswordKey, PasswordLoginOutcome,
+    LiveApi, LoginApi, LoginSuccess, MemberApi, NavApi, NavInfo, PasswordKey, PasswordLoginOutcome,
     PasswordLoginRequest, PgcApi, PgcPlayUrlParams, PlayUrlParams, PopularFeed, QrPollStatus,
     QrStart, RankingFeed, RecommendFeed, ReplyApi, SafeCenterCaptcha, SafeCenterInfo,
     SafeCenterSmsSendRequest,

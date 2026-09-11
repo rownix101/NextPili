@@ -5,6 +5,7 @@ pub mod dynamics;
 pub mod engagement;
 pub mod feed;
 pub mod live;
+pub mod member;
 pub mod login;
 pub mod nav;
 pub mod pgc;
@@ -18,6 +19,7 @@ pub use dynamics::DynamicsApi;
 pub use engagement::EngagementApi;
 pub use feed::{FeedApi, PopularFeed, RankingFeed, RecommendFeed};
 pub use live::LiveApi;
+pub use member::MemberApi;
 pub use login::{
     CaptchaParams, LoginApi, LoginSuccess, PasswordKey, PasswordLoginOutcome, PasswordLoginRequest,
     QrPollStatus, QrStart, SafeCenterCaptcha, SafeCenterInfo, SafeCenterSmsSendRequest,

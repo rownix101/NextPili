@@ -7,8 +7,8 @@ import '../error.dart';
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `require_main`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
+// These functions are ignored because they are not marked as `pub`: `optional_main`, `require_main`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 /// Watch history (main slot · Cookie). Cursor IFS: first call `max=0, view_at=0, business=""`.
 ///
@@ -44,6 +44,24 @@ Future<FavResourcePageDto> favResources({
   mediaId: mediaId,
   pn: pn,
   ps: ps,
+);
+
+/// Member profile card (`/x/web-interface/card`). Cookie optional.
+Future<MemberProfileDto> memberProfile({required PlatformInt64 mid}) =>
+    RustLib.instance.api.crateApiUserMemberProfile(mid: mid);
+
+/// UP contribution list via the App archive cursor.
+///
+/// First page: `aid = 0`. Subsequent pages: previous `next_aid`.
+/// `order`: `pubdate` or `click`.
+Future<MemberVideoPageDto> memberVideos({
+  required PlatformInt64 mid,
+  required PlatformInt64 aid,
+  required String order,
+}) => RustLib.instance.api.crateApiUserMemberVideos(
+  mid: mid,
+  aid: aid,
+  order: order,
 );
 
 /// Favorite folder.
@@ -278,6 +296,169 @@ class HistoryPageDto {
           nextViewAt == other.nextViewAt &&
           nextBusiness == other.nextBusiness &&
           hasMore == other.hasMore;
+}
+
+/// Public UP profile for the member-space page.
+class MemberProfileDto {
+  final PlatformInt64 mid;
+  final String name;
+  final String face;
+  final String sign;
+  final int level;
+  final PlatformInt64 fans;
+  final PlatformInt64 following;
+  final PlatformInt64 likes;
+  final PlatformInt64 archiveCount;
+  final bool isFollowing;
+  final bool isSelf;
+  final String officialTitle;
+  final int officialType;
+  final bool vipStatus;
+  final String vipLabel;
+
+  const MemberProfileDto({
+    required this.mid,
+    required this.name,
+    required this.face,
+    required this.sign,
+    required this.level,
+    required this.fans,
+    required this.following,
+    required this.likes,
+    required this.archiveCount,
+    required this.isFollowing,
+    required this.isSelf,
+    required this.officialTitle,
+    required this.officialType,
+    required this.vipStatus,
+    required this.vipLabel,
+  });
+
+  @override
+  int get hashCode =>
+      mid.hashCode ^
+      name.hashCode ^
+      face.hashCode ^
+      sign.hashCode ^
+      level.hashCode ^
+      fans.hashCode ^
+      following.hashCode ^
+      likes.hashCode ^
+      archiveCount.hashCode ^
+      isFollowing.hashCode ^
+      isSelf.hashCode ^
+      officialTitle.hashCode ^
+      officialType.hashCode ^
+      vipStatus.hashCode ^
+      vipLabel.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MemberProfileDto &&
+          runtimeType == other.runtimeType &&
+          mid == other.mid &&
+          name == other.name &&
+          face == other.face &&
+          sign == other.sign &&
+          level == other.level &&
+          fans == other.fans &&
+          following == other.following &&
+          likes == other.likes &&
+          archiveCount == other.archiveCount &&
+          isFollowing == other.isFollowing &&
+          isSelf == other.isSelf &&
+          officialTitle == other.officialTitle &&
+          officialType == other.officialType &&
+          vipStatus == other.vipStatus &&
+          vipLabel == other.vipLabel;
+}
+
+/// One UP contribution (archive) row.
+class MemberVideoItemDto {
+  final PlatformInt64 aid;
+  final String bvid;
+  final PlatformInt64 cid;
+  final String title;
+  final String cover;
+  final PlatformInt64 durationMs;
+  final PlatformInt64 play;
+  final PlatformInt64 danmaku;
+  final PlatformInt64 ctimeMs;
+  final String author;
+
+  const MemberVideoItemDto({
+    required this.aid,
+    required this.bvid,
+    required this.cid,
+    required this.title,
+    required this.cover,
+    required this.durationMs,
+    required this.play,
+    required this.danmaku,
+    required this.ctimeMs,
+    required this.author,
+  });
+
+  @override
+  int get hashCode =>
+      aid.hashCode ^
+      bvid.hashCode ^
+      cid.hashCode ^
+      title.hashCode ^
+      cover.hashCode ^
+      durationMs.hashCode ^
+      play.hashCode ^
+      danmaku.hashCode ^
+      ctimeMs.hashCode ^
+      author.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MemberVideoItemDto &&
+          runtimeType == other.runtimeType &&
+          aid == other.aid &&
+          bvid == other.bvid &&
+          cid == other.cid &&
+          title == other.title &&
+          cover == other.cover &&
+          durationMs == other.durationMs &&
+          play == other.play &&
+          danmaku == other.danmaku &&
+          ctimeMs == other.ctimeMs &&
+          author == other.author;
+}
+
+/// Paginated UP contribution page.
+class MemberVideoPageDto {
+  final List<MemberVideoItemDto> items;
+
+  /// Pass as `aid` to request the next page; `0` when finished.
+  final PlatformInt64 nextAid;
+  final bool hasMore;
+  final PlatformInt64 total;
+
+  const MemberVideoPageDto({
+    required this.items,
+    required this.nextAid,
+    required this.hasMore,
+    required this.total,
+  });
+
+  @override
+  int get hashCode =>
+      items.hashCode ^ nextAid.hashCode ^ hasMore.hashCode ^ total.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MemberVideoPageDto &&
+          runtimeType == other.runtimeType &&
+          items == other.items &&
+          nextAid == other.nextAid &&
+          hasMore == other.hasMore &&
+          total == other.total;
 }
 
 /// Watch-later row.

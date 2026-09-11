@@ -5,6 +5,7 @@ import '../../features/dynamics/dynamics_page.dart';
 import '../../features/home/home_page.dart';
 import '../../features/live/live_page.dart';
 import '../../features/live/live_room_page.dart';
+import '../../features/member/member_page.dart';
 import '../../features/pgc/pgc_page.dart';
 import '../../features/pgc/pgc_season_page.dart';
 import '../../features/player/player_page.dart';
@@ -87,6 +88,19 @@ GoRouter createAppRouter() {
               name: state.name,
               child: const DynamicsPage(),
             ),
+          ),
+          GoRoute(
+            path: '/user/:mid',
+            name: 'member',
+            pageBuilder: (context, state) {
+              final mid =
+                  int.tryParse(state.pathParameters['mid'] ?? '') ?? 0;
+              return AppTransitions.fadeThrough(
+                key: state.pageKey,
+                name: state.name,
+                child: MemberPage(mid: mid),
+              );
+            },
           ),
           GoRoute(
             path: '/library',

@@ -802,6 +802,40 @@ class AppLocalizationsZh extends AppLocalizations {
   String get unfollowSuccess => '已取消关注';
 
   @override
+  String get memberProfileFallback => '用户主页';
+
+  @override
+  String get memberTabVideos => '投稿';
+
+  @override
+  String get memberVideosEmpty => '暂无投稿';
+
+  @override
+  String get memberStatFollowing => '关注';
+
+  @override
+  String get memberStatFans => '粉丝';
+
+  @override
+  String get memberStatLikes => '获赞';
+
+  @override
+  String memberLevel(int level) {
+    return 'Lv$level';
+  }
+
+  @override
+  String memberVideosCount(String count) {
+    return '共 $count 个投稿';
+  }
+
+  @override
+  String get memberVideosSortLatest => '最新发布';
+
+  @override
+  String get memberVideosSortPopular => '最多播放';
+
+  @override
   String get actionComingSoon => '即将支持';
 
   @override

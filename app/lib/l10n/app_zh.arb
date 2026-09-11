@@ -385,6 +385,26 @@
   "following": "已关注",
   "followSuccess": "已关注",
   "unfollowSuccess": "已取消关注",
+  "memberProfileFallback": "用户主页",
+  "memberTabVideos": "投稿",
+  "memberVideosEmpty": "暂无投稿",
+  "memberStatFollowing": "关注",
+  "memberStatFans": "粉丝",
+  "memberStatLikes": "获赞",
+  "memberLevel": "Lv{level}",
+  "@memberLevel": {
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
+  "memberVideosCount": "共 {count} 个投稿",
+  "@memberVideosCount": {
+    "placeholders": {
+      "count": { "type": "String" }
+    }
+  },
+  "memberVideosSortLatest": "最新发布",
+  "memberVideosSortPopular": "最多播放",
   "actionComingSoon": "即将支持",
   "loginRequiredTitle": "需要登录",
   "loginRequiredBody": "登录后即可点赞、投币、收藏、关注、发评论与弹幕",

@@ -140,6 +140,7 @@ flutter run -d <device-id>   # flutter devices 查看
 - WBI / AppSign 与 HTTP 管线（Cookie / CSRF / 签名）
 - 短信登录与桌面/平板 TV 扫码；推荐/热门/详情；playurl → media_kit 播放与清晰度
 - 评论 + 弹幕 Overlay（REST）；搜索；历史 / 稍后再看 / 收藏只读
+- 用户空间（资料卡 + 投稿，可按 mid 查看 UP 主页）
 - 设置：`preferred_qn` / 代理（Rust store，热更新 HTTP 客户端）
 
 ## 许可

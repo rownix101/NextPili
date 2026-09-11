@@ -66,7 +66,7 @@ auth:      login_sms_*, login_password, login_qr_* (desktop/tablet UI), logout, 
 feed:      feed_recommend, feed_popular, feed_regions, feed_ranking
 video:     video_detail, play_url, video_related
 social:    reply_list, reply_add, danmaku_segments, danmaku_post, danmaku_like, danmaku_report
-user:      history_list, toview_list, fav_folders, fav_resources
+user:      history_list, toview_list, fav_folders, fav_resources, member_profile, member_videos
 search:    search_video, search_suggest
 dynamics:  dynamics_feed
 live:      live_recommend, live_room, live_play_url, live_dm_history, live_send_msg

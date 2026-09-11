@@ -47,6 +47,7 @@ app/lib/
     player/                 # 播放页 + PlayerAdapter
     search/
     user/                   # 历史、收藏入口等
+    member/                 # 用户空间（资料卡 + 投稿）
     settings/
   l10n/                     # ARB + gen-l10n（见 ux/localization）
 ```
@@ -145,7 +146,7 @@ feedProvider = AsyncNotifier
 / video/:bvid/play?cid=
 / search
 / settings
-/ user/history
+/ user/:mid
 ...
 ```
 
@@ -175,6 +176,7 @@ feedProvider = AsyncNotifier
 | player | P3 | play_url, playback_start/stop, danmaku；`PlaybackSession` 单实例 surface（inline/fullscreen/mini） |
 | search | P5 | search_suggest, search_video |
 | user | P5 | history_list, toview_list, fav_folders, fav_resources |
+| member | P6 | member_profile, member_videos |
 | settings | P1 起 | proxy, qn, slots |
 
 ---

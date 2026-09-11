@@ -307,6 +307,26 @@
   "following": "Following",
   "followSuccess": "Followed",
   "unfollowSuccess": "Unfollowed",
+  "memberProfileFallback": "Profile",
+  "memberTabVideos": "Videos",
+  "memberVideosEmpty": "No videos yet",
+  "memberStatFollowing": "Following",
+  "memberStatFans": "Followers",
+  "memberStatLikes": "Likes",
+  "memberLevel": "Lv{level}",
+  "@memberLevel": {
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
+  "memberVideosCount": "{count} videos",
+  "@memberVideosCount": {
+    "placeholders": {
+      "count": { "type": "String" }
+    }
+  },
+  "memberVideosSortLatest": "Latest",
+  "memberVideosSortPopular": "Most viewed",
   "actionComingSoon": "Coming soon",
   "loginRequiredTitle": "Sign in required",
   "loginRequiredBody": "Sign in to like, coin, favorite, follow, comment, or send danmaku",

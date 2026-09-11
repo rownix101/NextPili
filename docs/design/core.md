@@ -116,6 +116,8 @@ shutdown()
 | `video_favorite_deal` | 指定收藏夹批量加入 / 移出（长按选夹） |
 | `fav_folders(rid)` | 可选 `rid=aid` 填充 `in_folder` |
 | `relation_follow` | 关注 / 取关 UP |
+| `member_profile` | 用户空间资料卡（`/x/web-interface/card`，可选 Cookie） |
+| `member_videos` | 用户投稿（App archive cursor；`aid=0` 首页，后续传 `next_aid`） |
 | `dynamics_feed` | 关注动态时间线（offset 游标 · main 槽 · Cookie） |
 | `live_recommend` | 直播推荐分页（可选登录） |
 | `live_room` | 房间元数据（`getH5InfoByRoom`） |

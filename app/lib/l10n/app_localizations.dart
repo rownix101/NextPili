@@ -1622,6 +1622,66 @@ abstract class AppLocalizations {
   /// **'已取消关注'**
   String get unfollowSuccess;
 
+  /// No description provided for @memberProfileFallback.
+  ///
+  /// In zh, this message translates to:
+  /// **'用户主页'**
+  String get memberProfileFallback;
+
+  /// No description provided for @memberTabVideos.
+  ///
+  /// In zh, this message translates to:
+  /// **'投稿'**
+  String get memberTabVideos;
+
+  /// No description provided for @memberVideosEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无投稿'**
+  String get memberVideosEmpty;
+
+  /// No description provided for @memberStatFollowing.
+  ///
+  /// In zh, this message translates to:
+  /// **'关注'**
+  String get memberStatFollowing;
+
+  /// No description provided for @memberStatFans.
+  ///
+  /// In zh, this message translates to:
+  /// **'粉丝'**
+  String get memberStatFans;
+
+  /// No description provided for @memberStatLikes.
+  ///
+  /// In zh, this message translates to:
+  /// **'获赞'**
+  String get memberStatLikes;
+
+  /// No description provided for @memberLevel.
+  ///
+  /// In zh, this message translates to:
+  /// **'Lv{level}'**
+  String memberLevel(int level);
+
+  /// No description provided for @memberVideosCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'共 {count} 个投稿'**
+  String memberVideosCount(String count);
+
+  /// No description provided for @memberVideosSortLatest.
+  ///
+  /// In zh, this message translates to:
+  /// **'最新发布'**
+  String get memberVideosSortLatest;
+
+  /// No description provided for @memberVideosSortPopular.
+  ///
+  /// In zh, this message translates to:
+  /// **'最多播放'**
+  String get memberVideosSortPopular;
+
   /// No description provided for @actionComingSoon.
   ///
   /// In zh, this message translates to:

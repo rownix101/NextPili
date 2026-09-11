@@ -47,8 +47,9 @@ pub use social::{
     DanmakuItemDto, DanmakuSegmentDto, ReplyDto, ReplyListDto,
 };
 pub use user::{
-    fav_folders, fav_resources, history_list, toview_list, FavFolderDto, FavFolderListDto,
-    FavResourceItemDto, FavResourcePageDto, HistoryItemDto, HistoryPageDto, ToViewItemDto,
+    fav_folders, fav_resources, history_list, member_profile, member_videos, toview_list,
+    FavFolderDto, FavFolderListDto, FavResourceItemDto, FavResourcePageDto, HistoryItemDto,
+    HistoryPageDto, MemberProfileDto, MemberVideoItemDto, MemberVideoPageDto, ToViewItemDto,
     ToViewPageDto,
 };
 pub use video::{

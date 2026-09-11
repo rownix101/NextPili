@@ -815,6 +815,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unfollowSuccess => 'Unfollowed';
 
   @override
+  String get memberProfileFallback => 'Profile';
+
+  @override
+  String get memberTabVideos => 'Videos';
+
+  @override
+  String get memberVideosEmpty => 'No videos yet';
+
+  @override
+  String get memberStatFollowing => 'Following';
+
+  @override
+  String get memberStatFans => 'Followers';
+
+  @override
+  String get memberStatLikes => 'Likes';
+
+  @override
+  String memberLevel(int level) {
+    return 'Lv$level';
+  }
+
+  @override
+  String memberVideosCount(String count) {
+    return '$count videos';
+  }
+
+  @override
+  String get memberVideosSortLatest => 'Latest';
+
+  @override
+  String get memberVideosSortPopular => 'Most viewed';
+
+  @override
   String get actionComingSoon => 'Coming soon';
 
   @override

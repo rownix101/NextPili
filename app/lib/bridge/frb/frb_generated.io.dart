@@ -171,6 +171,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<LiveRoomCardDto> dco_decode_list_live_room_card_dto(dynamic raw);
 
   @protected
+  List<MemberVideoItemDto> dco_decode_list_member_video_item_dto(dynamic raw);
+
+  @protected
   List<PgcEpisodeDto> dco_decode_list_pgc_episode_dto(dynamic raw);
 
   @protected
@@ -220,6 +223,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   MediaSourceDto dco_decode_media_source_dto(dynamic raw);
+
+  @protected
+  MemberProfileDto dco_decode_member_profile_dto(dynamic raw);
+
+  @protected
+  MemberVideoItemDto dco_decode_member_video_item_dto(dynamic raw);
+
+  @protected
+  MemberVideoPageDto dco_decode_member_video_page_dto(dynamic raw);
 
   @protected
   String? dco_decode_opt_String(dynamic raw);
@@ -532,6 +544,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<MemberVideoItemDto> sse_decode_list_member_video_item_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<PgcEpisodeDto> sse_decode_list_pgc_episode_dto(
     SseDeserializer deserializer,
   );
@@ -597,6 +614,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   MediaSourceDto sse_decode_media_source_dto(SseDeserializer deserializer);
+
+  @protected
+  MemberProfileDto sse_decode_member_profile_dto(SseDeserializer deserializer);
+
+  @protected
+  MemberVideoItemDto sse_decode_member_video_item_dto(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  MemberVideoPageDto sse_decode_member_video_page_dto(
+    SseDeserializer deserializer,
+  );
 
   @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
@@ -984,6 +1014,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_member_video_item_dto(
+    List<MemberVideoItemDto> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_pgc_episode_dto(
     List<PgcEpisodeDto> self,
     SseSerializer serializer,
@@ -1076,6 +1112,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_media_source_dto(
     MediaSourceDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_member_profile_dto(
+    MemberProfileDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_member_video_item_dto(
+    MemberVideoItemDto self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_member_video_page_dto(
+    MemberVideoPageDto self,
     SseSerializer serializer,
   );
 

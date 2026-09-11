@@ -12,6 +12,7 @@ pub mod feed;
 pub mod id;
 pub mod library;
 pub mod live;
+pub mod member;
 pub mod pgc;
 pub mod quality;
 pub mod reply;
@@ -38,6 +39,7 @@ pub use live::{
     LiveDanmakuItem, LivePlaySource, LiveRecommendPage, LiveRoomCard, LiveRoomInfo,
     LiveStreamOption,
 };
+pub use member::{MemberProfile, MemberVideo, MemberVideoPage};
 pub use pgc::{
     pgc_season_type_label, PgcEpisode, PgcRankItem, PgcRankPage, PgcSeason, PGC_RANK_TYPES,
 };

@@ -3,7 +3,7 @@
 use crate::app::CoreApp;
 use crate::error::{AppError, ErrorKind};
 use auth::AccountSlot;
-use http::UserApi;
+use http::{MemberApi, UserApi};
 
 /// Watch-history row.
 #[derive(Debug, Clone)]
@@ -271,4 +271,121 @@ fn require_main(app: &CoreApp) -> Result<auth::Account, AppError> {
         .or_else(|| reg.active_main())
         .cloned()
         .ok_or_else(|| AppError::new(ErrorKind::Unauthenticated, "未登录或登录已失效"))
+}
+
+/// Public UP profile for the member-space page.
+#[derive(Debug, Clone)]
+pub struct MemberProfileDto {
+    pub mid: i64,
+    pub name: String,
+    pub face: String,
+    pub sign: String,
+    pub level: i32,
+    pub fans: i64,
+    pub following: i64,
+    pub likes: i64,
+    pub archive_count: i64,
+    pub is_following: bool,
+    pub is_self: bool,
+    pub official_title: String,
+    pub official_type: i32,
+    pub vip_status: bool,
+    pub vip_label: String,
+}
+
+/// One UP contribution (archive) row.
+#[derive(Debug, Clone)]
+pub struct MemberVideoItemDto {
+    pub aid: i64,
+    pub bvid: String,
+    pub cid: i64,
+    pub title: String,
+    pub cover: String,
+    pub duration_ms: i64,
+    pub play: i64,
+    pub danmaku: i64,
+    pub ctime_ms: i64,
+    pub author: String,
+}
+
+/// Paginated UP contribution page.
+#[derive(Debug, Clone)]
+pub struct MemberVideoPageDto {
+    pub items: Vec<MemberVideoItemDto>,
+    /// Pass as `aid` to request the next page; `0` when finished.
+    pub next_aid: i64,
+    pub has_more: bool,
+    pub total: i64,
+}
+
+/// Member profile card (`/x/web-interface/card`). Cookie optional.
+pub async fn member_profile(mid: i64) -> Result<MemberProfileDto, AppError> {
+    let app = CoreApp::global()?;
+    let account = optional_main(&app);
+    let buvid = app.store.buvid3();
+    let http = app.http();
+    let profile = MemberApi::profile(&http, account.as_ref(), Some(buvid.as_str()), mid).await?;
+    let is_self = account.as_ref().map(|a| a.mid.get()) == Some(mid);
+
+    Ok(MemberProfileDto {
+        mid: profile.mid,
+        name: profile.name,
+        face: profile.face,
+        sign: profile.sign,
+        level: profile.level,
+        fans: profile.fans,
+        following: profile.following,
+        likes: profile.likes,
+        archive_count: profile.archive_count,
+        is_following: profile.following_state,
+        is_self,
+        official_title: profile.official_title,
+        official_type: profile.official_type,
+        vip_status: profile.vip_status,
+        vip_label: profile.vip_label,
+    })
+}
+
+/// UP contribution list via the App archive cursor.
+///
+/// First page: `aid = 0`. Subsequent pages: previous `next_aid`.
+/// `order`: `pubdate` or `click`.
+pub async fn member_videos(
+    mid: i64,
+    aid: i64,
+    order: String,
+) -> Result<MemberVideoPageDto, AppError> {
+    let app = CoreApp::global()?;
+    let account = optional_main(&app);
+    let http = app.http();
+    let page = MemberApi::archive_cursor(&http, account.as_ref(), mid, aid, &order, 20).await?;
+
+    Ok(MemberVideoPageDto {
+        items: page
+            .items
+            .into_iter()
+            .map(|it| MemberVideoItemDto {
+                aid: it.aid,
+                bvid: it.bvid,
+                cid: it.cid,
+                title: it.title,
+                cover: it.cover,
+                duration_ms: it.duration_ms,
+                play: it.play,
+                danmaku: it.danmaku,
+                ctime_ms: it.ctime_ms,
+                author: it.author,
+            })
+            .collect(),
+        next_aid: page.next_aid,
+        has_more: page.has_more,
+        total: page.total,
+    })
+}
+
+fn optional_main(app: &CoreApp) -> Option<auth::Account> {
+    let reg = app.accounts.read();
+    reg.account_for(AccountSlot::Main)
+        .or_else(|| reg.active_main())
+        .cloned()
 }

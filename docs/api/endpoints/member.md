@@ -2,6 +2,8 @@
 
 用户空间、投稿与关注分组。
 
+> **NextPili 已接：** 资料卡用 `GET /x/web-interface/card`（`member_profile`）；投稿用 App cursor `GET https://app.bilibili.com/x/v2/space/archive/cursor`（`member_videos`，首屏 `aid=0`，后续传上一页最后一条 `next_aid`）。
+
 ---
 
 ## 用户资料

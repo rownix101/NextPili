@@ -20,6 +20,7 @@ pub use api::{
     fav_folders, fav_resources, feed_popular, feed_ranking, feed_recommend, feed_regions,
     get_settings, history_list,
     list_accounts, live_dm_history, live_play_url, live_recommend, live_room, live_send_msg,
+    member_profile, member_videos,
     login_captcha, login_password, login_password_risk_captcha, login_password_risk_send_sms,
     login_password_risk_verify, login_qr_poll, login_qr_start, login_sms, login_sms_send, logout,
     new_login_session_id, pgc_play_url, pgc_rank, pgc_season, ping, play_url, playback_start,
@@ -32,6 +33,7 @@ pub use api::{
     FavResourcePageDto, FeedItemDto, HeaderDto, HistoryItemDto, HistoryPageDto, LiveDanmakuItemDto,
     RankingFeedDto, RegionDto,
     LiveRecommendPageDto, LiveRoomCardDto, LiveRoomDto, MediaFormatDto, MediaSourceDto,
+    MemberProfileDto, MemberVideoItemDto, MemberVideoPageDto,
     PasswordLoginDto, PasswordLoginResultDto, PasswordLoginResultKind, PasswordRiskDto,
     PasswordRiskSendSmsDto, PasswordRiskSendSmsResultDto, PasswordRiskVerifyDto, PgcEpisodeDto,
     PgcRankItemDto, PgcRankPageDto, PgcSeasonDto, PopularFeedDto, QrPollDto, QrStartDto,
@@ -48,6 +50,6 @@ pub const CORE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// FFI API compatibility version (major bumps on breaking changes).
 pub const API_MAJOR: u32 = 0;
-/// minor … · 19: video_related · 20: SMS need-captcha outcome + session id
-pub const API_MINOR: u32 = 20;
+/// minor … · 19: video_related · 20: SMS need-captcha outcome + session id · 21: member space
+pub const API_MINOR: u32 = 21;
 pub const API_PATCH: u32 = 0;
