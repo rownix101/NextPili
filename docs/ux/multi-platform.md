@@ -155,7 +155,7 @@ expanded+:   [ Rail + Body + (optional secondary) ]
 | 项 | 约定 |
 |----|------|
 | 窗口最小尺寸 | 建议 min ≈ 800×500（可配置）；低于此出现滚动而非挤爆 |
-| 桌面穿透 | 透明窗口 + Liquid Glass chrome；内容不透明托盘（见 [design-system §2.2.1](./design-system.md#221-桌面穿透desktop-pierce)） |
+| 桌面外壳 | 不透明窗口 + `ChromeSurface` Rail / 紧凑底栏；内容不透明托盘（见 [design-system §2.2.1](./design-system.md#221-桌面外壳desktop-shell)） |
 | 标题栏 | 可用系统标题栏或沉浸式自定义；自定义时保留双击最大化、拖拽移动 |
 | 文件/目录选择 | 使用系统对话框（缓存目录、下载路径） |
 | 打开外链 | 系统默认浏览器 |
@@ -192,7 +192,7 @@ expanded+:   [ Rail + Body + (optional secondary) ]
   - 手机 notch、动态岛、底部 Home 指示条；
   - 折叠屏铰链附近的 `displayFeatures`（见 §12）。
 - 全屏：隐藏应用壳层导航；退出全屏后完整恢复壳层状态。
-- 底栏/顶栏必须坐在安全区之内。compact 底栏：**移动** = 悬浮 Liquid Glass；**桌面窄窗** = 贴边 Mica + icon/文字。Linux 桌面 blur 由**合成器**完成（勿 Flutter `BackdropFilter`）。内容可 `extendBody` 透到栏下，可点控件不得落入手势条/挖孔。
+- 底栏/顶栏必须坐在安全区之内。compact 底栏：**移动** = 悬浮 Liquid Glass；**桌面窄窗** = 贴边 `DesktopNavBar` + icon/文字。桌面外壳不透明，不请求原生材质或合成器 blur。可点控件不得落入手势条/挖孔。
 
 ---
 
@@ -215,7 +215,7 @@ expanded+:   [ Rail + Body + (optional secondary) ]
 app/lib/core/adaptive/
   breakpoints.dart       # 档位枚举与计算
   window_size.dart       # WindowSizeClass
-  desktop_window.dart    # 透明窗口 / desktopPierceEnabled
+  desktop_window.dart    # 不透明窗口 + 最小尺寸
   shell.dart             # 响应式 Scaffold / Rail / Bar（features/shell）
   window_constraints.dart
   platform_shortcuts.dart
@@ -256,7 +256,7 @@ app/lib/core/adaptive/
 
 | 形态 | 宽度档 | 导航 | 玻璃 |
 |------|--------|------|------|
-| 手机竖屏 | `compact` | 悬浮 `GlassTabBar`（Liquid Glass）+ 顶栏 | 移动专用；桌面窄窗改用 Mica + icon/label |
+| 手机竖屏 | `compact` | 悬浮 `GlassTabBar`（Liquid Glass）+ 顶栏 | 移动专用；桌面窄窗改用 `DesktopNavBar` + icon/label |
 | 手机横屏短高 | `compact` 或高度优先 | 播放优先；底栏可自动隐藏 | 播放中仅控件条 |
 | 小平板 / 折叠内屏单栏 | `medium` | 收起 Rail 或双栏雏形 | 外壳玻璃，内容不透明 |
 | 大平板 / 折叠内屏展开 | `expanded`+ | Rail 或 List–Detail | 同桌面中档 |

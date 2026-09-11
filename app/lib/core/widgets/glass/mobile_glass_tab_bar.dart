@@ -12,7 +12,7 @@ import '../../theme/spacing.dart';
 /// indicator — while using NextPili semantic colors.
 ///
 /// Expects **≤5** primary tabs (locked IA: 4 — home · dynamics · library · me).
-/// Desktop compact stays on FrostedNavBar / Mica (not this widget).
+/// Desktop compact stays on the opaque `DesktopNavBar` (not this widget).
 ///
 /// Layout metrics are shared with the mini-player pill so overlays stack
 /// above the tab chrome without hard-coded magic in feature code.

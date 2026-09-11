@@ -3,7 +3,6 @@
 **/*.rs.bk
 # Cargo.lock is committed for the application workspace
 
-
 # Flutter
 app/.dart_tool/
 app/.flutter-plugins
@@ -58,3 +57,7 @@ cache/
 .claude/
 .omo/
 .codegraph/
+
+# FVM Version Cache
+.fvm/
+.fvmrc/

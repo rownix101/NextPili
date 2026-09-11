@@ -289,6 +289,7 @@ player.setSubtitleTrack(SubtitleTrack.data(vtt));
 ### 5.3 评论
 
 - 楼中楼展开折叠；点赞需登录。
+- 访客态若服务端截断评论（`all_count >` 已加载数且无下一页），底部提示「登录后查看更多评论」，不显示「没有更多了」。
 - 桌面：`Ctrl+Enter` 发送，`Enter` 换行（或相反，**必须在设置中写清默认**；建议 **Enter 换行，Ctrl+Enter 发送**）。
 - 排序：热度 / 时间。
 

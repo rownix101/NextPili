@@ -31,6 +31,10 @@ GET /x/v2/reply # 旧分页
 
 有 `nextOffset` 时走 `/main`，否则旧接口 `pn` 分页。
 
+> 访客请求时服务端可能只返回少量主楼评论，并直接给出 `cursor.is_end = true`，
+> 但 `cursor.all_count` 仍是实际总数。客户端应在
+> `all_count > replies.length` 且没有下一页时提示登录查看更多，而不是显示「没有更多了」。
+
 ### 楼中楼
 
 ```

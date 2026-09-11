@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../bridge/core_api.dart';
 import '../../core/haptics/haptics.dart';
@@ -36,6 +37,7 @@ class _ReplySectionState extends ConsumerState<ReplySection> {
   bool _loading = true;
   bool _loadingMore = false;
   bool _sending = false;
+  bool _guestLimited = false;
   String? _error;
   int _mode = 3; // heat
 
@@ -68,6 +70,7 @@ class _ReplySectionState extends ConsumerState<ReplySection> {
       _nextOffset = '';
       _isEnd = false;
       _allCount = 0;
+      _guestLimited = false;
     });
     try {
       final page = await CoreApi.instance.replyList(
@@ -75,11 +78,14 @@ class _ReplySectionState extends ConsumerState<ReplySection> {
         mode: _mode,
       );
       if (!mounted) return;
+      final loggedIn = isLoggedIn();
+      final pageCount = i64(page.allCount);
       setState(() {
         _items.addAll(page.replies);
         _nextOffset = page.nextOffset;
         _isEnd = page.isEnd;
-        _allCount = i64(page.allCount);
+        _allCount = pageCount;
+        _guestLimited = !loggedIn && _isEnd && pageCount > _items.length;
         _loading = false;
       });
     } catch (e) {
@@ -101,6 +107,7 @@ class _ReplySectionState extends ConsumerState<ReplySection> {
         nextOffset: _nextOffset,
       );
       if (!mounted) return;
+      final loggedIn = isLoggedIn();
       setState(() {
         _items.addAll(page.replies);
         _nextOffset = page.nextOffset;
@@ -108,6 +115,7 @@ class _ReplySectionState extends ConsumerState<ReplySection> {
         if (i64(page.allCount) > 0) {
           _allCount = i64(page.allCount);
         }
+        _guestLimited = !loggedIn && _isEnd && _allCount > _items.length;
         _loadingMore = false;
       });
     } catch (e) {
@@ -122,6 +130,12 @@ class _ReplySectionState extends ConsumerState<ReplySection> {
     Haptics.selection();
     setState(() => _mode = mode);
     _reload();
+  }
+
+  Future<void> _loginForMore() async {
+    await context.push('/auth');
+    if (!mounted) return;
+    await _reload();
   }
 
   Future<void> _send() async {
@@ -144,6 +158,7 @@ class _ReplySectionState extends ConsumerState<ReplySection> {
       setState(() {
         _items.insert(0, posted);
         _allCount += 1;
+        _guestLimited = false;
         _composer.clear();
         _sending = false;
       });
@@ -174,10 +189,7 @@ class _ReplySectionState extends ConsumerState<ReplySection> {
                 style: theme.textTheme.titleMedium,
               ),
             ),
-            _SortSegment(
-              mode: _mode,
-              onChanged: _setMode,
-            ),
+            _SortSegment(mode: _mode, onChanged: _setMode),
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -201,10 +213,7 @@ class _ReplySectionState extends ConsumerState<ReplySection> {
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
-            NpButton(
-              label: l10n.replySend,
-              onPressed: _sending ? null : _send,
-            ),
+            NpButton(label: l10n.replySend, onPressed: _sending ? null : _send),
           ],
         ),
         const SizedBox(height: AppSpacing.md),
@@ -215,15 +224,14 @@ class _ReplySectionState extends ConsumerState<ReplySection> {
           )
         else if (_error != null)
           EmptyState.error(message: _error!, onRetry: _reload)
-        else if (_items.isEmpty)
-          EmptyState(
-            message: l10n.replyEmpty,
-            icon: AppIcons.comment,
-          )
+        else if (_items.isEmpty && !_guestLimited)
+          EmptyState(message: l10n.replyEmpty, icon: AppIcons.comment)
         else ...[
           for (final r in _items) _ReplyTile(reply: r),
           const SizedBox(height: AppSpacing.sm),
-          if (!_isEnd)
+          if (_guestLimited)
+            _ReplyLoginGate(onLogin: () => _loginForMore())
+          else if (!_isEnd)
             Center(
               child: _loadingMore
                   ? Padding(
@@ -262,10 +270,7 @@ class _ReplySectionState extends ConsumerState<ReplySection> {
 
 /// Text segmented control for comment sort (content token, not M3 SegmentedButton).
 class _SortSegment extends StatelessWidget {
-  const _SortSegment({
-    required this.mode,
-    required this.onChanged,
-  });
+  const _SortSegment({required this.mode, required this.onChanged});
 
   final int mode;
   final ValueChanged<int> onChanged;
@@ -350,6 +355,45 @@ class _SortChip extends StatelessWidget {
   }
 }
 
+class _ReplyLoginGate extends StatelessWidget {
+  const _ReplyLoginGate({required this.onLogin});
+
+  final VoidCallback onLogin;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = AppColors.of(context);
+    final l10n = context.l10n;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: colors.sunken,
+        borderRadius: AppShapes.borderMd,
+        border: Border.all(color: colors.borderSubtle),
+      ),
+      child: Row(
+        children: [
+          Icon(AppIcons.lock, size: AppIcons.sm, color: colors.fgSecondary),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              l10n.replyLoginForMore,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colors.fgPrimary,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          NpButton(label: l10n.goLogin, onPressed: onLogin),
+        ],
+      ),
+    );
+  }
+}
+
 class _ReplyTile extends StatelessWidget {
   const _ReplyTile({required this.reply});
 
@@ -370,10 +414,15 @@ class _ReplyTile extends StatelessWidget {
           CircleAvatar(
             radius: 16,
             backgroundColor: colors.sunken,
-            backgroundImage:
-                reply.avatar.isNotEmpty ? NetworkImage(reply.avatar) : null,
+            backgroundImage: reply.avatar.isNotEmpty
+                ? NetworkImage(reply.avatar)
+                : null,
             child: reply.avatar.isEmpty
-                ? Icon(AppIcons.user, size: AppIcons.xs, color: colors.fgSecondary)
+                ? Icon(
+                    AppIcons.user,
+                    size: AppIcons.xs,
+                    color: colors.fgSecondary,
+                  )
                 : null,
           ),
           const SizedBox(width: AppSpacing.sm),

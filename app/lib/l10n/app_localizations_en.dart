@@ -369,6 +369,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get replyEmptyMessage => 'Enter a comment';
 
   @override
+  String get replyLoginForMore => 'Sign in to see more comments';
+
+  @override
   String get playerDanmakuOn => 'Show danmaku';
 
   @override

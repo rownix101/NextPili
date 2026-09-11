@@ -366,6 +366,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get replyEmptyMessage => '请输入评论内容';
 
   @override
+  String get replyLoginForMore => '登录后查看更多评论';
+
+  @override
   String get playerDanmakuOn => '打开弹幕';
 
   @override

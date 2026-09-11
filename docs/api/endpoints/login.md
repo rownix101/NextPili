@@ -237,6 +237,24 @@ GET https://api.bilibili.com/x/web-interface/nav
 | `level_info` | 等级 |
 | `official` | 认证 |
 
+访客调用同样返回 HTTP 200，但 body `code = -101`；此时 `data` 仍包含
+`isLogin: false` 与 `wbi_img`。客户端应把它视为访客 nav，并继续提取 WBI
+密钥，而不是按未登录错误丢弃。
+
+```json
+{
+  "code": -101,
+  "message": "账号未登录",
+  "data": {
+    "isLogin": false,
+    "wbi_img": {
+      "img_url": "https://i0.hdslb.com/bfs/wbi/....png",
+      "sub_url": "https://i0.hdslb.com/bfs/wbi/....png"
+    }
+  }
+}
+```
+
 ```
 GET /x/web-interface/nav/stat # 关注/粉丝/动态数（当前用户）
 ```

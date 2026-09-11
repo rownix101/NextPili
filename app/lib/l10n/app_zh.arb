@@ -193,6 +193,7 @@
   "replySend": "发送",
   "replySent": "评论已发送",
   "replyEmptyMessage": "请输入评论内容",
+  "replyLoginForMore": "登录后查看更多评论",
 
   "playerDanmakuOn": "打开弹幕",
   "playerDanmakuOff": "关闭弹幕",

@@ -1,6 +1,7 @@
 use crate::client::{BiliClient, RequestOptions};
 use crate::error::Result;
-use auth::{Account, API_BASE, WbiSigner};
+use crate::response::BiliResponse;
+use auth::{API_BASE, Account, WbiSigner};
 use serde::Deserialize;
 use serde_json::Value;
 
@@ -16,7 +17,7 @@ pub struct NavInfo {
     pub raw: Value,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 struct NavData {
     #[serde(default, rename = "isLogin")]
     is_login: bool,
@@ -38,6 +39,21 @@ struct WbiImg {
     img_url: String,
     #[serde(default)]
     sub_url: String,
+}
+
+/// Extract `data` from a nav response.
+///
+/// Bilibili returns `code = -101` (`账号未登录`) for anonymous callers even
+/// though the payload still contains the WBI keys and `isLogin: false`.
+/// Treat that as a valid guest nav instead of an auth failure.
+fn parse_nav_payload(resp: BiliResponse<Value>) -> Result<Value> {
+    match resp.code {
+        0 | -101 => Ok(resp.data.or(resp.result).unwrap_or(Value::Null)),
+        _ => {
+            resp.ensure_ok()?;
+            unreachable!("ensure_ok returns Err for any non-zero, non-guest code")
+        }
+    }
 }
 
 /// Nav endpoint: user info + WBI keys.
@@ -63,9 +79,13 @@ impl NavApi {
         let resp = client
             .get_bili::<Value>(&url, Default::default(), opts)
             .await?;
-        let raw = resp.into_data()?;
-        let data: NavData = serde_json::from_value(raw.clone())
-            .map_err(|e| crate::error::Error::Parse(e.to_string()))?;
+        let raw = parse_nav_payload(resp)?;
+        let data: NavData = if raw.is_null() {
+            NavData::default()
+        } else {
+            serde_json::from_value(raw.clone())
+                .map_err(|e| crate::error::Error::Parse(e.to_string()))?
+        };
 
         Ok(NavInfo {
             is_login: data.is_login || data.mid > 0,
@@ -93,5 +113,58 @@ impl NavApi {
             tracing::warn!(error = e, "failed to parse wbi keys from nav");
         }
         Ok(info)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    fn raw_json(value: Value) -> String {
+        value.to_string()
+    }
+
+    #[test]
+    fn guest_nav_keeps_wbi_payload() {
+        let raw = raw_json(json!({
+            "code": -101,
+            "message": "账号未登录",
+            "data": {
+                "isLogin": false,
+                "wbi_img": {
+                    "img_url": "https://i0.hdslb.com/bfs/wbi/img.png",
+                    "sub_url": "https://i0.hdslb.com/bfs/wbi/sub.png"
+                }
+            }
+        }));
+        let resp: BiliResponse<Value> = serde_json::from_str(&raw).unwrap();
+        let value = parse_nav_payload(resp).unwrap();
+        let data: NavData = serde_json::from_value(value).unwrap();
+        assert!(!data.is_login);
+        assert_eq!(
+            data.wbi_img.as_ref().unwrap().img_url,
+            "https://i0.hdslb.com/bfs/wbi/img.png"
+        );
+    }
+
+    #[test]
+    fn guest_nav_without_data_is_empty() {
+        let raw = raw_json(json!({"code": -101, "message": "账号未登录", "data": null}));
+        let resp: BiliResponse<Value> = serde_json::from_str(&raw).unwrap();
+        let raw = parse_nav_payload(resp).unwrap();
+        let data: NavData = if raw.is_null() {
+            NavData::default()
+        } else {
+            serde_json::from_value(raw).unwrap()
+        };
+        assert!(!data.is_login);
+    }
+
+    #[test]
+    fn nav_api_error_is_preserved() {
+        let raw = raw_json(json!({"code": -400, "message": "请求错误", "data": null}));
+        let resp: BiliResponse<Value> = serde_json::from_str(&raw).unwrap();
+        assert!(parse_nav_payload(resp).is_err());
     }
 }

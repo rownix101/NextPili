@@ -2,18 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../icons/app_icons.dart';
 import '../theme/app_colors.dart';
-import 'mica_surface.dart';
+import 'chrome_surface.dart';
 
-/// Edge-flush desktop compact tab bar: Mica tint + icon + label.
-///
-/// **Do not** use Flutter [BackdropFilter] for desktop wallpaper blur — the
-/// engine cannot sample the compositor desktop. Real-time blur is requested
-/// from the Linux compositor in `linux/runner/desktop_compositor_blur.cc`
-/// (KWin X11 / Wayland). Win/macOS use DWM Mica / NSVisualEffectView.
-///
-/// docs/ux/design-system.md §2.5
-class FrostedNavBar extends StatelessWidget {
-  const FrostedNavBar({
+/// Edge-flush desktop compact tab bar: opaque icon + label chrome.
+class DesktopNavBar extends StatelessWidget {
+  const DesktopNavBar({
     super.key,
     required this.items,
     required this.selectedIndex,
@@ -21,7 +14,7 @@ class FrostedNavBar extends StatelessWidget {
     this.barHeight = 56,
   });
 
-  final List<FrostedNavItem> items;
+  final List<DesktopNavItem> items;
   final int selectedIndex;
   final ValueChanged<int> onSelect;
   final double barHeight;
@@ -33,8 +26,8 @@ class FrostedNavBar extends StatelessWidget {
 
     return Material(
       type: MaterialType.transparency,
-      child: MicaSurface(
-        borderRadius: BorderRadius.zero,
+      child: ChromeSurface(
+        border: Border(top: BorderSide(color: colors.borderSubtle)),
         child: Padding(
           padding: EdgeInsets.only(bottom: bottomInset),
           child: SizedBox(
@@ -43,7 +36,7 @@ class FrostedNavBar extends StatelessWidget {
               children: [
                 for (var i = 0; i < items.length; i++)
                   Expanded(
-                    child: _FrostedNavTile(
+                    child: _DesktopNavTile(
                       item: items[i],
                       selected: i == selectedIndex,
                       colors: colors,
@@ -59,8 +52,8 @@ class FrostedNavBar extends StatelessWidget {
   }
 }
 
-class FrostedNavItem {
-  const FrostedNavItem({
+class DesktopNavItem {
+  const DesktopNavItem({
     required this.icon,
     required this.label,
   });
@@ -69,15 +62,15 @@ class FrostedNavItem {
   final String label;
 }
 
-class _FrostedNavTile extends StatelessWidget {
-  const _FrostedNavTile({
+class _DesktopNavTile extends StatelessWidget {
+  const _DesktopNavTile({
     required this.item,
     required this.selected,
     required this.colors,
     required this.onTap,
   });
 
-  final FrostedNavItem item;
+  final DesktopNavItem item;
   final bool selected;
   final AppColors colors;
   final VoidCallback onTap;

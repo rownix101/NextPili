@@ -155,6 +155,7 @@
   "replySend": "Post",
   "replySent": "Comment posted",
   "replyEmptyMessage": "Enter a comment",
+  "replyLoginForMore": "Sign in to see more comments",
 
   "playerDanmakuOn": "Show danmaku",
   "playerDanmakuOff": "Hide danmaku",

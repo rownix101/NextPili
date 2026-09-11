@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/adaptive/desktop_window.dart';
 import '../../core/adaptive/form_factor.dart';
 import '../../core/adaptive/window_size.dart';
 import '../../core/icons/app_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/shapes.dart';
 import '../../core/theme/spacing.dart';
-import '../../core/widgets/frosted_nav_bar.dart';
+import '../../core/widgets/chrome_surface.dart';
+import '../../core/widgets/desktop_nav_bar.dart';
 import '../../core/widgets/glass/app_glass.dart';
-import '../../core/widgets/mica_surface.dart';
 import '../../l10n/l10n.dart';
 
 class _NavDest {
@@ -93,7 +92,6 @@ class AppShell extends StatelessWidget {
     final sizeClass = windowSizeClassOf(context);
     final colors = AppColors.of(context);
     final l10n = context.l10n;
-    final pierce = DesktopWindow.desktopPierceEnabled;
 
     if (usesNavigationRail(sizeClass)) {
       final dests = _desktopDestinations(l10n);
@@ -103,7 +101,6 @@ class AppShell extends StatelessWidget {
         dests: dests,
         sizeClass: sizeClass,
         colors: colors,
-        pierce: pierce,
         onSelect: (i) {
           if (i < 0 || i >= dests.length) return;
           context.go(dests[i].location);
@@ -116,7 +113,7 @@ class AppShell extends StatelessWidget {
 
     // Compact tab chrome:
     // - Mobile OS → floating Liquid Glass pill (design-system §2.5)
-    // - Desktop narrow window → edge-flush Mica + icon/label (no frosted tray)
+    // - Desktop narrow window → edge-flush opaque icon/label bar
     if (isMobileOs) {
       final dests = _mobileDestinations(l10n);
       final index = _mobileIndexFor(path);
@@ -147,41 +144,18 @@ class AppShell extends StatelessWidget {
     final index = _desktopIndexFor(dests, path);
     final barIndex = index < 0 ? 0 : index;
     return Scaffold(
-      backgroundColor: pierce ? Colors.transparent : colors.canvas,
-      extendBody: true,
+      backgroundColor: colors.canvas,
       body: child,
-      bottomNavigationBar: FrostedNavBar(
+      bottomNavigationBar: DesktopNavBar(
         selectedIndex: barIndex,
         onSelect: (i) {
           if (i < 0 || i >= dests.length) return;
           context.go(dests[i].location);
         },
         items: [
-          for (final d in dests) FrostedNavItem(icon: d.icon, label: d.label),
+          for (final d in dests) DesktopNavItem(icon: d.icon, label: d.label),
         ],
       ),
-    );
-  }
-}
-
-/// Opaque content tray — fills remaining space flush to rail / window edges.
-///
-/// No shell margin (no transparent pierce gaps) and no app-level window-edge
-/// radius — WM owns outer corners.
-class _OpaqueContentPanel extends StatelessWidget {
-  const _OpaqueContentPanel({
-    required this.colors,
-    required this.child,
-  });
-
-  final AppColors colors;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return ColoredBox(
-      color: colors.canvas,
-      child: child,
     );
   }
 }
@@ -192,7 +166,6 @@ class _DesktopShell extends StatelessWidget {
     required this.dests,
     required this.sizeClass,
     required this.colors,
-    required this.pierce,
     required this.onSelect,
     required this.onSearch,
     required this.onAccount,
@@ -203,7 +176,6 @@ class _DesktopShell extends StatelessWidget {
   final List<_NavDest> dests;
   final WindowSizeClass sizeClass;
   final AppColors colors;
-  final bool pierce;
   final ValueChanged<int> onSelect;
   final VoidCallback onSearch;
   final VoidCallback onAccount;
@@ -229,14 +201,15 @@ class _DesktopShell extends StatelessWidget {
     );
 
     return Scaffold(
-      // Transparent only so native Mica / VE paint under the rail strip.
-      backgroundColor: pierce ? Colors.transparent : colors.canvas,
+      backgroundColor: colors.canvas,
       body: Row(
         children: [
-          // Edge-flush Mica rail — no outer margin (no pierce voids).
-          MicaSurface(
+          // Edge-flush opaque rail — no outer margin.
+          ChromeSurface(
             width: expanded ? 88 : 72,
-            borderRadius: BorderRadius.zero,
+            border: Border(
+              right: BorderSide(color: colors.borderSubtle),
+            ),
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
             child: NavigationRail(
               selectedIndex: index,
@@ -279,11 +252,7 @@ class _DesktopShell extends StatelessWidget {
               ],
             ),
           ),
-          Expanded(
-            child: pierce
-                ? _OpaqueContentPanel(colors: colors, child: chrome)
-                : chrome,
-          ),
+          Expanded(child: chrome),
         ],
       ),
     );

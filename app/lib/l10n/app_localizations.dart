@@ -764,6 +764,12 @@ abstract class AppLocalizations {
   /// **'请输入评论内容'**
   String get replyEmptyMessage;
 
+  /// No description provided for @replyLoginForMore.
+  ///
+  /// In zh, this message translates to:
+  /// **'登录后查看更多评论'**
+  String get replyLoginForMore;
+
   /// No description provided for @playerDanmakuOn.
   ///
   /// In zh, this message translates to:

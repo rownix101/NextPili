@@ -66,7 +66,7 @@ app/lib/
 ```text
 WidgetsFlutterBinding.ensureInitialized()
 await LiquidGlassWidgets.initialize()   # 预热 shader；须在 runApp 前
-await DesktopWindow.ensureInitialized() # 桌面透明窗；非桌面 no-op
+await DesktopWindow.ensureInitialized() # 不透明窗口；非桌面 no-op
 await RustLib.init()
 await coreApi.bootstrap(BootstrapConfig(
   dataDir: ...,
@@ -158,7 +158,7 @@ feedProvider = AsyncNotifier
 - 宽屏：`NavigationRail` + 内容区；窄窗回落导航栏。
 - 列表：虚拟滚动（`ListView.builder`）；封面 `CachedNetworkImage` 或等价。
 - 键盘：空格播放/暂停、方向键 seek、F 全屏（播放页 Focus）。
-- 窗口：`window_manager` 透明底 + min 800×500；`flutter_acrylic`：Win Mica/Acrylic、macOS `sidebar` VisualEffect、Linux `transparent`；Linux Rail 另用 `DesktopWallpaper` 采样 plate；壳层见 [design-system §2.2.1](../ux/design-system.md#221-桌面穿透desktop-pierce)。
+- 窗口：`window_manager` 不透明底 + min 800×500；Rail 与桌面紧凑底栏使用 `ChromeSurface`；不请求原生材质。壳层见 [design-system §2.2.1](../ux/design-system.md#221-桌面外壳desktop-shell)。
 - 窗口：记住大小/位置（可选，后续）。
 
 ---

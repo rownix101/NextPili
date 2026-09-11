@@ -78,7 +78,7 @@ flutter config --enable-linux-desktop
 
 把 Flutter 目标打开到 Linux / Windows / macOS，再在 `app/` 下运行。
 
-**Linux 桌面穿透 / blur：** 壳层透明后，live blur 依赖合成器协议 `ext-background-effect-v1`（runner：`desktop_compositor_blur.cc`）。**GNOME/Mutter 预计 ≥51** 才支持；50.x 上只有透明、无模糊是预期行为。KWin（Plasma 6.7+）、Hyprland、Niri 等已实现该协议的环境可测 live blur。自检：`wayland-info | grep background_effect`。
+**桌面外壳：** 窗口保持不透明，Rail 与桌面紧凑底栏使用 `ChromeSurface` 语义表面；不请求 Mica / Acrylic / 合成器 blur。视觉规则见 [design-system §2.2.1](docs/ux/design-system.md#221-桌面外壳desktop-shell)。
 
 安装 FRB 代码生成器：
 
